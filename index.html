@@ -28,7 +28,7 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
   font-size:16px;overscroll-behavior-y:none}
 body{padding-bottom:var(--safe-b)}
 button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:none;cursor:pointer}
-input{font-family:inherit}
+input,textarea{font-family:inherit}
 .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
 
 /* ---------- shell ---------- */
@@ -261,6 +261,45 @@ table.gc .bestrow td{font-weight:800}
 .legend .rd{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--red);
   vertical-align:middle;margin:0 3px}
 
+/* ---------- chat ---------- */
+.chatwrap{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  box-shadow:var(--shadow);overflow:hidden;margin-bottom:10px}
+.chatlist{padding:12px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  min-height:180px;max-height:calc(100vh - 330px)}
+.msg{margin-bottom:11px;display:flex;flex-direction:column;max-width:84%}
+.msg.mine{margin-left:auto;align-items:flex-end}
+.msg .who{font-size:10.5px;font-weight:800;letter-spacing:.4px;margin-bottom:3px;padding:0 2px}
+.msg .who.s{color:var(--snots)} .msg .who.d{color:var(--ducks)}
+.msg .bub{background:var(--surface2);border:1px solid var(--line);border-radius:13px;
+  padding:8px 11px;font-size:14px;line-height:1.4;word-wrap:break-word;overflow-wrap:anywhere;
+  white-space:pre-wrap}
+.msg.mine .bub{background:var(--text);border-color:var(--text);color:#fff}
+.msg .meta{font-size:10px;color:var(--dim);margin-top:3px;padding:0 3px}
+.msg .meta .sending{color:var(--dim)} .msg .meta .failed{color:var(--red);font-weight:750}
+.chatempty{text-align:center;color:var(--dim);font-size:13px;padding:34px 14px;line-height:1.6}
+.composer{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);
+  background:var(--surface2);align-items:flex-end}
+.chatin{flex:1;min-width:0;border:1px solid var(--line);border-radius:11px;padding:11px 12px;
+  font-size:15px;background:var(--surface);color:var(--text);outline:none;resize:none;
+  line-height:1.35;max-height:104px}
+.chatin:focus{border-color:var(--text)}
+.sendbtn{flex:none;padding:11px 16px;border-radius:11px;background:var(--red);color:#fff;
+  font-weight:750;font-size:14px}
+.sendbtn:disabled{opacity:.4}
+.chanbar{display:flex;gap:6px;margin-bottom:10px}
+.chanbar button{flex:1;padding:10px 6px;border-radius:11px;background:var(--surface);
+  border:1px solid var(--line);font-size:13px;font-weight:750;color:var(--muted);
+  box-shadow:var(--shadow);position:relative}
+.chanbar button.on{background:var(--text);border-color:var(--text);color:#fff}
+.chanbar button.on.s{background:var(--snots-solid);border-color:var(--snots-solid)}
+.chanbar button.on.d{background:var(--ducks-solid);border-color:var(--ducks-solid)}
+.dotbadge{display:inline-block;min-width:17px;height:17px;line-height:17px;padding:0 4px;
+  border-radius:9px;background:var(--red);color:#fff;font-size:10px;font-weight:800;
+  margin-left:5px;vertical-align:middle}
+.warnbar{background:#fff6e5;border:1px solid #f0d9a8;color:#7a5600;border-radius:11px;
+  padding:11px 13px;margin-bottom:10px;font-size:12.5px;line-height:1.5}
+.warnbar b{color:#5c4100}
+
 /* ---------- misc ---------- */
 .syncpill{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);
   padding:10px 12px;justify-content:center}
@@ -312,7 +351,7 @@ table.st tbody tr:nth-child(even){background:var(--surface2)}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth, signInAnonymously }
   from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { getDatabase, ref, onValue, update }
+import { getDatabase, ref, onValue, update, push, set }
   from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
 /* ==========================================================================
@@ -579,10 +618,14 @@ function playerStats(){
    Every cell is timestamped, so merging is "newest wins".
    ========================================================================== */
 const Store = (() => {
-  const LS = `${EVENT_KEY}_data`;
-  let data = {}, db = null, connected = false, authed = false, listeners = [];
+  const LS = `${EVENT_KEY}_data`, LS_CHAT = `${EVENT_KEY}_chat`, LS_SEEN = `${EVENT_KEY}_chatseen`;
+  let data = {}, chatData = {}, chatSeen = {};
+  let db = null, connected = false, authed = false, chatBlocked = null, listeners = [];
   try { data = JSON.parse(localStorage.getItem(LS) || "{}"); } catch(e){ data = {}; }
+  try { chatData = JSON.parse(localStorage.getItem(LS_CHAT) || "{}"); } catch(e){ chatData = {}; }
+  try { chatSeen = JSON.parse(localStorage.getItem(LS_SEEN) || "{}"); } catch(e){ chatSeen = {}; }
   const flush = () => { try { localStorage.setItem(LS, JSON.stringify(data)); } catch(e){} };
+  const flushChat = () => { try { localStorage.setItem(LS_CHAT, JSON.stringify(chatData)); } catch(e){} };
   const bucket = id => (data[id] = data[id] || {scores:{}, scorer:null});
 
   function mergeRemote(id, remote){
@@ -602,6 +645,7 @@ const Store = (() => {
   return {
     get online(){ return connected; },
     get authed(){ return authed; },
+    get chatBlocked(){ return chatBlocked; },
     onChange(fn){ listeners.push(fn); },
     _emit(){ listeners.forEach(f => f()); },
 
@@ -658,6 +702,49 @@ const Store = (() => {
       }
     },
 
+    /* ---- chat -------------------------------------------------------------
+       Messages are create-only: the rules refuse overwrites and deletes, so
+       nobody (including a bot) can rewrite the history. Sends are optimistic —
+       the message shows immediately and is marked "sending" until the server
+       confirms, so a dead spot never eats a message silently. */
+    chat(channel){
+      const c = chatData[channel] || {};
+      return Object.keys(c).map(id => ({id, ...c[id]}))
+        .sort((a, b) => a.t - b.t);
+    },
+    chatSend(channel, txt, by){
+      const t = Date.now();
+      const id = db ? push(ref(db, `${EVENT_KEY}/chat/${channel}`)).key
+                    : `local-${t}-${Math.random().toString(36).slice(2, 8)}`;
+      chatData[channel] = chatData[channel] || {};
+      chatData[channel][id] = {by, txt, t, state: "sending"};
+      flushChat(); this._emit();
+      if (!db){ chatData[channel][id].state = "failed"; flushChat(); this._emit(); return; }
+      set(ref(db, `${EVENT_KEY}/chat/${channel}/${id}`), {by, txt, t})
+        .then(() => { if (chatData[channel][id]){ delete chatData[channel][id].state;
+                      flushChat(); this._emit(); } })
+        .catch(err => { chatData[channel][id].state = "failed";
+                        chatData[channel][id].err = err.code || String(err);
+                        flushChat(); this._emit(); });
+    },
+    chatRetry(){
+      for (const ch in chatData) for (const id in chatData[ch]){
+        const m = chatData[ch][id];
+        if (m.state !== "failed") continue;
+        delete chatData[ch][id];
+        this.chatSend(ch, m.txt, m.by);
+      }
+    },
+    chatUnread(channel){
+      const seen = chatSeen[channel] || 0;
+      return this.chat(channel).filter(m => m.t > seen && m.by !== Session.id).length;
+    },
+    chatMarkRead(channel){
+      const list = this.chat(channel);
+      chatSeen[channel] = list.length ? list[list.length - 1].t : Date.now();
+      try { localStorage.setItem(LS_SEEN, JSON.stringify(chatSeen)); } catch(e){}
+    },
+
     async connect(){
       try {
         const app = initializeApp(FIREBASE_CONFIG);
@@ -672,6 +759,20 @@ const Store = (() => {
           for (const id in all) if (mergeRemote(id, all[id])) changed = true;
           if (changed){ flush(); this._emit(); }
         }, err => console.warn("sync read blocked:", err.code || err));
+        onValue(ref(db, `${EVENT_KEY}/chat`), snap => {
+          const all = snap.val() || {}; let changed = false;
+          for (const ch in all){
+            chatData[ch] = chatData[ch] || {};
+            for (const id in all[ch]){
+              const m = all[ch][id];
+              if (!m || typeof m.t !== "number") continue;
+              const cur = chatData[ch][id];
+              if (!cur || cur.state){ chatData[ch][id] = m; changed = true; }
+            }
+          }
+          if (changed){ flushChat(); this._emit(); }
+        }, err => { chatBlocked = err.code || String(err);
+                    console.warn("chat read blocked:", chatBlocked); this._emit(); });
       } catch(e){ console.warn("sync unavailable", e); }
     }
   };
@@ -711,7 +812,8 @@ function myMatch(){
 /* ==========================================================================
    6. VIEW HELPERS
    ========================================================================== */
-let V = {view:"home", round:0, matchId:null, hole:0, sheet:null, pending:false};
+let V = {view:"home", round:0, matchId:null, hole:0, sheet:null, pending:false,
+         chan:"all", draft:null, refocusChat:false, statSort:"net"};
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fmtPt = n => Number.isInteger(n) ? String(n) : n.toFixed(1).replace(/\.0$/, "");
@@ -747,6 +849,7 @@ function render(){
   if (V.view === "home")  html = viewHome();
   if (V.view === "board") html = viewBoard();
   if (V.view === "stats") html = viewStats();
+  if (V.view === "chat")  html = viewChat();
   if (V.view === "round") html = viewRound();
   if (V.view === "match") html = viewMatch();
   if (V.view === "card")  html = viewCard();
@@ -866,7 +969,11 @@ function viewHome(){
         ${mineId ? `<button class="btn big" data-nav="match" data-id="${mineId}">Your Match</button>` : ""}
         <button class="btn big ghost" data-nav="board">Live Leaderboard</button>
       </div>
-      <button class="btn ghost" data-nav="stats" style="margin-top:9px">Statistics</button>
+      <div class="actions" style="margin-top:9px">
+        <button class="btn big ghost" data-nav="chat" style="margin-top:0">Chat${
+          chatBadge()}</button>
+        <button class="btn big ghost" data-nav="stats" style="margin-top:0">Statistics</button>
+      </div>
       <div class="sect">Rounds</div>${rounds}
       ${syncHTML()}
     </div>`;
@@ -886,6 +993,10 @@ function boardHTML(st){
       : `${st.fin} of ${MATCH_COUNT} matches complete`}
       &middot; <b>${fmtPt(CLINCH)}</b> to clinch</div></div>`;
 }
+const chatBadge = () => {
+  const n = Store.chatUnread("all") + Store.chatUnread(myChannel());
+  return n > 0 ? `<span class="dotbadge">${n > 99 ? "99+" : n}</span>` : "";
+};
 const syncHTML = () => `<div class="syncpill ${Store.online ? "on" : "off"}"><span class="led"></span>
   ${Store.online ? "Live &middot; synced to every phone" : "Offline &middot; saved here, will sync"}</div>`;
 
@@ -905,6 +1016,65 @@ function viewBoard(){
       ${boardHTML(st)}
       ${mineId ? `<button class="btn big" data-nav="match" data-id="${mineId}">Return to Your Match</button>` : ""}
       ${out}${syncHTML()}</div>`;
+}
+
+/* ---------- chat ---------- */
+const myChannel = () => Session.me.t === "s" ? "snots" : "ducks";
+const clockTime = t => new Date(t).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"});
+
+function viewChat(){
+  const ch = V.chan === "team" ? myChannel() : "all";
+  const mine = Session.me.t;
+  const msgs = Store.chat(ch);
+  const otherUnread = Store.chatUnread(V.chan === "team" ? "all" : myChannel());
+  const failed = msgs.some(m => m.state === "failed");
+
+  const list = msgs.length ? msgs.map(m => {
+    const p = PLAYERS[m.by], own = m.by === Session.id;
+    const who = p ? p.n : "Unknown";
+    const team = p ? p.t : "s";
+    return `<div class="msg ${own ? "mine" : ""}">
+      ${own ? "" : `<div class="who ${team}">${esc(who)}</div>`}
+      <div class="bub">${esc(m.txt)}</div>
+      <div class="meta">${clockTime(m.t)}${
+        m.state === "sending" ? ` &middot; <span class="sending">sending&hellip;</span>` :
+        m.state === "failed"  ? ` &middot; <span class="failed">not sent</span>` : ""}</div>
+    </div>`;
+  }).join("") : `<div class="chatempty">${ch === "all"
+      ? "Nothing here yet. Say something to all twenty."
+      : `Nothing here yet. This one only goes to the ${mine === "s" ? "Snots" : "Ducks"}.`}</div>`;
+
+  const badge = n => n > 0 ? `<span class="dotbadge">${n > 99 ? "99+" : n}</span>` : "";
+
+  return `<div class="topbar">
+      <button class="iconbtn" data-nav="home">&lsaquo;</button>
+      <h1>Chat<div class="sub">${ch === "all" ? "Everyone &middot; all 20 players"
+        : `${mine === "s" ? "Snots" : "Ducks"} only &middot; your 10`}</div></h1></div>
+    <div class="wrap">
+      <div class="chanbar">
+        <button class="${V.chan !== "team" ? "on" : ""}" data-chan="all">Everyone${
+          V.chan === "team" ? badge(otherUnread) : ""}</button>
+        <button class="${V.chan === "team" ? "on " + mine : ""}" data-chan="team">${
+          mine === "s" ? "Snots" : "Ducks"} only${V.chan !== "team" ? badge(otherUnread) : ""}</button>
+      </div>
+      ${Store.chatBlocked ? `<div class="warnbar"><b>Chat isn't switched on yet.</b>
+        The database is still refusing chat messages &mdash; Andrew needs to publish the
+        updated rules in the Firebase console. Scoring is unaffected.</div>` : ""}
+      ${failed ? `<div class="warnbar"><b>Some messages didn't send.</b>
+        <button data-retry="1" style="color:var(--red);font-weight:750;text-decoration:underline">
+        Try again &rsaquo;</button></div>` : ""}
+      <div class="chatwrap">
+        <div class="chatlist" id="chatlist">${list}</div>
+        <div class="composer">
+          <textarea class="chatin" id="chatin" rows="1" maxlength="500"
+            placeholder="${ch === "all" ? "Message everyone…" : `Message the ${mine === "s" ? "Snots" : "Ducks"}…`}"></textarea>
+          <button class="sendbtn" id="chatsend">Send</button>
+        </div>
+      </div>
+      <div class="savedtag">${ch === "all"
+        ? "Everyone on the trip sees this."
+        : "Only your team sees this in the app &mdash; but it isn't encrypted. Don't put anything in here you'd mind the other side reading."}</div>
+    </div>`;
 }
 
 /* ---------- statistics ---------- */
@@ -1267,6 +1437,7 @@ function wire(){
     if (n === "home")  V.view = "home";
     if (n === "board") V.view = "board";
     if (n === "stats") V.view = "stats";
+    if (n === "chat")  V.view = "chat";
     if (n === "round"){ V.view = "round"; V.round = +el.dataset.i; }
     if (n === "match"){
       V.view = "match"; V.matchId = el.dataset.id;
@@ -1283,6 +1454,45 @@ function wire(){
     el.onclick = () => { V.sheet = el.dataset.sheet; render(); });
   document.querySelectorAll("[data-sort]").forEach(el =>
     el.onclick = () => { V.statSort = el.dataset.sort; render(); });
+
+  /* --- chat --------------------------------------------------------------- */
+  document.querySelectorAll("[data-chan]").forEach(el =>
+    el.onclick = () => { V.chan = el.dataset.chan; render(); });
+  const retry = document.querySelector("[data-retry]");
+  if (retry) retry.onclick = () => { Store.chatRetry(); render(); };
+
+  if (V.view === "chat"){
+    const inp = document.getElementById("chatin");
+    const btn = document.getElementById("chatsend");
+    const listEl = document.getElementById("chatlist");
+    const ch = V.chan === "team" ? myChannel() : "all";
+    if (listEl) listEl.scrollTop = listEl.scrollHeight;      // newest message in view
+    Store.chatMarkRead(ch);
+
+    const grow = () => { inp.style.height = "auto";
+                         inp.style.height = Math.min(inp.scrollHeight, 104) + "px"; };
+    const send = () => {
+      const txt = inp.value.trim();
+      if (!txt) return;
+      Store.chatSend(ch, txt.slice(0, 500), Session.id);
+      inp.value = ""; grow(); V.pending = false; render();
+      const l = document.getElementById("chatlist");
+      if (l) l.scrollTop = l.scrollHeight;
+      document.getElementById("chatin").focus();
+    };
+    if (inp){
+      // a message arriving mid-sentence must not eat the draft or the caret
+      if (V.draft != null){ inp.value = V.draft; V.draft = null; grow(); }
+      inp.oninput = grow;
+      inp.onfocus = () => setTimeout(() =>
+        inp.scrollIntoView({block: "center", behavior: "smooth"}), 260);
+      inp.onkeydown = e => {
+        if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); send(); }
+      };
+      if (V.refocusChat){ V.refocusChat = false; inp.focus(); }
+    }
+    if (btn) btn.onclick = send;
+  }
   document.querySelectorAll("[data-close]").forEach(el =>
     el.onclick = e => { if (e.target === el){ V.sheet = null; render(); } });
   document.querySelectorAll("[data-closebtn]").forEach(el =>
@@ -1401,9 +1611,11 @@ function patch(){
    ========================================================================== */
 Store.onChange(() => {
   if (!Session.id) return;
+  const ae = document.activeElement, cls = ae && ae.classList;
   // Never rebuild the DOM out from under someone who is typing a score.
-  const ae = document.activeElement;
-  if (ae && ae.classList && ae.classList.contains("gsin")){ V.pending = true; return; }
+  if (cls && cls.contains("gsin")){ V.pending = true; return; }
+  // Chat can redraw live, but the draft and caret have to survive it.
+  if (cls && cls.contains("chatin")){ V.draft = ae.value; V.refocusChat = true; }
   render();
 });
 Store.connect();
