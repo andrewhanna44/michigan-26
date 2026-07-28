@@ -129,18 +129,18 @@ input{font-family:inherit}
 .badge.h{background:var(--surface3);color:var(--muted)}
 
 /* ---------- hole entry ---------- */
-.holehead{background:var(--surface);border:1px solid var(--line);border-radius:15px;
-  padding:13px 14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.holehead{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:11px 12px;margin-bottom:10px;box-shadow:var(--shadow)}
 .holenav{display:flex;align-items:center;gap:12px}
-.navbtn{width:46px;height:46px;border-radius:12px;background:var(--surface2);flex:none;
+.navbtn{width:42px;height:42px;border-radius:11px;background:var(--surface2);flex:none;
   border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
-  font-size:23px;font-weight:700}
+  font-size:21px;font-weight:700}
 .navbtn:active{background:var(--surface3)}
 .navbtn:disabled{opacity:.32}
 .holeinfo{flex:1;text-align:center}
-.holeinfo .hn{font-size:27px;font-weight:850;line-height:1;letter-spacing:-.6px}
-.holeinfo .hd{font-size:12px;color:var(--muted);margin-top:5px;font-weight:600}
-.strip{display:flex;gap:3px;margin-top:13px}
+.holeinfo .hn{font-size:23px;font-weight:850;line-height:1;letter-spacing:-.5px}
+.holeinfo .hd{font-size:11.5px;color:var(--muted);margin-top:4px;font-weight:600}
+.strip{display:flex;gap:3px;margin-top:10px}
 .strip button{flex:1;height:27px;border-radius:5px;background:var(--surface2);
   border:1px solid var(--line);font-size:10px;font-weight:700;color:var(--dim);
   display:flex;align-items:center;justify-content:center;padding:0;min-width:0}
@@ -156,17 +156,17 @@ input{font-family:inherit}
 .sidebox.s .sidehdr{color:var(--snots);background:var(--snots-tint)}
 .sidebox.d .sidehdr{color:var(--ducks);background:var(--ducks-tint)}
 .sidehdr .net{letter-spacing:.3px;font-weight:700;font-size:12px;color:var(--muted);text-transform:none}
-.prow{padding:11px 13px;border-top:1px solid var(--line)}
+.prow{padding:8px 12px;border-top:1px solid var(--line)}
 .prow:first-child{border-top:none}
 .prow.best{background:var(--surface2)}
-.pname{font-size:14.5px;font-weight:700;line-height:1.25}
-.pname .hc{color:var(--dim);font-weight:600;font-size:11px;margin-left:6px}
-.pname .ball{color:var(--red);font-weight:800;font-size:10px;letter-spacing:.6px;
-  text-transform:uppercase;margin-left:6px}
-.entry{display:flex;align-items:center;gap:10px;margin-top:8px}
-.entry .lab{font-size:12.5px;color:var(--muted);font-weight:650;flex:none}
+.pname{font-size:13.5px;font-weight:700;line-height:1.2}
+.pname .hc{color:var(--dim);font-weight:600;font-size:10.5px;margin-left:5px}
+.pname .ball{color:var(--red);font-weight:800;font-size:9.5px;letter-spacing:.6px;
+  text-transform:uppercase;margin-left:5px}
+.entry{display:flex;align-items:center;gap:9px;margin-top:5px}
+.entry .lab{font-size:11.5px;color:var(--muted);font-weight:650;flex:none}
 .gswrap{position:relative;flex:none}
-.gsin{width:60px;height:52px;text-align:center;font-size:23px;font-weight:800;
+.gsin{width:54px;height:44px;text-align:center;font-size:20px;font-weight:800;
   background:var(--surface2);border:1.5px solid transparent;border-radius:11px;
   color:var(--text);outline:none;padding:0;-moz-appearance:textfield}
 .gsin::-webkit-outer-spin-button,.gsin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
@@ -177,11 +177,22 @@ input{font-family:inherit}
 .gsdots{position:absolute;top:-3px;right:-3px;display:flex;gap:2px;pointer-events:none}
 .gsdots .dot{width:6px;height:6px;border-radius:50%;background:var(--red);
   box-shadow:0 0 0 2px var(--surface)}
-.entry .out{flex:1;text-align:right;font-size:12px;color:var(--dim);font-weight:650}
-.entry .out b{display:block;font-size:19px;color:var(--text);font-weight:800;line-height:1.2}
-.entry .clr{flex:none;width:34px;height:34px;border-radius:9px;background:var(--surface2);
-  border:1px solid var(--line);color:var(--dim);font-size:15px;display:flex;
+.entry .out{flex:1;text-align:right;font-size:11px;color:var(--dim);font-weight:650}
+.entry .out b{display:block;font-size:17px;color:var(--text);font-weight:800;line-height:1.15}
+.entry .clr{flex:none;width:31px;height:31px;border-radius:8px;background:var(--surface2);
+  border:1px solid var(--line);color:var(--dim);font-size:14px;display:flex;
   align-items:center;justify-content:center}
+
+/* prev / save / next bar under the score boxes */
+.holebar{display:flex;gap:7px;margin-top:12px}
+.holebar button{border-radius:12px;padding:13px 6px;font-weight:750;font-size:13px;
+  background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.holebar button:disabled{opacity:.34}
+.holebar .side{flex:none;width:84px;color:var(--muted);font-size:11px;white-space:nowrap}
+.holebar .go{flex:1;background:var(--red);border-color:var(--red);color:#fff;font-size:14px}
+.holebar .go:active{filter:brightness(.9)}
+.holebar .go.fin{background:var(--text);border-color:var(--text)}
+.savedtag{text-align:center;font-size:11px;color:var(--dim);margin-top:8px}
 
 /* under par = red + circles.  par = plain black.  over par = black + boxes. */
 .u{color:var(--red)!important}
@@ -193,10 +204,10 @@ input{font-family:inherit}
 .mk{display:inline-flex;align-items:center;justify-content:center;
   min-width:21px;height:21px;line-height:1;font-weight:750}
 
-.resbar{border-radius:13px;padding:14px;text-align:center;margin-bottom:11px;
+.resbar{border-radius:13px;padding:11px;text-align:center;margin-bottom:9px;
   background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
-.resbar .r1{font-size:12px;color:var(--muted);font-weight:650}
-.resbar .r2{font-size:21px;font-weight:850;margin-top:4px;letter-spacing:-.3px}
+.resbar .r1{font-size:11.5px;color:var(--muted);font-weight:650}
+.resbar .r2{font-size:19px;font-weight:850;margin-top:3px;letter-spacing:-.3px}
 .resbar.s{background:var(--snots-tint);border-color:var(--snots-edge)}
 .resbar.d{background:var(--ducks-tint);border-color:var(--ducks-edge)}
 .resbar.s .r2{color:var(--snots)} .resbar.d .r2{color:var(--ducks)}
@@ -238,7 +249,9 @@ table.gc .gdot.two::before{right:5px} table.gc .gdot.two::after{right:0}
 table.gc td.w{background:var(--snots-solid);color:#fff}
 table.gc td.l{background:var(--ducks-solid);color:#fff}
 table.gc td.hh{background:var(--surface3);color:var(--muted)}
-table.gc .rowres td{font-weight:800;font-size:11px}
+table.gc .rowres td{font-weight:800;font-size:9.5px;letter-spacing:-.2px}
+table.gc .rowres .tot{font-size:9.5px;white-space:nowrap;padding:0 4px}
+table.gc .tot{min-width:62px}
 table.gc .bestrow td{font-weight:800}
 .legend{font-size:11.5px;color:var(--dim);padding:10px 12px;line-height:1.7;
   border-top:1px solid var(--line);background:var(--surface)}
@@ -256,9 +269,36 @@ table.gc .bestrow td{font-weight:800}
 .sheet{position:fixed;inset:0;background:rgba(14,18,22,.45);z-index:80;display:flex;
   align-items:flex-end;justify-content:center}
 .sheet-in{background:var(--surface);width:100%;max-width:560px;border-radius:17px 17px 0 0;
-  padding:19px 16px calc(22px + var(--safe-b));max-height:86vh;overflow-y:auto}
-.sheet h3{margin:0 0 5px;font-size:17px}
+  padding:0 16px calc(22px + var(--safe-b));max-height:86vh;overflow-y:auto}
+.sheethdr{position:sticky;top:0;background:var(--surface);display:flex;align-items:center;
+  gap:10px;padding:17px 0 11px;border-bottom:1px solid var(--line);margin-bottom:14px;z-index:2}
+.sheethdr h3{margin:0;font-size:17px;flex:1}
 .sheet p{color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 15px}
+
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tabs button{flex:1;padding:9px 4px;border-radius:10px;background:var(--surface);
+  border:1px solid var(--line);font-size:12px;font-weight:750;color:var(--muted);
+  box-shadow:var(--shadow);white-space:nowrap}
+.tabs button.on{background:var(--red);border-color:var(--red);color:#fff}
+
+/* ---------- statistics ---------- */
+.statcards{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.statcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:11px 12px;box-shadow:var(--shadow)}
+.statcard .k{font-size:10px;font-weight:800;letter-spacing:1.4px;color:var(--dim);text-transform:uppercase}
+.statcard .v{font-size:15px;font-weight:800;margin-top:4px;line-height:1.25}
+.statcard .v small{display:block;font-size:11px;font-weight:650;color:var(--muted);margin-top:2px}
+table.st{border-collapse:collapse;width:100%;font-size:12.5px}
+table.st th,table.st td{padding:8px 4px;text-align:center;border-top:1px solid var(--line);
+  font-variant-numeric:tabular-nums}
+table.st thead th{background:var(--surface2);font-size:10px;font-weight:800;color:var(--muted);
+  letter-spacing:.6px;border-top:none;padding:8px 4px}
+table.st .who{text-align:left;padding-left:11px;font-weight:700;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:118px}
+table.st .who.s{color:var(--snots)} table.st .who.d{color:var(--ducks)}
+table.st .num{font-weight:750}
+table.st .lead{color:var(--red);font-weight:850}
+table.st tbody tr:nth-child(even){background:var(--surface2)}
 .codelist{display:grid;grid-template-columns:1fr auto;gap:0 10px;font-size:13px;margin-bottom:15px}
 .codelist .cn{padding:7px 0;border-bottom:1px solid var(--line)}
 .codelist .cc{padding:7px 0;border-bottom:1px solid var(--line);font-weight:800;
@@ -485,6 +525,55 @@ function standings(){
   return {s, d, projS: ps, projD: pd, fin, live};
 }
 
+/**
+ * Per-player totals across the whole trip.
+ * Best Ball / Shamble / Singles have a score per man, so it's his own.
+ * Scramble / Alternate Shot only have a team score — that score is credited
+ * to BOTH partners, since it's the number they made together.
+ * Birdies/bogeys are counted off GROSS vs par, the way a scorecard reads.
+ */
+function playerStats(){
+  const acc = {};
+  Object.keys(PLAYERS).forEach(id => acc[id] =
+    {holes:0, gross:0, net:0, par:0, eagle:0, birdie:0, parCt:0, bogey:0, dbl:0, rounds:new Set()});
+  const bump = (a, gross, net, par, rid) => {
+    a.holes++; a.gross += gross; a.net += net; a.par += par; a.rounds.add(rid);
+    const d = gross - par;
+    if (d <= -2) a.eagle++; else if (d === -1) a.birdie++;
+    else if (d === 0) a.parCt++; else if (d === 1) a.bogey++; else a.dbl++;
+  };
+  ROUNDS.forEach(r => {
+    const c = COURSES[r.course];
+    r.matches.forEach(m => {
+      const scores = Store.scores(m.id);
+      ["s","d"].forEach(key => {
+        const side = m[key];
+        for (let h = 0; h < 18; h++){
+          const row = scores[h] || {};
+          if (r.mode === "team"){
+            const g = row[key];
+            if (g == null) continue;
+            const net = g - teamStrokes(r, side, h);
+            side.p.forEach(pl => bump(acc[pl[0]], g, net, c.par[h], r.n));
+          } else side.p.forEach(pl => {
+            const g = row[pl[0]];
+            if (g == null) return;
+            bump(acc[pl[0]], g, g - playerStrokes(r, side, pl, h), c.par[h], r.n);
+          });
+        }
+      });
+    });
+  });
+  return Object.keys(acc).map(id => {
+    const a = acc[id];
+    return {id, name: PLAYERS[id].n, team: PLAYERS[id].t, holes: a.holes,
+            grossToPar: a.gross - a.par, netToPar: a.net - a.par,
+            eagle: a.eagle, birdie: a.birdie, parCt: a.parCt,
+            bogey: a.bogey, dbl: a.dbl, bogeyPlus: a.bogey + a.dbl,
+            rounds: a.rounds.size};
+  }).filter(p => p.holes > 0);
+}
+
 /* ==========================================================================
    4. STORE  — localStorage is durable truth, Firebase is shared truth.
    Every cell is timestamped, so merging is "newest wins".
@@ -657,6 +746,7 @@ function render(){
   let html = "";
   if (V.view === "home")  html = viewHome();
   if (V.view === "board") html = viewBoard();
+  if (V.view === "stats") html = viewStats();
   if (V.view === "round") html = viewRound();
   if (V.view === "match") html = viewMatch();
   if (V.view === "card")  html = viewCard();
@@ -776,6 +866,7 @@ function viewHome(){
         ${mineId ? `<button class="btn big" data-nav="match" data-id="${mineId}">Your Match</button>` : ""}
         <button class="btn big ghost" data-nav="board">Live Leaderboard</button>
       </div>
+      <button class="btn ghost" data-nav="stats" style="margin-top:9px">Statistics</button>
       <div class="sect">Rounds</div>${rounds}
       ${syncHTML()}
     </div>`;
@@ -814,6 +905,73 @@ function viewBoard(){
       ${boardHTML(st)}
       ${mineId ? `<button class="btn big" data-nav="match" data-id="${mineId}">Return to Your Match</button>` : ""}
       ${out}${syncHTML()}</div>`;
+}
+
+/* ---------- statistics ---------- */
+const toPar = n => n === 0 ? "E" : n > 0 ? `+${n}` : `${n}`;
+function viewStats(){
+  const rows = playerStats();
+  if (!rows.length) return `<div class="topbar">
+      <button class="iconbtn" data-nav="home">&lsaquo;</button>
+      <h1>Statistics<div class="sub">Nothing scored yet</div></h1></div>
+    <div class="wrap"><div class="empty">Statistics appear here once scores start going in.<br>
+      Every man's gross and net contribution to par, birdies, eagles and bogeys &mdash;
+      across all five rounds.</div></div>`;
+
+  const sort = V.statSort || "net";
+  const cmp = {
+    net:    (a,b) => a.netToPar - b.netToPar,
+    gross:  (a,b) => a.grossToPar - b.grossToPar,
+    birdie: (a,b) => (b.birdie + b.eagle) - (a.birdie + a.eagle) || a.netToPar - b.netToPar,
+    bogey:  (a,b) => b.bogeyPlus - a.bogeyPlus || b.netToPar - a.netToPar
+  }[sort];
+  const sorted = [...rows].sort(cmp);
+
+  const bestBy = (fn, hi) => rows.reduce((x, y) => (hi ? fn(y) > fn(x) : fn(y) < fn(x)) ? y : x);
+  const bNet = bestBy(p => p.netToPar, false), bGross = bestBy(p => p.grossToPar, false);
+  // birdies and eagles rank separately — an eagle shouldn't quietly win "most birdies"
+  const bBird = bestBy(p => p.birdie * 100 + p.eagle, true);
+  const bEagle = bestBy(p => p.eagle, true), bBog = bestBy(p => p.bogeyPlus, true);
+  const nm = p => p.name.split(" ").slice(-1)[0];
+
+  const card = (k, v, sub) => `<div class="statcard"><div class="k">${k}</div>
+    <div class="v">${v}<small>${sub}</small></div></div>`;
+
+  const body = sorted.map(p => `<tr>
+    <td class="who ${p.team}">${esc(nm(p))}</td>
+    <td class="num">${toPar(p.grossToPar)}</td>
+    <td class="num">${toPar(p.netToPar)}</td>
+    <td class="${p.eagle === bEagle.eagle && p.eagle > 0 ? "lead" : ""}">${p.eagle || ""}</td>
+    <td class="${p.birdie === bBird.birdie && p.birdie > 0 ? "lead" : ""}">${p.birdie || ""}</td>
+    <td class="${p.bogeyPlus === bBog.bogeyPlus && p.bogeyPlus > 0 ? "lead" : ""}">${p.bogeyPlus || ""}</td>
+    <td style="color:var(--dim)">${p.holes}</td></tr>`).join("");
+
+  const tab = (k, lbl) => `<button class="${sort === k ? "on" : ""}" data-sort="${k}">${lbl}</button>`;
+
+  return `<div class="topbar">
+      <button class="iconbtn" data-nav="home">&lsaquo;</button>
+      <h1>Statistics<div class="sub">${rows.length} players &middot; contribution to par</div></h1></div>
+    <div class="wrap">
+      <div class="statcards">
+        ${card("Best net", nm(bNet), `${toPar(bNet.netToPar)} to par`)}
+        ${card("Best gross", nm(bGross), `${toPar(bGross.grossToPar)} to par`)}
+        ${bEagle.eagle > 0
+          ? card("Most eagles", nm(bEagle), `${bEagle.eagle} eagle${bEagle.eagle === 1 ? "" : "s"}`)
+          : card("Most birdies", bBird.birdie > 0 ? nm(bBird) : "&mdash;",
+              `${bBird.birdie} birdie${bBird.birdie === 1 ? "" : "s"}`)}
+        ${card("Most bogeys+", bBog.bogeyPlus > 0 ? nm(bBog) : "&mdash;", `${bBog.bogeyPlus} holes over par`)}
+      </div>
+      <div class="tabs">${tab("net","Net")}${tab("gross","Gross")}${tab("birdie","Birdies")}${tab("bogey","Bogeys+")}</div>
+      <div class="gridwrap"><div class="gscroll"><table class="st">
+        <thead><tr><th class="who">Player</th><th>GROSS</th><th>NET</th>
+          <th>EGL</th><th>BIR</th><th>BGY+</th><th>HOLES</th></tr></thead>
+        <tbody>${body}</tbody></table></div>
+        <div class="legend">Gross and net are each man's total contribution to par across every
+          round he's played. On scramble and alternate shot the team's score counts for both
+          partners. Birdies and bogeys are counted off gross.</div>
+      </div>
+      <button class="btn ghost" data-nav="home">Back to home</button>
+    </div>`;
 }
 
 /* ---------- round ---------- */
@@ -900,6 +1058,8 @@ function viewMatch(){
         <div class="r1" id="res1">${holeLine(r, m, h, scores)}</div>
         <div class="r2" id="res2">${st.started ? matchLine(st) : "Match not started"}</div>
       </div>
+      ${st.done ? `<button class="btn" style="margin:0 0 10px"
+        data-nav="card" data-id="${m.id}">Match complete &mdash; Review Round &rsaquo;</button>` : ""}
       ${scorerBar(m, sc, editable)}
       <div class="holehead">
         <div class="holenav">
@@ -911,6 +1071,14 @@ function viewMatch(){
         <div class="strip">${strip}</div>
       </div>
       ${sideBox("s")}${sideBox("d")}
+      <div class="holebar">
+        <button class="side" data-step="-1" ${h === 0 ? "disabled" : ""}>&lsaquo; Prev Hole</button>
+        <button class="go ${h === 17 || st.done ? "fin" : ""}" data-proceed="1">${
+          h === 17 || st.done ? "Save &amp; Review Round" : "Save Scores &amp; Proceed"}</button>
+        <button class="side" data-step="1" ${h === 17 ? "disabled" : ""}>Next Hole &rsaquo;</button>
+      </div>
+      <div class="savedtag">Every score saves the moment you type it${
+        Store.online ? " and syncs to everyone" : " &mdash; will sync when you get service"}.</div>
       <div class="actions">
         <button class="btn big ghost" data-nav="board">Live Leaderboard</button>
         <button class="btn big ghost" data-nav="card" data-id="${m.id}">Full Scorecard</button>
@@ -966,6 +1134,17 @@ function viewCard(){
   const {r, m} = ALL_MATCHES[V.matchId], c = COURSES[r.course];
   const scores = Store.scores(m.id), st = matchState(r, m, scores);
 
+  // running "up" after each decided hole (+ve = Snots), null where not played
+  const run = []; let u = 0;
+  for (let h = 0; h < 18; h++){
+    const w = st.holes[h];
+    if (w === null){ run.push(null); continue; }
+    if (w === "s") u++; else if (w === "d") u--;
+    run.push(u);
+  }
+  const shortSide = key => m[key].p.length > 1
+    ? m[key].p.map(p => last(p[0])[0]).join("/") : last(m[key].p[0][0]);
+
   const rowPair = (name, colour, strokeFn, grossFn, from, to) => {
     let g = `<tr class="gr"><td class="lbl" style="color:${colour}">${esc(name)}</td>`;
     let n = `<tr class="netrow"><td class="lbl">net</td>`;
@@ -1015,15 +1194,24 @@ function viewCard(){
       body += `<tr class="sep"><td class="lbl"></td>${"<td></td>".repeat(to - from + 2)}</tr>`;
     });
 
-    let res = `<tr class="rowres"><td class="lbl">Result</td>`;
-    let sw = 0, dw = 0;
+    /* Running match status, not per-hole winners. A golfer looking at this
+       wants "who's up and by how much", not to add up S's and D's. */
+    let res = `<tr class="rowres"><td class="lbl">Match</td>`;
+    let lastU = null;
     for (let h = from; h <= to; h++){
-      const w = st.holes[h];
-      if (w === "s") sw++; if (w === "d") dw++;
-      res += `<td class="${w === "s" ? "w" : w === "d" ? "l" : w === "h" ? "hh" : ""}">${
-        w === "s" ? "S" : w === "d" ? "D" : w === "h" ? "&frac12;" : ""}</td>`;
+      const u = run[h];
+      if (u === null){ res += `<td></td>`; continue; }
+      lastU = u;
+      res += `<td class="${u > 0 ? "w" : u < 0 ? "l" : "hh"}">${
+        u === 0 ? "AS" : `${Math.abs(u)} UP`}</td>`;
     }
-    res += `<td class="tot">${sw || dw ? `${sw}&ndash;${dw}` : ""}</td></tr>`;
+    let totTxt = "";
+    if (to === 17 && st.done){
+      totTxt = st.winner ? `${shortSide(st.winner)} ${st.text}` : "AS &frac12;&ndash;&frac12;";
+    } else if (lastU !== null){
+      totTxt = lastU === 0 ? "AS" : `${shortSide(lastU > 0 ? "s" : "d")} ${Math.abs(lastU)} UP`;
+    }
+    res += `<td class="tot">${totTxt}</td></tr>`;
     return `<div class="gridwrap"><div class="gscroll"><table class="gc">
       <thead>${head}</thead><tbody>${par}${si}${body}${res}</tbody></table></div></div>`;
   };
@@ -1059,11 +1247,13 @@ function viewSheet(){
         PLAYERS[id].t === "s" ? "Snots" : "Ducks"}</span></div>
        <div class="cc mono">${PLAYERS[id].code}</div>`).join("") + `</div>`;
   return `<div class="sheet" data-close="1"><div class="sheet-in">
-    <h3>${esc(Session.me.n)}</h3>
+    <div class="sheethdr"><h3>${esc(Session.me.n)}</h3>
+      <button class="iconbtn" data-closebtn="1">&times;</button></div>
     <p>${Session.me.t === "s" ? "Snots" : "Ducks"} &middot; Index ${fmtIdx(Session.me.idx)}${
       Session.admin ? " &middot; Commissioner" : ""}<br>
       ${Store.online ? "Live sync is on." : "Offline &mdash; scores save here and sync when you get service."}</p>
     ${codes}
+    <button class="btn ghost" data-closebtn="1">Close</button>
     <button class="btn ghost" data-signout="1">Return to lock screen</button>
   </div></div>`;
 }
@@ -1076,6 +1266,7 @@ function wire(){
     const n = el.dataset.nav;
     if (n === "home")  V.view = "home";
     if (n === "board") V.view = "board";
+    if (n === "stats") V.view = "stats";
     if (n === "round"){ V.view = "round"; V.round = +el.dataset.i; }
     if (n === "match"){
       V.view = "match"; V.matchId = el.dataset.id;
@@ -1090,8 +1281,12 @@ function wire(){
 
   document.querySelectorAll("[data-sheet]").forEach(el =>
     el.onclick = () => { V.sheet = el.dataset.sheet; render(); });
+  document.querySelectorAll("[data-sort]").forEach(el =>
+    el.onclick = () => { V.statSort = el.dataset.sort; render(); });
   document.querySelectorAll("[data-close]").forEach(el =>
     el.onclick = e => { if (e.target === el){ V.sheet = null; render(); } });
+  document.querySelectorAll("[data-closebtn]").forEach(el =>
+    el.onclick = () => { V.sheet = null; render(); });
   const so = document.querySelector("[data-signout]");
   if (so) so.onclick = () => { Session.id = null; V.sheet = null; V.view = "home"; render(); };
 
@@ -1123,9 +1318,23 @@ function wire(){
       Store.setScore(m.id, V.hole, el.dataset.entrant, v, Session.id, true);
       patch();
     };
-    el.onfocus = () => el.select();
+    el.onfocus = () => {
+      el.select();
+      // iOS slides the keyboard up over the page; put the active box mid-screen.
+      setTimeout(() => el.scrollIntoView({block: "center", behavior: "smooth"}), 260);
+    };
     el.onblur = () => { if (V.pending){ V.pending = false; render(); } else patch(); };
   });
+  const proceed = document.querySelector("[data-proceed]");
+  if (proceed) proceed.onclick = () => {
+    const ae = document.activeElement;
+    if (ae && ae.classList.contains("gsin")) ae.blur();   // commit what's typed
+    const {r, m} = ALL_MATCHES[V.matchId];
+    const st = matchState(r, m, Store.scores(m.id));
+    if (V.hole === 17 || st.done){ V.view = "card"; }
+    else V.hole = Math.min(17, V.hole + 1);
+    V.pending = false; render(); window.scrollTo(0, 0);
+  };
   document.querySelectorAll("[data-clear]").forEach(el => el.onclick = () => {
     const {m} = ALL_MATCHES[V.matchId];
     Store.setScore(m.id, V.hole, el.dataset.clear, null, Session.id, true);
@@ -1202,7 +1411,7 @@ render();
 
 window.MI26 = {PLAYERS, COURSES, ROUNDS, ALL_MATCHES, Store, Session, V,
   strokesOn, playerStrokes, teamStrokes, sideHole, matchState, standings, markCls,
-  render, patch, MATCH_COUNT, myMatch,
+  playerStats, toPar, render, patch, MATCH_COUNT, myMatch,
   resetAll(){ Object.keys(ALL_MATCHES).forEach(id => Store.resetMatch(id)); render(); }};
 </script>
 </body>
