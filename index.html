@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Michigan '26">
-<title>Michigan '26 &middot; Snots vs Ducks</title>
+<meta name="apple-mobile-web-app-title" content="Crusade '26">
+<title>Crusade in the Creek &middot; Snots vs Ducks</title>
 <style>
 :root{
   --bg:#eef1f4; --surface:#fff; --surface2:#f4f6f8; --surface3:#e7ebef;
@@ -18,9 +18,11 @@
   --shadow:0 1px 2px rgba(14,18,22,.06), 0 1px 8px rgba(14,18,22,.04);
   --safe-b:env(safe-area-inset-bottom,0px);
 }
-.splash{ /* the lock screen keeps the dark space theme */
-  --surface:#1d2025; --surface2:#262a30; --line:#3a4048;
-  --text:#e9ecef; --muted:#98a1ad; --dim:#6b7480; --red:#e03131;
+/* The lock screen wears the Crusade in the Creek crest: forest green, gold, cream. */
+.splash{
+  --crest-green:#14472f; --crest-deep:#0e3322; --crest-gold:#c9a227; --crest-cream:#f2e7cd;
+  --surface:#0e3322; --surface2:#123d29; --line:#2c6144;
+  --text:#f2e7cd; --muted:#a9bfae; --dim:#7d9a88; --red:#c9a227;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
@@ -48,28 +50,28 @@ input,textarea{font-family:inherit}
 
 /* ---------- lock screen ---------- */
 .splash{position:fixed;inset:0;background:
-  radial-gradient(1100px 620px at 50% -14%, #1e2a44 0%, #14161a 64%);
+  radial-gradient(900px 620px at 50% 18%, #1a5638 0%, #0b2a1c 70%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:24px;z-index:100;overflow:hidden}
+  padding:22px;z-index:100;overflow:hidden}
 .stars{position:absolute;inset:0;pointer-events:none}
-.stars i{position:absolute;background:#fff;border-radius:50%;opacity:.5;
+.stars i{position:absolute;background:var(--crest-gold);border-radius:50%;opacity:.4;
   animation:tw 3.4s ease-in-out infinite}
-@keyframes tw{0%,100%{opacity:.14}50%{opacity:.8}}
-.splash-inner{position:relative;z-index:2;width:100%;max-width:400px;text-align:center}
-.kicker{font-size:11px;letter-spacing:3.2px;color:#c7ad63;text-transform:uppercase;font-weight:750}
-.bigtitle{font-size:39px;font-weight:850;letter-spacing:-1.2px;margin:5px 0 2px;line-height:1;color:#fff}
-.bigtitle .yr{color:#c7ad63}
-.dates{font-size:11.5px;color:var(--dim);letter-spacing:1.6px;text-transform:uppercase;font-weight:600}
-.scene{width:100%;max-width:330px;margin:14px auto 6px;display:block}
-.teamrow{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px}
+@keyframes tw{0%,100%{opacity:.1}50%{opacity:.55}}
+.splash-inner{position:relative;z-index:2;width:100%;max-width:390px;text-align:center}
+.crest{width:100%;max-width:268px;margin:0 auto 16px;display:block}
+.dates{font-size:11px;color:var(--crest-gold);letter-spacing:2.6px;text-transform:uppercase;
+  font-weight:750;margin-bottom:15px}
+.teamrow{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:15px}
 .teamrow .t{font-size:12.5px;font-weight:850;letter-spacing:2.4px}
-.teamrow .t.s{color:#d4b45c} .teamrow .t.d{color:#5fbf87}
-.teamrow .vs{font-size:11px;font-weight:800;color:var(--dim);letter-spacing:1px}
+.teamrow .t.s{color:var(--crest-cream)} .teamrow .t.d{color:#7fc79b}
+.teamrow .vs{font-size:10.5px;font-weight:800;color:var(--dim);letter-spacing:1px}
 .codein{width:100%;text-align:center;font-size:26px;letter-spacing:11px;font-weight:800;
-  padding:15px 10px 15px 21px;border-radius:13px;background:var(--surface);
-  border:1.5px solid var(--line);color:var(--text);text-transform:uppercase;outline:none}
-.codein:focus{border-color:#c7ad63}
-.codein::placeholder{letter-spacing:9px;color:#4a525c;font-weight:600}
+  padding:15px 10px 15px 21px;border-radius:13px;background:rgba(0,0,0,.28);
+  border:1.5px solid var(--line);color:var(--crest-cream);text-transform:uppercase;outline:none}
+.codein:focus{border-color:var(--crest-gold)}
+.codein::placeholder{letter-spacing:9px;color:#4d6f5b;font-weight:600}
+.splash .btn{background:var(--crest-gold);color:#0e3322}
+.splash .hint{color:var(--dim)}
 .btn{display:block;width:100%;padding:15px;border-radius:13px;background:var(--red);
   color:#fff;font-weight:750;font-size:16px;margin-top:10px;letter-spacing:.2px}
 .btn:active{filter:brightness(.9)}
@@ -440,7 +442,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-28.7";      // bump on every deploy; drives the update prompt
+const BUILD = "2026-07-28.8";      // bump on every deploy; drives the update prompt
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -1050,10 +1052,8 @@ function viewLogin(){
       width:${s}px;height:${s}px;animation-delay:${(Math.random()*3.4).toFixed(1)}s"></i>`;
   }
   return `<div class="splash"><div class="stars">${stars}</div><div class="splash-inner">
-    <div class="kicker">Shanty Creek Resort</div>
-    <div class="bigtitle">MICHIGAN <span class="yr">'26</span></div>
-    <div class="dates">August 13 &ndash; 15 &middot; Bellaire, MI</div>
-    ${sceneSVG()}
+    ${crestSVG()}
+    <div class="dates">August 13 &ndash; 15, 2026</div>
     <div class="teamrow"><span class="t s">SNOTS</span><span class="vs">VS</span>
       <span class="t d">DUCKS</span></div>
     <input class="codein mono" id="code" maxlength="4" placeholder="CODE"
@@ -1074,6 +1074,73 @@ function wireLogin(){
   $("#go").onclick = submit;
   inp.oninput = () => { $("#err").textContent = ""; if (inp.value.length === 4) submit(); };
   inp.onkeydown = e => { if (e.key === "Enter") submit(); };
+}
+
+/* The Crusade in the Creek crest, drawn to match the printed badge:
+   forest-green roundel, gold rings, arced lettering, astronaut vs duck over
+   crossed clubs with the creek running between them. */
+function crestSVG(){
+  const G = "#14472f", DEEP = "#0b2a1c", GOLD = "#c9a227", CREAM = "#f2e7cd";
+  const pine = (x, y, s) => `<g transform="translate(${x},${y}) scale(${s})">
+    <path d="M0 -24 L10 -6 H4.5 L13 7 H5.5 L15 20 H-15 L-5.5 7 H-13 L-4.5 -6 H-10 Z"
+      fill="${CREAM}" stroke="${G}" stroke-width="2"/>
+    <rect x="-2.4" y="18" width="4.8" height="8" fill="${CREAM}" stroke="${G}" stroke-width="2"/></g>`;
+  const club = rot => `<g transform="rotate(${rot} 200 195)">
+    <rect x="196" y="112" width="8" height="150" rx="4" fill="${GOLD}" stroke="${DEEP}" stroke-width="2.6"/>
+    <path d="M186 114 h28 a9 9 0 0 1 0 18 h-28 a9 9 0 0 1 0-18 z"
+      fill="${GOLD}" stroke="${DEEP}" stroke-width="2.6"/></g>`;
+  return `<svg class="crest" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="Crusade in the Creek">
+    <defs>
+      <path id="arcTop" d="M 54,204 A 146,146 0 0 1 346,204"/>
+      <path id="arcBot" d="M 82,212 A 124,124 0 0 0 318,212"/>
+      <clipPath id="roundel"><circle cx="200" cy="200" r="166"/></clipPath>
+    </defs>
+    <circle cx="200" cy="200" r="198" fill="${DEEP}"/>
+    <circle cx="200" cy="200" r="191" fill="${GOLD}"/>
+    <circle cx="200" cy="200" r="182" fill="${G}"/>
+    <circle cx="200" cy="200" r="167" fill="none" stroke="${GOLD}" stroke-width="3"/>
+
+    <g clip-path="url(#roundel)" transform="translate(200,190) scale(.79) translate(-200,-200)">
+      ${club(-24)} ${club(24)}
+      ${pine(200, 158, .92)} ${pine(158, 178, .6)} ${pine(242, 178, .6)}
+
+      <!-- the creek, running down between them -->
+      <path d="M200 232 c-15 12 8 22 -6 34 c-11 10 9 18 1 30"
+        stroke="${CREAM}" stroke-width="11" fill="none" stroke-linecap="round"/>
+
+      <!-- astronaut (Snots) -->
+      <g stroke="${DEEP}" stroke-width="3" stroke-linejoin="round">
+        <rect x="92" y="228" width="20" height="42" rx="9" fill="${CREAM}"/>
+        <path d="M106 234 h44 a17 17 0 0 1 17 17 v34 h-61 z" fill="${CREAM}"/>
+        <path d="M160 250 l22 12" stroke="${CREAM}" stroke-width="16" stroke-linecap="round"/>
+        <circle cx="186" cy="264" r="10" fill="${CREAM}"/>
+        <circle cx="140" cy="196" r="33" fill="${CREAM}"/>
+        <path d="M142 174 a23 23 0 0 1 0 44 z" fill="${G}"/>
+        <path d="M150 182 a15 15 0 0 0 -4 26" stroke="${CREAM}" stroke-width="3.5"
+          fill="none" stroke-linecap="round" opacity=".7"/>
+      </g>
+
+      <!-- duck (Ducks) -->
+      <g stroke="${DEEP}" stroke-width="3" stroke-linejoin="round">
+        <path d="M294 234 h-44 a17 17 0 0 0 -17 17 v34 h61 z" fill="${CREAM}"/>
+        <path d="M240 250 l-22 12" stroke="${CREAM}" stroke-width="16" stroke-linecap="round"/>
+        <circle cx="214" cy="264" r="10" fill="${CREAM}"/>
+        <circle cx="262" cy="196" r="31" fill="${DEEP}"/>
+        <path d="M232 194 l-26 7 l26 10 z" fill="#e8820c"/>
+        <circle cx="248" cy="185" r="5.5" fill="${CREAM}" stroke="none"/>
+        <circle cx="246" cy="184" r="2.2" fill="${DEEP}" stroke="none"/>
+        <path d="M234 166 a34 34 0 0 1 57 5 l-59 6 z" fill="${CREAM}"/>
+      </g>
+    </g>
+
+    <text fill="${CREAM}" font-size="27" font-weight="800" letter-spacing=".5"
+      font-family="Georgia,'Times New Roman',serif" text-anchor="middle">
+      <textPath href="#arcTop" startOffset="50%">CRUSADE IN THE CREEK</textPath></text>
+    <text fill="${GOLD}" font-size="14" font-weight="800" letter-spacing="1.6"
+      font-family="Georgia,'Times New Roman',serif" text-anchor="middle">
+      <textPath href="#arcBot" startOffset="50%">SHANTY CREEK &#183; BELLAIRE, MI</textPath></text>
+  </svg>`;
 }
 
 /* An astronaut and a duck, both with a hand on the cup. */
@@ -1125,7 +1192,7 @@ function sceneSVG(){
 function viewHome(){
   const st = standings(), me = Session.me, mineId = myMatch();
   return `<div class="topbar">
-      <h1>Michigan '26<div class="sub">${esc(me.n)} &middot; ${me.t === "s" ? "Snots" : "Ducks"}</div></h1>
+      <h1>Crusade in the Creek<div class="sub">${esc(me.n)} &middot; ${me.t === "s" ? "Snots" : "Ducks"}</div></h1>
       <button class="iconbtn" data-sheet="menu">&#9776;</button></div>
     <div class="wrap">
       ${boardHTML(st)}
