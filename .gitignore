@@ -1,0 +1,6 @@
+# Publish the app and nothing else.
+# Pat's spreadsheet contains all 20 players' email addresses and handicap
+# indexes — it must never be pushed to a public repo.
+*
+!index.html
+!.gitignore
