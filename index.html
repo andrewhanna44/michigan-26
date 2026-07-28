@@ -759,18 +759,30 @@ const Store = (() => {
           for (const id in all) if (mergeRemote(id, all[id])) changed = true;
           if (changed){ flush(); this._emit(); }
         }, err => console.warn("sync read blocked:", err.code || err));
+        /* The server is the authority here, not this phone. Firebase applies a
+           write to its local cache before the server has accepted it, so a
+           message the rules reject briefly looks real. If we only ever ADDED
+           from the snapshot, that phantom would live on this phone forever,
+           showing its owner a message nobody else can see. So: rebuild from
+           the snapshot each time, keeping only local messages that genuinely
+           haven't reached the server yet (still sending, or failed). */
         onValue(ref(db, `${EVENT_KEY}/chat`), snap => {
-          const all = snap.val() || {}; let changed = false;
+          const all = snap.val() || {}, next = {};
           for (const ch in all){
-            chatData[ch] = chatData[ch] || {};
+            next[ch] = {};
             for (const id in all[ch]){
               const m = all[ch][id];
-              if (!m || typeof m.t !== "number") continue;
-              const cur = chatData[ch][id];
-              if (!cur || cur.state){ chatData[ch][id] = m; changed = true; }
+              if (m && typeof m.t === "number") next[ch][id] = m;
             }
           }
-          if (changed){ flushChat(); this._emit(); }
+          for (const ch in chatData){
+            next[ch] = next[ch] || {};
+            for (const id in chatData[ch]){
+              const m = chatData[ch][id];
+              if (m && m.state && !next[ch][id]) next[ch][id] = m;
+            }
+          }
+          chatData = next; flushChat(); this._emit();
         }, err => { chatBlocked = err.code || String(err);
                     console.warn("chat read blocked:", chatBlocked); this._emit(); });
       } catch(e){ console.warn("sync unavailable", e); }
