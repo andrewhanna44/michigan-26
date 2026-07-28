@@ -300,6 +300,11 @@ table.gc .bestrow td{font-weight:800}
   padding:11px 13px;margin-bottom:10px;font-size:12.5px;line-height:1.5}
 .warnbar b{color:#5c4100}
 
+.updbar{position:sticky;top:0;z-index:60;background:var(--red);color:#fff;
+  padding:11px 14px;padding-top:calc(11px + env(safe-area-inset-top,0px));
+  font-size:13.5px;font-weight:750;text-align:center;width:100%;display:block}
+.updbar:active{filter:brightness(.9)}
+
 /* ---------- misc ---------- */
 .syncpill{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);
   padding:10px 12px;justify-content:center}
@@ -368,6 +373,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
+const BUILD = "2026-07-28.6";      // bump on every deploy; drives the update prompt
 
 /* ==========================================================================
    2. DATA  (from Pat's "Michigan '26 Scoring File")
@@ -826,6 +832,24 @@ function myMatch(){
    ========================================================================== */
 let V = {view:"home", round:0, matchId:null, hole:0, sheet:null, pending:false,
          chan:"all", draft:null, refocusChat:false, statSort:"net"};
+
+/* GitHub Pages caches the page, so a phone can keep running an old build for
+   hours after a fix ships. Poll for a newer BUILD and offer a one-tap reload —
+   nobody on a golf course is going to know how to clear a browser cache. */
+let updateReady = false;
+async function checkForUpdate(){
+  if (updateReady) return;
+  try {
+    const res = await fetch(`index.html?cb=${Date.now()}`, {cache: "no-store"});
+    if (!res.ok) return;
+    const m = (await res.text()).match(/const BUILD = "([^"]+)"/);
+    if (m && m[1] !== BUILD){ updateReady = true; if (Session.id) render(); }
+  } catch(e){ /* offline — try again later */ }
+}
+function applyUpdate(){
+  // a plain reload can be served from cache; a fresh query string cannot
+  location.replace(location.pathname + "?v=" + Date.now());
+}
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fmtPt = n => Number.isInteger(n) ? String(n) : n.toFixed(1).replace(/\.0$/, "");
@@ -857,14 +881,15 @@ const dotsHTML = n => n <= 0 ? "" :
 function render(){
   const app = $("#app");
   if (!Session.id){ app.innerHTML = viewLogin(); wireLogin(); return; }
-  let html = "";
-  if (V.view === "home")  html = viewHome();
-  if (V.view === "board") html = viewBoard();
-  if (V.view === "stats") html = viewStats();
-  if (V.view === "chat")  html = viewChat();
-  if (V.view === "round") html = viewRound();
-  if (V.view === "match") html = viewMatch();
-  if (V.view === "card")  html = viewCard();
+  let html = updateReady
+    ? `<button class="updbar" data-update="1">A newer version is ready &mdash; tap to update</button>` : "";
+  if (V.view === "home")  html += viewHome();
+  if (V.view === "board") html += viewBoard();
+  if (V.view === "stats") html += viewStats();
+  if (V.view === "chat")  html += viewChat();
+  if (V.view === "round") html += viewRound();
+  if (V.view === "match") html += viewMatch();
+  if (V.view === "card")  html += viewCard();
   if (V.sheet) html += viewSheet();
   app.innerHTML = html;
   wire();
@@ -1433,7 +1458,8 @@ function viewSheet(){
       <button class="iconbtn" data-closebtn="1">&times;</button></div>
     <p>${Session.me.t === "s" ? "Snots" : "Ducks"} &middot; Index ${fmtIdx(Session.me.idx)}${
       Session.admin ? " &middot; Commissioner" : ""}<br>
-      ${Store.online ? "Live sync is on." : "Offline &mdash; scores save here and sync when you get service."}</p>
+      ${Store.online ? "Live sync is on." : "Offline &mdash; scores save here and sync when you get service."}<br>
+      <span style="color:var(--dim)">Version ${BUILD}</span></p>
     ${codes}
     <button class="btn ghost" data-closebtn="1">Close</button>
     <button class="btn ghost" data-signout="1">Return to lock screen</button>
@@ -1462,6 +1488,8 @@ function wire(){
     V.sheet = null; render(); window.scrollTo(0, 0);
   });
 
+  const upd = document.querySelector("[data-update]");
+  if (upd) upd.onclick = applyUpdate;
   document.querySelectorAll("[data-sheet]").forEach(el =>
     el.onclick = () => { V.sheet = el.dataset.sheet; render(); });
   document.querySelectorAll("[data-sort]").forEach(el =>
@@ -1633,9 +1661,17 @@ Store.onChange(() => {
 Store.connect();
 render();
 
+// check for a new build on load, when the app comes back to the foreground,
+// and every ten minutes while it's open
+setTimeout(checkForUpdate, 4000);
+setInterval(checkForUpdate, 600000);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") checkForUpdate();
+});
+
 window.MI26 = {PLAYERS, COURSES, ROUNDS, ALL_MATCHES, Store, Session, V,
   strokesOn, playerStrokes, teamStrokes, sideHole, matchState, standings, markCls,
-  playerStats, toPar, render, patch, MATCH_COUNT, myMatch,
+  playerStats, toPar, render, patch, MATCH_COUNT, myMatch, BUILD, checkForUpdate,
   resetAll(){ Object.keys(ALL_MATCHES).forEach(id => Store.resetMatch(id)); render(); }};
 </script>
 </body>
