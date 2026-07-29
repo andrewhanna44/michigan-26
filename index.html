@@ -596,7 +596,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-29.1";      // must match version.txt — that's what phones poll
+const BUILD = "2026-07-29.2";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -1185,13 +1185,21 @@ const Store = (() => {
            showing its owner a message nobody else can see. So: rebuild from
            the snapshot each time, keeping only local messages that genuinely
            haven't reached the server yet (still sending, or failed). */
+        /* The server is authoritative here, exactly as with chat. Firebase applies
+           a write locally before the rules have judged it, so a value the server
+           rejects briefly looks real. Taking only "newer" data would leave that
+           phantom on this phone forever, and only this phone would see it. So:
+           mirror the snapshot, and keep only the fields we recognise. */
         onValue(ref(db, `${EVENT_KEY}/tiebreak`), snap => {
           const v = snap.val();
-          if (v && typeof v.t === "number" && (!tie || v.t > tie.t)){
-            tie = v;
-            try { localStorage.setItem(LS_TIE, JSON.stringify(tie)); } catch(e){}
-            this._emit();
-          }
+          tie = (v && typeof v.t === "number")
+            ? {format: typeof v.format === "string" ? v.format : "",
+               result: typeof v.result === "string" ? v.result : "",
+               winner: (v.winner === "s" || v.winner === "d") ? v.winner : null,
+               by: typeof v.by === "string" ? v.by : "", t: v.t}
+            : null;
+          try { localStorage.setItem(LS_TIE, JSON.stringify(tie)); } catch(e){}
+          this._emit();
         }, () => {});
         onValue(ref(db, `${EVENT_KEY}/chat`), snap => {
           const all = snap.val() || {}, next = {};
