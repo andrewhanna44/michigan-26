@@ -101,6 +101,42 @@ input,textarea{font-family:inherit}
 .pbar{display:flex;height:7px;border-radius:5px;overflow:hidden;margin-top:13px;background:var(--surface3)}
 .pbar .s{background:var(--snots-solid)} .pbar .d{background:var(--ducks-solid)}
 
+/* ---------- tiebreak ---------- */
+.tug{background:#12301f;border:1.5px solid var(--snots-solid);border-radius:15px;
+  padding:15px 14px;margin-bottom:12px;text-align:center;box-shadow:var(--shadow)}
+.tug.decided.s{border-color:var(--snots-solid)} .tug.decided.d{border-color:var(--ducks-solid)}
+.tugtitle{font-size:11px;font-weight:850;letter-spacing:2.2px;text-transform:uppercase;
+  color:#c9a227}
+.tugsvg{width:100%;max-width:320px;margin:8px auto 4px;display:block}
+.tugsub{font-size:13px;color:#a9bfae;font-weight:650}
+.tugsub.small{font-size:12px;color:#7d9a88;margin-top:6px}
+.tugwin{font-size:20px;font-weight:850;color:#f2e7cd;letter-spacing:.3px;margin:6px 0 10px}
+.tugrow{display:flex;gap:10px;justify-content:space-between;align-items:baseline;
+  border-top:1px solid #2c6144;padding:8px 2px;font-size:12.5px;text-align:left}
+.tugrow span{color:#7d9a88;font-weight:700;flex:none}
+.tugrow b{color:#f2e7cd;font-weight:700;text-align:right}
+.tugby{font-size:11px;color:#7d9a88;margin-top:8px}
+.tugform{margin-top:12px;text-align:left}
+.tugform label{display:block;font-size:12px;color:#a9bfae;font-weight:650;
+  margin:0 0 6px;line-height:1.5}
+.tbin{width:100%;border-radius:11px;padding:11px 12px;font-size:15px;
+  background:rgba(0,0,0,.3);border:1.5px solid #2c6144;color:#f2e7cd;outline:none;
+  resize:none;margin-bottom:10px}
+.tbin:focus{border-color:#c9a227}
+.tbwin{display:flex;gap:8px;margin-bottom:4px}
+.tbteam{flex:1;padding:13px 6px;border-radius:11px;font-weight:850;font-size:14px;
+  letter-spacing:1.4px;border:1.5px solid}
+.tbteam.s{background:var(--snots-solid);border-color:var(--snots-solid);color:#fff}
+.tbteam.d{background:var(--ducks-solid);border-color:var(--ducks-solid);color:#fff}
+.tbteam:active{filter:brightness(.88)}
+.tug .btn{margin-top:4px}
+.tugL{animation:tugl 2.4s ease-in-out infinite alternate}
+.tugR{animation:tugr 2.4s ease-in-out infinite alternate}
+.tugrope{animation:tugc 2.4s ease-in-out infinite alternate}
+@keyframes tugl{from{transform:translateX(-7px)}to{transform:translateX(5px)}}
+@keyframes tugr{from{transform:translateX(7px)}to{transform:translateX(-5px)}}
+@keyframes tugc{from{transform:translateX(-2px)}to{transform:translateX(2px)}}
+
 .series{background:var(--surface);border:1px solid var(--line);border-radius:13px;
   padding:11px 14px;margin-bottom:11px;box-shadow:var(--shadow);display:flex;
   align-items:center;gap:10px;flex-wrap:wrap}
@@ -560,7 +596,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-28.12";     // must match version.txt — that's what phones poll
+const BUILD = "2026-07-29.1";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -801,6 +837,21 @@ function standings(){
 }
 
 /**
+ * Where the Crusade stands overall.
+ *   complete  - every match final
+ *   tied      - complete and level on points, so a tiebreak decides it
+ *   winner    - "s" | "d" | null (null while tied and undeclared)
+ */
+function eventResult(){
+  const st = standings();
+  const complete = st.fin === MATCH_COUNT;
+  if (!complete) return {complete: false, tied: false, winner: null, st};
+  if (st.s !== st.d) return {complete: true, tied: false, winner: st.s > st.d ? "s" : "d", st};
+  const tb = Store.tiebreak();
+  return {complete: true, tied: true, winner: (tb && tb.winner) || null, tb, st};
+}
+
+/**
  * Per-player totals across the whole trip.
  * Best Ball / Shamble / Singles have a score per man, so it's his own.
  * Scramble / Alternate Shot only have a team score — that score is credited
@@ -876,7 +927,9 @@ function mvp(){
    ========================================================================== */
 const Store = (() => {
   const LS = `${EVENT_KEY}_data`, LS_CHAT = `${EVENT_KEY}_chat`, LS_SEEN = `${EVENT_KEY}_chatseen`;
-  let data = {}, chatData = {}, chatSeen = {};
+  const LS_TIE = `${EVENT_KEY}_tie`;
+  let data = {}, chatData = {}, chatSeen = {}, tie = null;
+  try { tie = JSON.parse(localStorage.getItem(LS_TIE) || "null"); } catch(e){ tie = null; }
   let db = null, connected = false, authed = false, chatBlocked = null, listeners = [];
   /* Every merge is "newest timestamp wins". If we trusted each phone's own
      clock, one man with a wrong clock would either lose every correction he
@@ -938,6 +991,24 @@ const Store = (() => {
       flush();
       if (!silent) this._emit();
       if (db) update(ref(db, `${EVENT_KEY}/matches/${id}/scores/${h}/${entrant}`), cell).catch(()=>{});
+    },
+
+    /* ---- tiebreak ----------------------------------------------------------
+       If the Crusade finishes level, Pat or Andrew declare the tiebreak on the
+       spot: first what it is, then who won it. Deliberately free text, because
+       nobody knows in advance what the course will allow. */
+    tiebreak(){ return tie && (tie.format || tie.winner) ? tie : null; },
+    setTiebreak(patch, by){
+      tie = {...(tie || {}), ...patch, by, t: now()};
+      try { localStorage.setItem(LS_TIE, JSON.stringify(tie)); } catch(e){}
+      this._emit();
+      if (db) update(ref(db, `${EVENT_KEY}/tiebreak`), tie).catch(()=>{});
+    },
+    clearTiebreak(by){
+      tie = {format: "", result: "", winner: null, by, t: now()};
+      try { localStorage.setItem(LS_TIE, JSON.stringify(tie)); } catch(e){}
+      this._emit();
+      if (db) update(ref(db, `${EVENT_KEY}/tiebreak`), tie).catch(()=>{});
     },
 
     scorer(id){ return (data[id] || {}).scorer || null; },
@@ -1114,6 +1185,14 @@ const Store = (() => {
            showing its owner a message nobody else can see. So: rebuild from
            the snapshot each time, keeping only local messages that genuinely
            haven't reached the server yet (still sending, or failed). */
+        onValue(ref(db, `${EVENT_KEY}/tiebreak`), snap => {
+          const v = snap.val();
+          if (v && typeof v.t === "number" && (!tie || v.t > tie.t)){
+            tie = v;
+            try { localStorage.setItem(LS_TIE, JSON.stringify(tie)); } catch(e){}
+            this._emit();
+          }
+        }, () => {});
         onValue(ref(db, `${EVENT_KEY}/chat`), snap => {
           const all = snap.val() || {}, next = {};
           for (const ch in all){
@@ -1397,6 +1476,7 @@ function viewHome(){
       <button class="iconbtn" data-sheet="menu">&#9776;</button></div>
     <div class="wrap">
       ${boardHTML(st)}
+      ${tiebreakHTML()}
       ${seriesHTML()}
       ${mineId ? `<button class="btn big" data-nav="match" data-id="${mineId}"
         style="margin-top:0">Your Match</button>` : ""}
@@ -1468,11 +1548,12 @@ function boardHTML(st){
       : `${st.fin} of ${MATCH_COUNT} matches complete`}
       &middot; <b>${fmtPt(CLINCH)}</b> to clinch</div></div>`;
 }
-/** All-time series. Adds this year automatically once every match is final. */
+/** All-time series. Adds this year once the Crusade is decided — including on a
+    tiebreak, which is why it reads the declared winner rather than the points. */
 function seriesHTML(){
-  const st = standings();
+  const ev = eventResult();
   const rows = [...SERIES];
-  if (st.fin === MATCH_COUNT && st.s !== st.d) rows.push({y: 2026, w: st.s > st.d ? "s" : "d", now: true});
+  if (ev.complete && ev.winner) rows.push({y: 2026, w: ev.winner, now: true});
   const s = rows.filter(r => r.w === "s").length, d = rows.filter(r => r.w === "d").length;
   const lead = s > d ? `Snots lead the series` : d > s ? `Ducks lead the series` : `Series all square`;
   return `<div class="series">
@@ -1480,6 +1561,86 @@ function seriesHTML(){
     <div class="sy">${rows.map(r => `<span class="${r.w}${r.now ? " now" : ""}">${r.y}</span>`).join("")}</div>
   </div>`;
 }
+/* Astronaut and duck hauling on a rope. Shown only when the Crusade ends level. */
+function tugSVG(){
+  const CREAM = "#f2e7cd", DEEP = "#0b2a1c", GOLD = "#c9a227", GREEN = "#1f5f3f";
+  return `<svg class="tugsvg" viewBox="0 0 420 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <g class="tugL">
+      <path d="M96 96 L150 84" stroke="${CREAM}" stroke-width="11" stroke-linecap="round"/>
+      <rect x="40" y="74" width="44" height="52" rx="15" fill="${CREAM}" stroke="${DEEP}" stroke-width="3.5"/>
+      <circle cx="62" cy="52" r="27" fill="${CREAM}" stroke="${DEEP}" stroke-width="3.5"/>
+      <path d="M64 32 a20 20 0 0 1 0 40 z" fill="${GOLD}"/>
+      <circle cx="96" cy="94" r="10" fill="${CREAM}" stroke="${DEEP}" stroke-width="3"/>
+    </g>
+    <path class="tugrope" d="M150 84 Q210 104 270 84" stroke="${GOLD}" stroke-width="7"
+      fill="none" stroke-linecap="round"/>
+    <g class="tugR">
+      <path d="M324 96 L270 84" stroke="${CREAM}" stroke-width="11" stroke-linecap="round"/>
+      <path d="M380 74 h-44 a16 16 0 0 0 -16 16 v36 h60 z" fill="${CREAM}" stroke="${DEEP}" stroke-width="3.5"/>
+      <circle cx="356" cy="52" r="26" fill="${GREEN}" stroke="${DEEP}" stroke-width="3.5"/>
+      <path d="M330 50 l-24 6 l24 9 z" fill="#e8820c" stroke="${DEEP}" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="344" cy="43" r="4.6" fill="${CREAM}"/><circle cx="342.6" cy="42" r="2" fill="${DEEP}"/>
+      <circle cx="324" cy="94" r="10" fill="${CREAM}" stroke="${DEEP}" stroke-width="3"/>
+    </g>
+    <path d="M0 132 h420" stroke="${DEEP}" stroke-width="4" opacity=".35"/>
+    <path d="M210 118 v22" stroke="${GOLD}" stroke-width="4" stroke-dasharray="5 5"/></svg>`;
+}
+
+/** The tiebreak panel. Everyone sees the stand-off; only Pat and Andrew can act. */
+function tiebreakHTML(){
+  const ev = eventResult();
+  if (!ev.complete || !ev.tied) return "";
+  const tb = ev.tb || {};
+  const admin = Session.admin;
+
+  if (ev.winner){
+    const w = ev.winner === "s" ? "SNOTS" : "DUCKS";
+    return `<div class="tug decided ${ev.winner}">
+      <div class="tugtitle">The Crusade is tied ${fmtPt(ev.st.s)}&ndash;${fmtPt(ev.st.d)}</div>
+      ${tugSVG()}
+      <div class="tugwin">${w} WIN ON THE TIEBREAK</div>
+      ${tb.format ? `<div class="tugrow"><span>Tiebreak</span><b>${esc(tb.format)}</b></div>` : ""}
+      ${tb.result ? `<div class="tugrow"><span>Result</span><b>${esc(tb.result)}</b></div>` : ""}
+      <div class="tugby">Declared by ${esc(PLAYERS[tb.by] ? PLAYERS[tb.by].n : "a commissioner")}</div>
+      ${admin ? `<button class="btn ghost" data-tbreset="1" style="margin-top:10px">Redo the tiebreak</button>` : ""}
+    </div>`;
+  }
+
+  // stage 1: nobody has said what the tiebreak is yet
+  if (!tb.format){
+    return `<div class="tug">
+      <div class="tugtitle">The Crusade is tied ${fmtPt(ev.st.s)}&ndash;${fmtPt(ev.st.d)}</div>
+      ${tugSVG()}
+      <div class="tugsub">It comes down to a tiebreak.</div>
+      ${admin ? `<div class="tugform">
+        <label for="tbformat">What is the tiebreak? Decide it on the spot &mdash; whatever the
+          course will allow.</label>
+        <textarea id="tbformat" class="tbin" rows="2" maxlength="300"
+          placeholder="e.g. Sudden death, one man a side, 18th hole"></textarea>
+        <button class="btn" data-tbformat="1">Set the tiebreak</button>
+      </div>` : `<div class="tugsub small">Pat or Andrew will set it.</div>`}
+    </div>`;
+  }
+
+  // stage 2: format declared, waiting on the result
+  return `<div class="tug">
+    <div class="tugtitle">The Crusade is tied ${fmtPt(ev.st.s)}&ndash;${fmtPt(ev.st.d)}</div>
+    ${tugSVG()}
+    <div class="tugrow"><span>Tiebreak</span><b>${esc(tb.format)}</b></div>
+    ${admin ? `<div class="tugform">
+      <label for="tbresult">How did it finish?</label>
+      <input id="tbresult" class="tbin" maxlength="300"
+        placeholder="e.g. Hanna beat Blohm with a par on the 18th">
+      <label>Who won it?</label>
+      <div class="tbwin">
+        <button class="tbteam s" data-tbwinner="s">SNOTS</button>
+        <button class="tbteam d" data-tbwinner="d">DUCKS</button>
+      </div>
+      <button class="btn ghost" data-tbedit="1" style="margin-top:9px">Change the tiebreak</button>
+    </div>` : `<div class="tugsub small">Waiting on the result.</div>`}
+  </div>`;
+}
+
 const chatBadge = () => {
   const n = Store.chatUnread("all") + Store.chatUnread(myChannel());
   return n > 0 ? `<span class="dotbadge">${n > 99 ? "99+" : n}</span>` : "";
@@ -1539,7 +1700,7 @@ function viewBoard(){
       <button class="iconbtn" data-nav="home">&#8592;</button>
       <h1>Leaderboard<div class="sub">Snots vs Ducks &middot; ${fmtPt(CLINCH)} to clinch</div></h1>
       <button class="iconbtn" data-nav="home" title="Home">&#8962;</button></div>
-    <div class="wrap">${boardHTML(st)}${out}${syncHTML()}</div>`;
+    <div class="wrap">${boardHTML(st)}${tiebreakHTML()}${out}${syncHTML()}</div>`;
 }
 
 /* ---------- chat ---------- */
@@ -2290,6 +2451,28 @@ function wire(){
     el.onclick = e => { if (e.target === el){ V.sheet = null; render(); } });
   document.querySelectorAll("[data-closebtn]").forEach(el =>
     el.onclick = () => { V.sheet = null; render(); });
+  /* --- tiebreak ----------------------------------------------------------- */
+  const tbf = document.querySelector("[data-tbformat]");
+  if (tbf) tbf.onclick = () => {
+    const v = (document.getElementById("tbformat").value || "").trim();
+    if (!v){ alert("Say what the tiebreak is first."); return; }
+    Store.setTiebreak({format: v.slice(0, 300)}, Session.id);
+    render(); window.scrollTo(0, 0);
+  };
+  document.querySelectorAll("[data-tbwinner]").forEach(el => el.onclick = () => {
+    const res = (document.getElementById("tbresult").value || "").trim();
+    const team = el.dataset.tbwinner;
+    if (!confirm(`Declare the ${team === "s" ? "SNOTS" : "DUCKS"} winners of the Crusade on the tiebreak?`)) return;
+    Store.setTiebreak({result: res.slice(0, 300), winner: team}, Session.id);
+    render(); window.scrollTo(0, 0);
+  });
+  const tbe = document.querySelector("[data-tbedit]");
+  if (tbe) tbe.onclick = () => { Store.setTiebreak({format: ""}, Session.id); render(); };
+  const tbr = document.querySelector("[data-tbreset]");
+  if (tbr) tbr.onclick = () => {
+    if (confirm("Clear the tiebreak and start it over?")) { Store.clearTiebreak(Session.id); render(); }
+  };
+
   const exp = document.querySelector("[data-export]");
   if (exp) exp.onclick = () => {
     const blob = new Blob([JSON.stringify(Store.exportAll(), null, 1)], {type:"application/json"});
@@ -2497,6 +2680,7 @@ document.addEventListener("visibilitychange", () => {
 window.MI26 = {PLAYERS, COURSES, ROUNDS, ALL_MATCHES, Store, Session, V,
   strokesOn, playerStrokes, teamStrokes, sideHole, holeScores, matchState, standings, markCls, PICKED,
   playerStats, playerPoints, mvp, toPar, roundSummary, holeVerdict, briefHTML, seriesHTML, rColour,
+  eventResult, tiebreakHTML, tugSVG,
   playTaunt, tauntSVG, taunted, markTaunted, playWin, duckHuntSVG, matchLine, holeLine,
   render, patch, MATCH_COUNT, myMatch, BUILD, checkForUpdate,
   resetAll(){ Object.keys(ALL_MATCHES).forEach(id => Store.resetMatch(id)); render(); }};
