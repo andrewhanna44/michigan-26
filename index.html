@@ -101,6 +101,28 @@ input,textarea{font-family:inherit}
 .pbar{display:flex;height:7px;border-radius:5px;overflow:hidden;margin-top:13px;background:var(--surface3)}
 .pbar .s{background:var(--snots-solid)} .pbar .d{background:var(--ducks-solid)}
 
+/* ---------- profile ---------- */
+.ava{width:38px;height:38px;flex:none;display:block}
+.ava.sm{width:34px;height:34px}
+.ava.big{width:86px;height:86px;margin:0 auto 10px}
+.avabtn{width:38px;height:38px;border-radius:50%;flex:none;padding:0;overflow:hidden;
+  border:1.5px solid var(--line);background:var(--surface)}
+.avabtn.s{border-color:var(--snots-edge)} .avabtn.d{border-color:var(--ducks-edge)}
+.avabtn:active{filter:brightness(.95)}
+.pcard{background:var(--surface);border:1.5px solid var(--line);border-radius:15px;
+  padding:18px 14px 14px;margin-bottom:11px;text-align:center;box-shadow:var(--shadow)}
+.pcard.s{border-color:var(--snots-edge);background:var(--snots-tint)}
+.pcard.d{border-color:var(--ducks-edge);background:var(--ducks-tint)}
+.pcard .pname{font-size:20px;font-weight:850;letter-spacing:-.3px}
+.pcard .pteam{font-size:10.5px;font-weight:800;letter-spacing:2px;margin-top:3px}
+.pcard.s .pteam{color:var(--snots)} .pcard.d .pteam{color:var(--ducks)}
+.pfacts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.pfact{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 4px}
+.pfact .k{font-size:9.5px;font-weight:800;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
+.pfact .v{font-size:17px;font-weight:850;margin-top:2px}
+.cmsh{font-size:9px;font-weight:850;letter-spacing:1px;color:var(--red);
+  background:var(--red-dim);padding:2px 5px;border-radius:5px;vertical-align:middle}
+
 /* ---------- tiebreak ---------- */
 .tug{background:#12301f;border:1.5px solid var(--snots-solid);border-radius:15px;
   padding:15px 14px;margin-bottom:12px;text-align:center;box-shadow:var(--shadow)}
@@ -493,6 +515,25 @@ table.sl tr.s .tm{color:var(--snots)} table.sl tr.d .tm{color:var(--ducks)}
 .msg .meta{font-size:10px;color:var(--dim);margin-top:3px;padding:0 3px}
 .msg .meta .sending{color:var(--dim)} .msg .meta .failed{color:var(--red);font-weight:750}
 .chatempty{text-align:center;color:var(--dim);font-size:13px;padding:34px 14px;line-height:1.6}
+.msg .bub .men{font-weight:800;color:var(--snots)}
+.msg.mine .bub .men{color:#f0d78a}
+.msg .bub .men.me{background:var(--red);color:#fff;border-radius:5px;padding:1px 5px}
+.msg.tagged .bub{border-color:var(--red);border-width:1.5px;background:var(--red-dim)}
+.tagbtn{flex:none;width:40px;height:40px;border-radius:11px;background:var(--surface);
+  border:1px solid var(--line);font-size:17px;font-weight:850;color:var(--muted)}
+.tagbtn.on{background:var(--red);border-color:var(--red);color:#fff}
+.tagpick{border-top:1px solid var(--line);background:var(--surface2);max-height:210px;
+  overflow-y:auto;padding:8px}
+.tagpickhd{font-size:11px;color:var(--dim);font-weight:650;padding:4px 6px 8px;line-height:1.5}
+.tagname{display:flex;align-items:center;gap:9px;width:100%;padding:8px;border-radius:10px;
+  font-size:14px;font-weight:650;text-align:left;background:var(--surface);
+  border:1px solid var(--line);margin-bottom:5px}
+.tagname:active{background:var(--surface3)}
+.tagname.s span{color:var(--snots)} .tagname.d span{color:var(--ducks)}
+.tagbar{background:var(--red-dim);border:1.5px solid var(--red);border-radius:12px;
+  padding:11px 13px;margin-bottom:11px;font-size:13px;color:var(--text);font-weight:650;
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left}
+.tagbar b{color:var(--red)}
 .composer{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);
   background:var(--surface2);align-items:flex-end}
 .chatin{flex:1;min-width:0;border:1px solid var(--line);border-radius:11px;padding:11px 12px;
@@ -596,33 +637,34 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-29.2";      // must match version.txt — that's what phones poll
+const BUILD = "2026-07-29.3";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
    2. DATA  (from Pat's "Michigan '26 Scoring File")
    ========================================================================== */
+// idx / room / yrs all come straight from Pat's Player Checklist tab.
 const PLAYERS = {
-  pat:    {n:"Pat Hodgman",        t:"s", idx:6.7,  code:"7K4M", admin:true},
-  andrew: {n:"Andrew Hanna",       t:"s", idx:-0.6, code:"3QX9", admin:true},
-  rendina:{n:"Anthony Rendina",    t:"s", idx:16.2, code:"R8VT"},
-  robert: {n:"Robert Leonard",     t:"s", idx:8.8,  code:"J2WN"},
-  curtin: {n:"Mike Curtin",        t:"s", idx:2.1,  code:"5FHD"},
-  gudden: {n:"Micheal Guddendorf", t:"s", idx:14.7, code:"T9BQ"},
-  alec:   {n:"Alec Kaczkowski",    t:"s", idx:7.4,  code:"6MZL"},
-  bert:   {n:"Alex Bertolini",     t:"s", idx:10.0, code:"P4RC"},
-  jordan: {n:"Jordan Watt",        t:"s", idx:16.0, code:"W7GK"},
-  luke:   {n:"Luke Smeester",      t:"s", idx:9.1,  code:"N2DX"},
-  jacobs: {n:"Alex Jacobs",        t:"d", idx:5.8,  code:"8CJV"},
-  blohm:  {n:"Jason Blohm",        t:"d", idx:6.9,  code:"L5TR"},
-  ryan:   {n:"Ryan Raupach",       t:"d", idx:11.9, code:"V3NP"},
-  cam:    {n:"Cameron Raupach",    t:"d", idx:9.4,  code:"K9HM"},
-  mosele: {n:"Nick Mosele",        t:"d", idx:6.0,  code:"D6QW"},
-  eric:   {n:"Eric Petersen",      t:"d", idx:15.7, code:"Z4LB"},
-  reed:   {n:"Reed Hosteller",     t:"d", idx:10.3, code:"G7XF"},
-  matt:   {n:"Matt Emerick",       t:"d", idx:23.1, code:"M2VJ"},
-  cooper: {n:"Cooper Macek",       t:"d", idx:15.1, code:"C8RT"},
-  austin: {n:"Austin MacDonald",   t:"d", idx:9.8,  code:"H5KN"}
+  pat:    {n:"Pat Hodgman",        t:"s", idx:6.7,  room:1, yrs:4, code:"7K4M", admin:true},
+  andrew: {n:"Andrew Hanna",       t:"s", idx:-0.6, room:1, yrs:4, code:"3QX9", admin:true},
+  rendina:{n:"Anthony Rendina",    t:"s", idx:16.2, room:2, yrs:4, code:"R8VT"},
+  robert: {n:"Robert Leonard",     t:"s", idx:8.8,  room:3, yrs:3, code:"J2WN"},
+  curtin: {n:"Mike Curtin",        t:"s", idx:2.1,  room:2, yrs:2, code:"5FHD"},
+  gudden: {n:"Micheal Guddendorf", t:"s", idx:14.7, room:3, yrs:1, code:"T9BQ"},
+  alec:   {n:"Alec Kaczkowski",    t:"s", idx:7.4,  room:4, yrs:4, code:"6MZL"},
+  bert:   {n:"Alex Bertolini",     t:"s", idx:10.0, room:5, yrs:4, code:"P4RC"},
+  jordan: {n:"Jordan Watt",        t:"s", idx:16.0, room:5, yrs:4, code:"W7GK"},
+  luke:   {n:"Luke Smeester",      t:"s", idx:9.1,  room:4, yrs:1, code:"N2DX"},
+  jacobs: {n:"Alex Jacobs",        t:"d", idx:5.8,  room:1, yrs:4, code:"8CJV"},
+  blohm:  {n:"Jason Blohm",        t:"d", idx:6.9,  room:1, yrs:4, code:"L5TR"},
+  ryan:   {n:"Ryan Raupach",       t:"d", idx:11.9, room:2, yrs:4, code:"V3NP"},
+  cam:    {n:"Cameron Raupach",    t:"d", idx:9.4,  room:2, yrs:4, code:"K9HM"},
+  mosele: {n:"Nick Mosele",        t:"d", idx:6.0,  room:3, yrs:2, code:"D6QW"},
+  eric:   {n:"Eric Petersen",      t:"d", idx:15.7, room:5, yrs:4, code:"Z4LB"},
+  reed:   {n:"Reed Hosteller",     t:"d", idx:10.3, room:5, yrs:3, code:"G7XF"},
+  matt:   {n:"Matt Emerick",       t:"d", idx:23.1, room:3, yrs:3, code:"M2VJ"},
+  cooper: {n:"Cooper Macek",       t:"d", idx:15.1, room:4, yrs:1, code:"C8RT"},
+  austin: {n:"Austin MacDonald",   t:"d", idx:9.8,  room:4, yrs:4, code:"H5KN"}
 };
 const last = id => PLAYERS[id].n.split(" ").slice(-1)[0];
 
@@ -1091,6 +1133,7 @@ const Store = (() => {
         this.chatSend(ch, m.txt, m.by);
       }
     },
+    chatSeenAt(channel){ return chatSeen[channel] || 0; },
     chatUnread(channel){
       const seen = chatSeen[channel] || 0;
       return this.chat(channel).filter(m => m.t > seen && m.by !== Session.id).length;
@@ -1264,7 +1307,8 @@ function myMatch(){
    6. VIEW HELPERS
    ========================================================================== */
 let V = {view:"home", round:0, matchId:null, hole:0, sheet:null, pending:false,
-         chan:"all", draft:null, refocusChat:false, statSort:"net", fromCard:false};
+         chan:"all", draft:null, refocusChat:false, statSort:"net", fromCard:false,
+         profileId:null, tagOpen:false};
 
 /* GitHub Pages caches the page, so a phone can keep running an old build for
    hours after a fix ships. Poll for a newer BUILD and offer a one-tap reload —
@@ -1321,6 +1365,7 @@ function render(){
   if (V.view === "home")  html += viewHome();
   if (V.view === "board") html += viewBoard();
   if (V.view === "matches") html += viewMatches();
+  if (V.view === "profile") html += viewProfile();
   if (V.view === "stats") html += viewStats();
   if (V.view === "chat")  html += viewChat();
   if (V.view === "round") html += viewRound();
@@ -1480,9 +1525,15 @@ function sceneSVG(){
 function viewHome(){
   const st = standings(), me = Session.me, mineId = myMatch();
   return `<div class="topbar">
+      <button class="avabtn ${me.t}" data-nav="profile" title="Your profile">${
+        avatarSVG(Session.id)}</button>
       <h1>Michigan '26<div class="sub">${esc(me.n)} &middot; ${me.t === "s" ? "Snots" : "Ducks"}</div></h1>
       <button class="iconbtn" data-sheet="menu">&#9776;</button></div>
     <div class="wrap">
+      ${taggedTotal() ? `<button class="tagbar" data-nav="chat">
+        <span style="font-size:17px">@</span>
+        <span>You were tagged in <b>${taggedTotal()}</b> message${taggedTotal() === 1 ? "" : "s"}.
+        Tap to read.</span></button>` : ""}
       ${boardHTML(st)}
       ${tiebreakHTML()}
       ${seriesHTML()}
@@ -1711,8 +1762,33 @@ function viewBoard(){
     <div class="wrap">${boardHTML(st)}${tiebreakHTML()}${out}${syncHTML()}</div>`;
 }
 
-/* ---------- chat ---------- */
+/* ---------- chat ----------
+   Tags are parsed out of the message text rather than stored as their own field.
+   That keeps the database shape unchanged — no rules to republish — and a tag
+   still reads naturally to anyone looking at the raw message. */
 const myChannel = () => Session.me.t === "s" ? "snots" : "ducks";
+const mentionsMe = txt => {
+  const me = PLAYERS[Session.id];
+  if (!me || !txt) return false;
+  const first = me.n.split(" ")[0], surname = last(Session.id);
+  return new RegExp(`@(${esc(me.n)}|${first}|${surname})\\b`, "i").test(txt);
+};
+/** Wrap @Name in a highlight, flagging the reader's own tags. */
+function renderMsgText(txt){
+  const names = Object.keys(PLAYERS).map(id => PLAYERS[id].n)
+    .sort((a, b) => b.length - a.length);
+  const alts = names.concat(Object.keys(PLAYERS).map(id => last(id)))
+    .map(n => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+  return esc(txt).replace(new RegExp(`@(${alts})\\b`, "gi"),
+    m => `<span class="men${mentionsMe(m) ? " me" : ""}">${m}</span>`);
+}
+/** Unread messages in a channel that tag me. */
+function taggedUnread(channel){
+  const seen = Store.chatSeenAt(channel);
+  return Store.chat(channel).filter(m =>
+    m.t > seen && m.by !== Session.id && mentionsMe(m.txt)).length;
+}
+const taggedTotal = () => taggedUnread("all") + taggedUnread(myChannel());
 const clockTime = t => new Date(t).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"});
 
 function viewChat(){
@@ -1726,9 +1802,9 @@ function viewChat(){
     const p = PLAYERS[m.by], own = m.by === Session.id;
     const who = p ? p.n : "Unknown";
     const team = p ? p.t : "s";
-    return `<div class="msg ${own ? "mine" : ""}">
+    return `<div class="msg ${own ? "mine" : ""}${mentionsMe(m.txt) && !own ? " tagged" : ""}">
       ${own ? "" : `<div class="who ${team}">${esc(who)}</div>`}
-      <div class="bub">${esc(m.txt)}</div>
+      <div class="bub">${renderMsgText(m.txt)}</div>
       <div class="meta">${clockTime(m.t)}${
         m.state === "sending" ? ` &middot; <span class="sending">sending&hellip;</span>` :
         m.state === "failed"  ? ` &middot; <span class="failed">not sent</span>` : ""}</div>
@@ -1760,10 +1836,19 @@ function viewChat(){
       <div class="chatwrap">
         <div class="chatlist" id="chatlist">${list}</div>
         <div class="composer">
+          <button class="tagbtn" id="tagbtn" title="Tag someone">@</button>
           <textarea class="chatin" id="chatin" rows="1" maxlength="500"
             placeholder="${ch === "all" ? "Message everyone…" : `Message the ${mine === "s" ? "Snots" : "Ducks"}…`}"></textarea>
           <button class="sendbtn" id="chatsend">Send</button>
         </div>
+        ${V.tagOpen ? `<div class="tagpick">
+          <div class="tagpickhd">Tag someone &mdash; they'll see it next time they open the app</div>
+          ${(ch === "all" ? Object.keys(PLAYERS)
+              : Object.keys(PLAYERS).filter(id => PLAYERS[id].t === Session.me.t))
+            .filter(id => id !== Session.id)
+            .map(id => `<button class="tagname ${PLAYERS[id].t}" data-tag="${id}">
+              ${avatarSVG(id, "sm")}<span>${esc(PLAYERS[id].n)}</span></button>`).join("")}
+        </div>` : ""}
       </div>
       <div class="savedtag">${ch === "all"
         ? "Everyone on the trip sees this."
@@ -1771,7 +1856,105 @@ function viewChat(){
     </div>`;
 }
 
-/* ---------- statistics ---------- */
+/* Monogram: an astronaut for a Snot, a duck for a Duck. Stands in for a photo
+   until (if ever) we have somewhere to host real ones. */
+function avatarSVG(id, cls){
+  const p = PLAYERS[id];
+  const snot = p.t === "s";
+  const CREAM = "#f2e7cd", DEEP = "#0b2a1c";
+  const inner = snot
+    ? `<circle cx="32" cy="32" r="19" fill="${CREAM}" stroke="${DEEP}" stroke-width="2.6"/>
+       <path d="M33 20 a13 13 0 0 1 0 25 z" fill="#8a6d00"/>
+       <path d="M38 25 a9 9 0 0 0 -2 15" stroke="${CREAM}" stroke-width="2.2" fill="none"
+         stroke-linecap="round" opacity=".7"/>
+       <rect x="9" y="27" width="6" height="11" rx="3" fill="${CREAM}" stroke="${DEEP}" stroke-width="2.2"/>
+       <rect x="49" y="27" width="6" height="11" rx="3" fill="${CREAM}" stroke="${DEEP}" stroke-width="2.2"/>`
+    : `<circle cx="36" cy="30" r="18" fill="#1b6b3f" stroke="${DEEP}" stroke-width="2.6"/>
+       <path d="M18 28 l-11 4 l11 5 z" fill="#e8820c" stroke="${DEEP}" stroke-width="2.2" stroke-linejoin="round"/>
+       <circle cx="28" cy="24" r="3.4" fill="${CREAM}"/><circle cx="27" cy="23.2" r="1.5" fill="${DEEP}"/>
+       <path d="M22 50 h34 a0 0 0 0 0 0 0 v4 H22 z" fill="${CREAM}"/>
+       <path d="M20 52 a18 14 0 0 0 30 0 z" fill="${CREAM}" stroke="${DEEP}" stroke-width="2.4"/>`;
+  return `<svg class="ava ${cls || ""} ${p.t}" viewBox="0 0 64 64" aria-hidden="true">
+    <circle cx="32" cy="32" r="31" fill="${snot ? "#faf1d5" : "#e3f0e8"}"
+      stroke="${snot ? "#a9840c" : "#1b6b3f"}" stroke-width="2"/>${inner}</svg>`;
+}
+
+/* ---------- player profile ---------- */
+function viewProfile(){
+  const meId = V.profileId && PLAYERS[V.profileId] ? V.profileId : Session.id;
+  const p = PLAYERS[meId], own = meId === Session.id;
+  const stats = playerStats().find(x => x.id === meId);
+  const pts = playerPoints()[meId] || 0;
+
+  let mine = "";
+  ROUNDS.forEach(r => r.matches.forEach(m => {
+    if (!inMatch(m, meId)) return;
+    const ms = matchState(r, m, Store.scores(m.id));
+    const side = m.s.p.some(x => x[0] === meId) ? "s" : "d";
+    const opp = m[side === "s" ? "d" : "s"].p.map(x => last(x[0])).join(" / ");
+    const partner = m[side].p.filter(x => x[0] !== meId).map(x => last(x[0])).join(" / ");
+    const up = side === "s" ? ms.up : -ms.up;      // from this man's point of view
+    const badge = !ms.started ? `<span class="badge soon">${esc(m.t)}</span>`
+      : ms.done ? `<span class="badge ${ms.winner === side ? side : "h"}">${
+          ms.winner === side ? "WON " + esc(ms.text) : ms.winner ? "LOST" : "HALVED"}</span>`
+      : `<span class="badge ${up === 0 ? "h" : side}">${
+          up === 0 ? "AS" : `${Math.abs(up)} ${up > 0 ? "UP" : "DN"}`}</span>`;
+    mine += `<button class="card" data-nav="match" data-id="${m.id}"><div class="rowline">
+      <div class="rnum" style="color:${rColour(r.n)};border-color:${rColour(r.n)};background:${rColour(r.n)}14">${r.n}</div>
+      <div class="rmeta"><div class="t1">${partner ? `with ${esc(partner)}` : "Singles"}</div>
+        <div class="t2">v ${esc(opp)} &middot; ${esc(r.fmt)}</div></div>
+      <div class="rright"><div class="small">${badge}</div></div>
+      <div class="chev">&rsaquo;</div></div></button>`;
+  }));
+
+  const fact = (k, v) => `<div class="pfact"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+
+  let roster = "";
+  ["s","d"].forEach(t => {
+    roster += `<div class="sect">${t === "s" ? "Snots" : "Ducks"}</div>`;
+    Object.keys(PLAYERS).filter(id => PLAYERS[id].t === t)
+      .sort((a,b) => PLAYERS[a].idx - PLAYERS[b].idx)
+      .forEach(id => {
+        const q = PLAYERS[id];
+        roster += `<button class="card ${id === Session.id ? "me" : ""}" data-profile="${id}">
+          <div class="rowline">${avatarSVG(id, "sm")}
+          <div class="rmeta"><div class="t1">${esc(q.n)}${q.admin ? ` <span class="cmsh">COMMISH</span>` : ""}</div>
+            <div class="t2">Index ${fmtIdx(q.idx)} &middot; Room ${q.room} &middot; ${q.yrs} year${q.yrs === 1 ? "" : "s"}</div></div>
+          <div class="chev">&rsaquo;</div></div></button>`;
+      });
+  });
+
+  return `<div class="topbar">
+      <button class="iconbtn" data-nav="home">&#8592;</button>
+      <h1>${own ? "Your profile" : esc(p.n)}<div class="sub">${
+        p.t === "s" ? "Snots" : "Ducks"}${p.admin ? " &middot; Commissioner" : ""}</div></h1>
+      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button></div>
+    <div class="wrap">
+      <div class="pcard ${p.t}">
+        ${avatarSVG(meId, "big")}
+        <div class="pname">${esc(p.n)}</div>
+        <div class="pteam">${p.t === "s" ? "SNOTS" : "DUCKS"}${p.admin ? " &middot; COMMISSIONER" : ""}</div>
+        <div class="pfacts">
+          ${fact("Handicap", fmtIdx(p.idx))}
+          ${fact("Room", p.room)}
+          ${fact("Years", p.yrs)}
+          ${fact("Points", fmtPt(pts))}
+        </div>
+      </div>
+      ${own ? `<div class="mycode"><div class="mck">Your login code</div>
+        <div class="mcv mono">${p.code}</div>
+        <div class="mch">This is your key to the app. Write it down.</div></div>` : ""}
+      <div class="card flat"><div style="font-size:12.5px;color:var(--muted);line-height:1.7">
+        ${stats ? `<b style="color:var(--text)">So far:</b> ${stats.holes} holes &middot;
+          ${toPar(stats.grossToPar)} gross &middot; ${toPar(stats.netToPar)} net &middot;
+          ${stats.birdie} birdie${stats.birdie === 1 ? "" : "s"}${
+          stats.eagle ? ` &middot; ${stats.eagle} eagle${stats.eagle === 1 ? "" : "s"}` : ""}`
+        : "No holes played yet."}</div></div>
+      <div class="sect">${own ? "Your matches" : "Matches"}</div>${mine}
+      <div class="sect" style="margin-top:24px">The field</div>${roster}
+    </div>`;
+}
+
 const toPar = n => n === 0 ? "E" : n > 0 ? `+${n}` : `${n}`;
 const trophySVG = () => `<svg class="trophy" viewBox="0 0 24 24" aria-hidden="true">
   <path d="M7 3h10v5a5 5 0 0 1-10 0z" fill="currentColor"/>
@@ -2381,6 +2564,7 @@ function wire(){
     if (n === "home")  V.view = "home";
     if (n === "board") V.view = "board";
     if (n === "matches") V.view = "matches";
+    if (n === "profile"){ V.view = "profile"; V.profileId = null; }
     if (n === "stats") V.view = "stats";
     if (n === "chat")  V.view = "chat";
     if (n === "round"){ V.view = "round"; V.round = +el.dataset.i; }
@@ -2410,6 +2594,9 @@ function wire(){
 
   const upd = document.querySelector("[data-update]");
   if (upd) upd.onclick = applyUpdate;
+  document.querySelectorAll("[data-profile]").forEach(el => el.onclick = () => {
+    V.view = "profile"; V.profileId = el.dataset.profile; render(); window.scrollTo(0, 0);
+  });
   document.querySelectorAll("[data-sheet]").forEach(el =>
     el.onclick = () => { V.sheet = el.dataset.sheet; render(); });
   document.querySelectorAll("[data-sort]").forEach(el =>
@@ -2426,6 +2613,18 @@ function wire(){
   if (V.view === "chat"){
     const inp = document.getElementById("chatin");
     const btn = document.getElementById("chatsend");
+    const tag = document.getElementById("tagbtn");
+    if (tag){
+      tag.classList.toggle("on", !!V.tagOpen);
+      tag.onclick = () => { V.draft = inp ? inp.value : null; V.tagOpen = !V.tagOpen;
+                            V.refocusChat = false; render(); };
+    }
+    document.querySelectorAll("[data-tag]").forEach(el => el.onclick = () => {
+      const box = document.getElementById("chatin");
+      const cur = (box.value || "").trimEnd();
+      V.draft = (cur ? cur + " " : "") + "@" + PLAYERS[el.dataset.tag].n + " ";
+      V.tagOpen = false; V.refocusChat = true; render();
+    });
     const listEl = document.getElementById("chatlist");
     const ch = V.chan === "team" ? myChannel() : "all";
     if (listEl) listEl.scrollTop = listEl.scrollHeight;      // newest message in view
@@ -2688,7 +2887,8 @@ document.addEventListener("visibilitychange", () => {
 window.MI26 = {PLAYERS, COURSES, ROUNDS, ALL_MATCHES, Store, Session, V,
   strokesOn, playerStrokes, teamStrokes, sideHole, holeScores, matchState, standings, markCls, PICKED,
   playerStats, playerPoints, mvp, toPar, roundSummary, holeVerdict, briefHTML, seriesHTML, rColour,
-  eventResult, tiebreakHTML, tugSVG,
+  eventResult, tiebreakHTML, tugSVG, avatarSVG, viewProfile,
+  mentionsMe, renderMsgText, taggedUnread, taggedTotal,
   playTaunt, tauntSVG, taunted, markTaunted, playWin, duckHuntSVG, matchLine, holeLine,
   render, patch, MATCH_COUNT, myMatch, BUILD, checkForUpdate,
   resetAll(){ Object.keys(ALL_MATCHES).forEach(id => Store.resetMatch(id)); render(); }};
