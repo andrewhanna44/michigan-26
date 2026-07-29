@@ -1,0 +1,16 @@
+{
+  "name": "Crusade in the Creek",
+  "short_name": "Crusade '26",
+  "description": "Live scoring for the Crusade in the Creek — Snots vs Ducks, Shanty Creek",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b2a1c",
+  "theme_color": "#14472f",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

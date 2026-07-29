@@ -1,6 +1,11 @@
-# Publish the app and nothing else.
+# Publish the app and its artwork, nothing else.
 # Pat's spreadsheet contains all 20 players' email addresses and handicap
-# indexes — it must never be pushed to a public repo.
+# indexes — it must never be pushed to a public repo. Same for the edits doc.
 *
 !index.html
 !.gitignore
+!crest.png
+!icon-180.png
+!icon-192.png
+!icon-512.png
+!site.webmanifest

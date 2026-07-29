@@ -6,6 +6,9 @@
 <meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Crusade '26">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="site.webmanifest">
 <title>Crusade in the Creek &middot; Snots vs Ducks</title>
 <style>
 :root{
@@ -58,7 +61,7 @@ input,textarea{font-family:inherit}
   animation:tw 3.4s ease-in-out infinite}
 @keyframes tw{0%,100%{opacity:.1}50%{opacity:.55}}
 .splash-inner{position:relative;z-index:2;width:100%;max-width:390px;text-align:center}
-.crest{width:100%;max-width:268px;margin:0 auto 16px;display:block}
+.crest{width:100%;max-width:272px;height:auto;margin:0 auto 16px;display:block}
 .dates{font-size:11px;color:var(--crest-gold);letter-spacing:2.6px;text-transform:uppercase;
   font-weight:750;margin-bottom:15px}
 .teamrow{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:15px}
@@ -97,6 +100,41 @@ input,textarea{font-family:inherit}
 .clinch b{color:var(--muted)}
 .pbar{display:flex;height:7px;border-radius:5px;overflow:hidden;margin-top:13px;background:var(--surface3)}
 .pbar .s{background:var(--snots-solid)} .pbar .d{background:var(--ducks-solid)}
+
+.series{background:var(--surface);border:1px solid var(--line);border-radius:13px;
+  padding:11px 14px;margin-bottom:11px;box-shadow:var(--shadow);display:flex;
+  align-items:center;gap:10px;flex-wrap:wrap}
+.series .sl{flex:1;min-width:0;font-size:12.5px;color:var(--muted);font-weight:650}
+.series .sl b{color:var(--text);font-size:15px;font-weight:850;margin-left:3px}
+.series .sy{display:flex;gap:5px}
+.series .sy span{font-size:10.5px;font-weight:800;padding:3px 7px;border-radius:6px;
+  letter-spacing:.3px}
+.series .sy .s{background:var(--snots-tint);color:var(--snots)}
+.series .sy .d{background:var(--ducks-tint);color:var(--ducks)}
+.series .sy .now{outline:1.5px solid var(--red);outline-offset:1px}
+
+/* ---------- round briefing ---------- */
+.brief{background:var(--surface);border:1px solid var(--line);border-radius:13px;
+  padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow)}
+.brief .bt{font-size:11px;font-weight:800;letter-spacing:1.6px;color:var(--dim);
+  text-transform:uppercase;margin-bottom:6px}
+.brief .bd{font-size:12.5px;color:var(--muted);line-height:1.55}
+.brief .bd b{color:var(--text)}
+.brief ul{margin:8px 0 0;padding:0;list-style:none}
+.brief li{font-size:12.5px;padding:5px 0;border-top:1px solid var(--line);line-height:1.45}
+.brief li .who{font-weight:750}
+.brief li .who.s{color:var(--snots)} .brief li .who.d{color:var(--ducks)}
+.brief li .hl{color:var(--muted)}
+.brief .none{color:var(--dim)}
+
+/* ---------- toast ---------- */
+.toast{position:fixed;left:50%;bottom:calc(22px + var(--safe-b));transform:translateX(-50%);
+  z-index:90;max-width:calc(100% - 28px);width:max-content;background:#0e1216;color:#fff;
+  border-radius:13px;padding:12px 16px;font-size:13.5px;font-weight:650;line-height:1.4;
+  box-shadow:0 8px 28px rgba(0,0,0,.3);text-align:center;animation:tup .22s ease-out}
+@keyframes tup{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+.toast b{font-weight:850}
+.toast .win.s{color:#f0d78a} .toast .win.d{color:#7fc79b}
 
 /* ---------- cards ---------- */
 .sect{font-size:11px;font-weight:800;letter-spacing:2px;color:var(--dim);
@@ -309,11 +347,18 @@ table.gc .bestrow td{font-weight:800}
 .vs{font-size:10px;font-weight:800;color:var(--dim);letter-spacing:1.2px}
 
 /* ---------- single-stat leaderboard ---------- */
-.statpick{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:11px}
-.statpick button{padding:8px 11px;border-radius:9px;background:var(--surface);
-  border:1px solid var(--line);font-size:12px;font-weight:700;color:var(--muted);
-  box-shadow:var(--shadow);white-space:nowrap}
-.statpick button.on{background:var(--red);border-color:var(--red);color:#fff}
+.filterbar{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.filterbar label{font-size:12px;font-weight:750;color:var(--muted);flex:none}
+.statsel{flex:1;min-width:0;padding:12px 12px;border-radius:11px;background:var(--surface);
+  border:1px solid var(--line);box-shadow:var(--shadow);font-size:14px;font-weight:700;
+  color:var(--text);appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' stroke='%235c6773' stroke-width='2' fill='none' stroke-linecap='round'/></svg>");
+  background-repeat:no-repeat;background-position:right 13px center}
+.statcard{display:block;width:100%;text-align:left}
+.statcard:active{filter:brightness(.97)}
+.mvpbadge{display:inline-block;margin-left:7px;padding:2px 7px;border-radius:6px;
+  background:var(--red);color:#fff;font-size:9.5px;font-weight:850;letter-spacing:1px;
+  vertical-align:middle}
 table.sl{border-collapse:collapse;width:100%;font-size:13.5px}
 table.sl td{padding:10px 8px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
 table.sl tr:first-child td{border-top:none}
@@ -442,7 +487,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-28.8";      // bump on every deploy; drives the update prompt
+const BUILD = "2026-07-28.9";      // bump on every deploy; drives the update prompt
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -546,6 +591,15 @@ const ROUNDS = [
   {id:"r5m09", t:"3:20 PM", tee:"White",      s:{p:[["alec",8,0]]},     d:{p:[["cam",10,2]]}},
   {id:"r5m10", t:"3:20 PM", tee:"White",      s:{p:[["luke",10,0]]},    d:{p:[["reed",11,1]]}}]}
 ];
+
+/* A restrained colour per round so they're easy to tell apart at a glance —
+   deliberately nothing near the Snots gold or Ducks green. */
+const ROUND_COLOUR = ["#2f5d8a", "#5a4b8a", "#a05a2c", "#2f7d7d", "#8a2f4a"];
+const rColour = n => ROUND_COLOUR[(n - 1) % ROUND_COLOUR.length];
+
+/* Series history. This year's winner is appended automatically once every
+   match is final — see seriesHTML(). */
+const SERIES = [{y:2023, w:"s"}, {y:2024, w:"s"}, {y:2025, w:"d"}];
 
 const ALL_MATCHES = {};
 ROUNDS.forEach(r => r.matches.forEach(m => ALL_MATCHES[m.id] = {r, m}));
@@ -1052,7 +1106,7 @@ function viewLogin(){
       width:${s}px;height:${s}px;animation-delay:${(Math.random()*3.4).toFixed(1)}s"></i>`;
   }
   return `<div class="splash"><div class="stars">${stars}</div><div class="splash-inner">
-    ${crestSVG()}
+    <img class="crest" src="crest.png" alt="Crusade in the Creek" width="560" height="560">
     <div class="dates">August 13 &ndash; 15, 2026</div>
     <div class="teamrow"><span class="t s">SNOTS</span><span class="vs">VS</span>
       <span class="t d">DUCKS</span></div>
@@ -1196,6 +1250,7 @@ function viewHome(){
       <button class="iconbtn" data-sheet="menu">&#9776;</button></div>
     <div class="wrap">
       ${boardHTML(st)}
+      ${seriesHTML()}
       ${mineId ? `<button class="btn big" data-nav="match" data-id="${mineId}"
         style="margin-top:0">Your Match</button>` : ""}
       <div class="actions">
@@ -1231,8 +1286,10 @@ function viewMatches(){
   let rounds = "";
   ROUNDS.forEach((r, i) => {
     const sum = roundSummary(r);
-    rounds += `<button class="card" data-nav="round" data-i="${i}"><div class="rowline">
-      <div class="rnum ${sum.complete ? "done" : ""}">${r.n}</div>
+    const col = rColour(r.n);
+    rounds += `<button class="card" data-nav="round" data-i="${i}"
+      style="border-color:${col};border-width:1.5px"><div class="rowline">
+      <div class="rnum" style="color:${col};border-color:${col};background:${col}14">${r.n}</div>
       <div class="rmeta"><div class="t1">${esc(COURSES[r.course].n)} &middot; ${esc(r.fmt)}</div>
         <div class="t2">${esc(r.day)} &middot; ${r.matches.length} matches${
           sum.started ? ` &middot; ${sum.done} final` : ""}</div></div>
@@ -1242,7 +1299,7 @@ function viewMatches(){
       <div class="chev">&rsaquo;</div></div></button>`;
   });
   return `<div class="topbar">
-      <button class="iconbtn" data-nav="home">&lsaquo;</button>
+      <button class="iconbtn" data-nav="home">&#8592;</button>
       <h1>All Matches<div class="sub">${MATCH_COUNT} matches across 5 rounds</div></h1></div>
     <div class="wrap"><div class="sect">Rounds</div>${rounds}
       <button class="btn ghost" data-nav="board">Leaderboard</button></div>`;
@@ -1261,6 +1318,18 @@ function boardHTML(st){
       ? `Projected <b>${fmtPt(st.projS)} &ndash; ${fmtPt(st.projD)}</b> with ${st.live} match${st.live>1?"es":""} live`
       : `${st.fin} of ${MATCH_COUNT} matches complete`}
       &middot; <b>${fmtPt(CLINCH)}</b> to clinch</div></div>`;
+}
+/** All-time series. Adds this year automatically once every match is final. */
+function seriesHTML(){
+  const st = standings();
+  const rows = [...SERIES];
+  if (st.fin === MATCH_COUNT && st.s !== st.d) rows.push({y: 2026, w: st.s > st.d ? "s" : "d", now: true});
+  const s = rows.filter(r => r.w === "s").length, d = rows.filter(r => r.w === "d").length;
+  const lead = s > d ? `Snots lead the series` : d > s ? `Ducks lead the series` : `Series all square`;
+  return `<div class="series">
+    <div class="sl">${lead} <b>${s}&ndash;${d}</b></div>
+    <div class="sy">${rows.map(r => `<span class="${r.w}${r.now ? " now" : ""}">${r.y}</span>`).join("")}</div>
+  </div>`;
 }
 const chatBadge = () => {
   const n = Store.chatUnread("all") + Store.chatUnread(myChannel());
@@ -1315,7 +1384,7 @@ function viewBoard(){
       <div class="lbtally">${tally}</div>${rows}</div>`;
   });
   return `<div class="topbar">
-      <button class="iconbtn" data-nav="home">&lsaquo;</button>
+      <button class="iconbtn" data-nav="home">&#8592;</button>
       <h1>Leaderboard<div class="sub">Snots vs Ducks &middot; ${fmtPt(CLINCH)} to clinch</div></h1></div>
     <div class="wrap">${boardHTML(st)}${out}${syncHTML()}</div>`;
 }
@@ -1349,7 +1418,7 @@ function viewChat(){
   const badge = n => n > 0 ? `<span class="dotbadge">${n > 99 ? "99+" : n}</span>` : "";
 
   return `<div class="topbar">
-      <button class="iconbtn" data-nav="home">&lsaquo;</button>
+      <button class="iconbtn" data-nav="home">&#8592;</button>
       <h1>Chat<div class="sub">${ch === "all" ? "Everyone &middot; all 20 players"
         : `${mine === "s" ? "Snots" : "Ducks"} only &middot; your 10`}</div></h1></div>
     <div class="wrap">
@@ -1384,26 +1453,26 @@ const toPar = n => n === 0 ? "E" : n > 0 ? `+${n}` : `${n}`;
 function viewStats(){
   const rows = playerStats();
   if (!rows.length) return `<div class="topbar">
-      <button class="iconbtn" data-nav="home">&lsaquo;</button>
+      <button class="iconbtn" data-nav="home">&#8592;</button>
       <h1>Statistics<div class="sub">Nothing scored yet</div></h1></div>
     <div class="wrap"><div class="empty">Statistics appear here once scores start going in.<br>
       Every man's gross and net contribution to par, birdies, eagles and bogeys &mdash;
       across all five rounds.</div></div>`;
 
-  // every statistic the toggle can show: label, how to read it, sort direction
+  // every statistic the filter can show: label, how to read it, sort direction
   const STATS = {
-    net:     {lbl:"Net score",    get:p=>p.netToPar,   fmt:toPar, low:true},
-    gross:   {lbl:"Gross score",  get:p=>p.grossToPar, fmt:toPar, low:true},
-    eagle:   {lbl:"Eagles",       get:p=>p.eagle},
-    eagleN:  {lbl:"Eagles (net)", get:p=>p.eagleN},
-    birdie:  {lbl:"Birdies",      get:p=>p.birdie},
-    birdieN: {lbl:"Birdies (net)",get:p=>p.birdieN},
-    par:     {lbl:"Pars",         get:p=>p.parCt},
-    parN:    {lbl:"Pars (net)",   get:p=>p.parCtN},
-    over:    {lbl:"Holes over par",     get:p=>p.over},
-    overN:   {lbl:"Over par (net)",     get:p=>p.overN},
-    points:  {lbl:"Points won",   get:p=>p.points, fmt:fmtPt},
-    holes:   {lbl:"Holes played", get:p=>p.holes}
+    net:     {lbl:"Net score to par",     get:p=>p.netToPar,   fmt:toPar, low:true},
+    gross:   {lbl:"Gross score to par",   get:p=>p.grossToPar, fmt:toPar, low:true},
+    worst:   {lbl:"Most over par (Gross)",get:p=>p.grossToPar, fmt:toPar},
+    eagle:   {lbl:"Eagles (Gross)",       get:p=>p.eagle},
+    eagleN:  {lbl:"Eagles (Net)",         get:p=>p.eagleN},
+    birdie:  {lbl:"Birdies (Gross)",      get:p=>p.birdie},
+    birdieN: {lbl:"Birdies (Net)",        get:p=>p.birdieN},
+    par:     {lbl:"Pars (Gross)",         get:p=>p.parCt},
+    parN:    {lbl:"Pars (Net)",           get:p=>p.parCtN},
+    over:    {lbl:"Holes over par (Gross)", get:p=>p.over},
+    overN:   {lbl:"Holes over par (Net)",   get:p=>p.overN},
+    points:  {lbl:"Team points won",      get:p=>p.points, fmt:fmtPt}
   };
   const key = STATS[V.statSort] ? V.statSort : "net";
   const S = STATS[key];
@@ -1414,11 +1483,13 @@ function viewStats(){
 
   const bestBy = (fn, hi) => rows.reduce((x, y) => (hi ? fn(y) > fn(x) : fn(y) < fn(x)) ? y : x);
   const bNet = bestBy(p => p.netToPar, false), bGross = bestBy(p => p.grossToPar, false);
-  const bBird = bestBy(p => p.birdie, true), bBog = bestBy(p => p.over, true);
+  const bBird = bestBy(p => p.birdie, true), bWorst = bestBy(p => p.grossToPar, true);
   const best = mvp();
 
-  const card = (k, p, v, sub) => `<div class="statcard ${p ? p.team : ""}">
-    <div class="k">${k}</div><div class="v">${v}<small>${sub}</small></div></div>`;
+  // every badge is a shortcut into the leaderboard below it
+  const card = (k, p, v, sub, jump, icon) => `<button class="statcard ${p ? p.team : ""}"
+    data-sort="${jump}"><div class="k">${k}</div>
+    <div class="v">${v}${icon || ""}<small>${sub}</small></div></button>`;
 
   const body = sorted.map((p, i) => `<tr class="${p.team}">
     <td class="rk">${i + 1}</td>
@@ -1426,33 +1497,46 @@ function viewStats(){
     <td class="tm">${p.team === "s" ? "Snots" : "Ducks"}</td>
     <td class="vl">${shown(p)}</td></tr>`).join("");
 
-  const pick = Object.keys(STATS).map(k =>
-    `<button class="${k === key ? "on" : ""}" data-sort="${k}">${STATS[k].lbl}</button>`).join("");
+  const options = Object.keys(STATS).map(k =>
+    `<option value="${k}"${k === key ? " selected" : ""}>${STATS[k].lbl}</option>`).join("");
+
+  const mvpNote = key === "points" ? `<div class="legend"><b>How MVP is decided.</b>
+    Every match win is worth 1 point and a halved match &frac12;. In the four 2v2 rounds
+    both partners are credited the side's full point &mdash; they won it together.
+    The MVP is the man with the most points <b>on the winning team</b>.
+    <br><b>Tie-break:</b> most holes played under net par.</div>` : "";
 
   return `<div class="topbar">
-      <button class="iconbtn" data-nav="home">&lsaquo;</button>
+      <button class="iconbtn" data-nav="home">&#8592;</button>
       <h1>Statistics<div class="sub">${rows.length} players scored so far</div></h1></div>
     <div class="wrap">
       <div class="statcards">
-        ${best ? `<div class="statcard ${best.team} mvpcard"><div class="k">${
-          best.decided ? "MVP" : "MVP so far"}</div><div class="v">${esc(best.name)}
+        ${best ? `<button class="statcard ${best.team} mvpcard" data-sort="points">
+          <div class="k">${best.decided ? "MVP" : "MVP so far"}</div>
+          <div class="v">${esc(best.name)}<span class="mvpbadge">MVP</span>
           <small>${fmtPt(best.points)} point${best.points === 1 ? "" : "s"} for the
           ${best.team === "s" ? "Snots" : "Ducks"} &middot; ${best.underN} hole${
-          best.underN === 1 ? "" : "s"} under net par</small></div></div>` : ""}
-        ${card("Best net", bNet, esc(bNet.last), `${toPar(bNet.netToPar)} to par`)}
-        ${card("Best gross", bGross, esc(bGross.last), `${toPar(bGross.grossToPar)} to par`)}
-        ${card("Most birdies", bBird.birdie > 0 ? bBird : null,
+          best.underN === 1 ? "" : "s"} under net par</small></div></button>` : ""}
+        ${card("Best net", bNet, esc(bNet.last), `${toPar(bNet.netToPar)} to par`, "net")}
+        ${card("Best gross", bGross, esc(bGross.last), `${toPar(bGross.grossToPar)} to par`, "gross")}
+        ${card("Most birdies (Gross)", bBird.birdie > 0 ? bBird : null,
           bBird.birdie > 0 ? esc(bBird.last) : "&mdash;",
-          `${bBird.birdie} birdie${bBird.birdie === 1 ? "" : "s"}`)}
-        ${card("Most over par", bBog.over > 0 ? bBog : null,
-          bBog.over > 0 ? esc(bBog.last) : "&mdash;", `${bBog.over} holes over par`)}
+          `${bBird.birdie} birdie${bBird.birdie === 1 ? "" : "s"}`, "birdie")}
+        ${card("Most over par (Gross)", bWorst.grossToPar > 0 ? bWorst : null,
+          bWorst.grossToPar > 0 ? esc(bWorst.last) : "&mdash;",
+          `${toPar(bWorst.grossToPar)} to par`, "worst")}
       </div>
-      <div class="sect">Leaderboard &middot; ${esc(S.lbl)}</div>
-      <div class="statpick">${pick}</div>
+      <div class="sect">Leaderboard</div>
+      <div class="filterbar">
+        <label for="statsel">Show</label>
+        <select id="statsel" class="statsel">${options}</select>
+      </div>
       <div class="gridwrap"><table class="sl"><tbody>${body}</tbody></table>
         <div class="legend">Each man's own scores from best ball, shamble and singles.
-          On scramble and alternate shot the team's score counts for both partners.
-          <b>Net</b> figures apply that player's strokes; plain figures are gross.</div>
+          On scramble and alternate shot the team's score counts for both partners, and a
+          picked-up ball (X) counts as double par. <b>Gross</b> is what he actually made;
+          <b>Net</b> applies his strokes.</div>
+        ${mvpNote}
       </div>
       <button class="btn ghost" data-nav="home">Back to home</button>
     </div>`;
@@ -1464,7 +1548,7 @@ function viewRound(){
   let list = "";
   r.matches.forEach(m => list += matchCard(r, m, matchState(r, m, Store.scores(m.id))));
   return `<div class="topbar">
-      <button class="iconbtn" data-nav="home">&lsaquo;</button>
+      <button class="iconbtn" data-nav="matches">&#8592;</button>
       <h1>Round ${r.n} &middot; ${esc(r.fmt)}<div class="sub">${esc(c.n)} &middot; ${esc(r.tee)} tees</div></h1>
     </div><div class="wrap">
       <div class="card flat"><div style="font-size:12.5px;color:var(--muted);line-height:1.65">
@@ -1536,7 +1620,7 @@ function viewMatch(){
   };
 
   return `<div class="topbar">
-      <button class="iconbtn" data-nav="round" data-i="${ROUNDS.indexOf(r)}">&lsaquo;</button>
+      <button class="iconbtn" data-nav="round" data-i="${ROUNDS.indexOf(r)}">&#8592;</button>
       <h1>${esc(r.fmt)}<div class="sub">${esc(c.n)} &middot; ${esc(m.tee || r.tee)} &middot; ${esc(m.t)}</div></h1>
       <button class="iconbtn" data-sheet="menu">&#9776;</button>
     </div><div class="wrap">
@@ -1546,13 +1630,14 @@ function viewMatch(){
       </div>
       ${st.done && !Store.isSubmitted(m.id) ? `<button class="btn" style="margin:0 0 10px"
         data-nav="card" data-id="${m.id}">Match decided &mdash; Review &amp; Submit &rsaquo;</button>` : ""}
+      ${!st.started ? briefHTML(r, m) : ""}
       ${Store.isSubmitted(m.id) ? `<div class="lockbar"><b>Round submitted.</b>
         Signed off by ${esc(PLAYERS[Store.submittedBy(m.id)] ? PLAYERS[Store.submittedBy(m.id)].n : "a commissioner")}.
         ${Session.admin ? `<button data-unsubmit="${m.id}">Reopen &rsaquo;</button>` : "Scores are locked."}</div>`
         : scorerBar(m, sc, editable)}
       <div class="holehead">
         <div class="holenav">
-          <button class="navbtn" data-step="-1" ${h === 0 ? "disabled" : ""}>&lsaquo;</button>
+          <button class="navbtn" data-step="-1" ${h === 0 ? "disabled" : ""}>&#8592;</button>
           <div class="holeinfo"><div class="hn">Hole ${h + 1}</div>
             <div class="hd">Par ${par}${yd ? " &middot; " + yd : ""} &middot; S.I. ${c.hcp[h]}</div></div>
           <button class="navbtn" data-step="1" ${h === 17 ? "disabled" : ""}>&rsaquo;</button>
@@ -1577,6 +1662,62 @@ function viewMatch(){
         style="color:var(--red);margin-top:9px">Reset this match</button>` : ""}
     </div>`;
 }
+/** Opening briefing: what this round is, and exactly who gets shots where. */
+function briefHTML(r, m){
+  const c = COURSES[r.course];
+  const rows = [];
+  if (r.mode === "team"){
+    ["s","d"].forEach(k => {
+      const side = m[k], holes = [];
+      for (let h = 0; h < 18; h++) if (teamStrokes(r, side, h)) holes.push(h + 1);
+      rows.push({k, name: side.p.map(p => last(p[0])).join(" / "), n: side.net, holes});
+    });
+  } else ["s","d"].forEach(k => m[k].p.forEach(pl => {
+    const holes = [];
+    for (let h = 0; h < 18; h++){ const n = playerStrokes(r, m[k], pl, h);
+      for (let i = 0; i < n; i++) holes.push(h + 1); }
+    rows.push({k, name: PLAYERS[pl[0]].n, n: pl[2], holes});
+  }));
+  return `<div class="brief">
+    <div class="bt">Round ${r.n} &middot; ${esc(r.fmt)}</div>
+    <div class="bd">${fmtBlurb(r)}<br><b>Strokes:</b> ${esc(r.rule)}</div>
+    <ul>${rows.map(x => `<li><span class="who ${x.k}">${esc(x.name)}</span>
+      <span class="hl">&mdash; ${x.holes.length ? `${x.holes.length} shot${x.holes.length===1?"":"s"}
+      on hole${x.holes.length===1?"":"s"} ${x.holes.join(", ")}` : "no shots"}</span></li>`).join("")}</ul>
+    ${r.par3Low ? `<div class="bd" style="margin-top:8px">On par 3s the pair plays off the
+      lower partner's strokes.</div>` : ""}
+  </div>`;
+}
+
+/** "Hodgman / Bertolini beat Mosele / MacDonald on Hole 1 with a Birdie" */
+function holeVerdict(r, m, h, scores){
+  const s = sideHole(r, m, "s", h, scores), d = sideHole(r, m, "d", h, scores);
+  if (!s || !d) return null;
+  const nm = k => m[k].p.map(p => last(p[0])).join(" / ");
+  const term = (gross, par) => {
+    const x = gross - par;
+    return x <= -3 ? "an Albatross" : x === -2 ? "an Eagle" : x === -1 ? "a Birdie"
+         : x === 0 ? "a Par" : x === 1 ? "a Bogey" : x === 2 ? "a Double Bogey"
+         : x === 3 ? "a Triple Bogey" : `a ${x} over par`;
+  };
+  const par = COURSES[r.course].par[h];
+  if (s.net === d.net)
+    return {w:null, html:`<b>${esc(nm("s"))}</b> and <b>${esc(nm("d"))}</b> halved
+      Hole ${h + 1} with ${term(s.gross, par)}`};
+  const w = s.net < d.net ? "s" : "d", l = w === "s" ? "d" : "s";
+  const win = w === "s" ? s : d;
+  return {w, html:`<b class="win ${w}">${esc(nm(w))}</b> beat ${esc(nm(l))} on Hole ${h + 1}
+    with ${term(win.gross, par)}${win.picked ? " (picked up)" : ""}`};
+}
+function showToast(html){
+  const old = document.querySelector(".toast"); if (old) old.remove();
+  const t = document.createElement("div");
+  t.className = "toast"; t.innerHTML = html;
+  document.body.appendChild(t);
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => { if (t.parentNode) t.remove(); }, 4200);
+}
+
 function holeLine(r, m, h, scores){
   const s = sideHole(r, m, "s", h, scores), d = sideHole(r, m, "d", h, scores);
   if (!s || !d) return "Enter both sides to score the hole";
@@ -1720,7 +1861,7 @@ function viewCard(){
   const canSubmit = st.done && !submitted && (canScore(m) || Session.admin);
 
   return `<div class="topbar">
-      <button class="iconbtn" data-nav="match" data-id="${m.id}">&lsaquo;</button>
+      <button class="iconbtn" data-nav="match" data-id="${m.id}">&#8592;</button>
       <h1>Review Round<div class="sub">${esc(c.n)} &middot; ${esc(r.fmt)} &middot; ${esc(m.tee || r.tee)}</div></h1>
     </div><div class="wrap">
       <div class="resbar ${st.done && !st.winner ? "halved" : (st.winner || "")}">
@@ -1806,7 +1947,9 @@ function wire(){
   document.querySelectorAll("[data-sheet]").forEach(el =>
     el.onclick = () => { V.sheet = el.dataset.sheet; render(); });
   document.querySelectorAll("[data-sort]").forEach(el =>
-    el.onclick = () => { V.statSort = el.dataset.sort; render(); });
+    el.onclick = () => { V.statSort = el.dataset.sort; render(); window.scrollTo(0, 0); });
+  const sel = document.getElementById("statsel");
+  if (sel) sel.onchange = () => { V.statSort = sel.value; render(); };
 
   /* --- chat --------------------------------------------------------------- */
   document.querySelectorAll("[data-chan]").forEach(el =>
@@ -1889,11 +2032,15 @@ function wire(){
       if (el.value !== raw) el.value = raw;
       let v = raw === "" ? null : parseInt(raw, 10);
       if (v !== null && (v < 1 || v > 15)) return;      // wait for a valid number
-      const {m} = ALL_MATCHES[V.matchId];
+      const {r, m} = ALL_MATCHES[V.matchId];
       const sc = Store.scorer(m.id);
       if ((!sc || !sc.id) && inMatch(m, Session.id)) Store.setScorer(m.id, Session.id);
+      const before = !!holeVerdict(r, m, V.hole, Store.scores(m.id));
       Store.setScore(m.id, V.hole, el.dataset.entrant, v, Session.id, true);
       patch();
+      // the moment a hole becomes complete, say who won it and with what
+      const after = holeVerdict(r, m, V.hole, Store.scores(m.id));
+      if (after && !before) showToast(after.html);
     };
     el.onfocus = () => {
       el.select();
@@ -1917,12 +2064,15 @@ function wire(){
     render();
   });
   document.querySelectorAll("[data-pick]").forEach(el => el.onclick = () => {
-    const {m} = ALL_MATCHES[V.matchId];
+    const {r, m} = ALL_MATCHES[V.matchId];
     const cur = (Store.scores(m.id)[V.hole] || {})[el.dataset.pick];
+    const before = !!holeVerdict(r, m, V.hole, Store.scores(m.id));
     // tapping X again un-picks
     Store.setScore(m.id, V.hole, el.dataset.pick,
       cur === PICKED ? null : PICKED, Session.id, true);
     render();
+    const after = holeVerdict(r, m, V.hole, Store.scores(m.id));
+    if (after && !before) showToast(after.html);
   });
 
   if (V.view === "match"){
@@ -2005,7 +2155,7 @@ document.addEventListener("visibilitychange", () => {
 
 window.MI26 = {PLAYERS, COURSES, ROUNDS, ALL_MATCHES, Store, Session, V,
   strokesOn, playerStrokes, teamStrokes, sideHole, holeScores, matchState, standings, markCls, PICKED,
-  playerStats, playerPoints, mvp, toPar, roundSummary,
+  playerStats, playerPoints, mvp, toPar, roundSummary, holeVerdict, briefHTML, seriesHTML, rColour,
   render, patch, MATCH_COUNT, myMatch, BUILD, checkForUpdate,
   resetAll(){ Object.keys(ALL_MATCHES).forEach(id => Store.resetMatch(id)); render(); }};
 </script>
