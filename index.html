@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Crusade '26">
+<meta name="apple-mobile-web-app-title" content="Michigan '26">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="site.webmanifest">
@@ -126,6 +126,40 @@ input,textarea{font-family:inherit}
 .brief li .who.s{color:var(--snots)} .brief li .who.d{color:var(--ducks)}
 .brief li .hl{color:var(--muted)}
 .brief .none{color:var(--dim)}
+
+/* ---------- pre-match taunt ----------
+   Plays once per match, on the way in. Always pro-Snots by design. Tap to skip.
+   Pure CSS on inline SVG: nothing downloaded, nothing that can fail on course. */
+.taunt{position:fixed;inset:0;z-index:95;background:radial-gradient(700px 500px at 50% 45%,#1a5638,#0b2a1c);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  animation:tfade .25s ease-out;cursor:pointer}
+.taunt.out{animation:tout .32s ease-in forwards}
+@keyframes tfade{from{opacity:0}to{opacity:1}}
+@keyframes tout{to{opacity:0}}
+.taunt svg{width:min(88vw,380px);height:auto;overflow:visible}
+.taunt .tline{color:#f2e7cd;font-size:15px;font-weight:800;letter-spacing:2.4px;
+  text-transform:uppercase;margin-top:20px;opacity:0;animation:tin .4s ease-out 1.25s forwards;
+  text-align:center;padding:0 20px;line-height:1.5}
+.taunt .tsub{color:#c9a227;font-size:11.5px;font-weight:750;letter-spacing:1.6px;
+  text-transform:uppercase;margin-top:8px;opacity:0;animation:tin .4s ease-out 1.5s forwards}
+.taunt .tskip{position:absolute;bottom:calc(26px + var(--safe-b));color:#7d9a88;
+  font-size:11.5px;font-weight:650;letter-spacing:.6px}
+@keyframes tin{to{opacity:1}}
+/* ball flies in, then the duck gets it */
+.tball{animation:tfly 1.05s cubic-bezier(.35,.1,.7,.5) forwards}
+@keyframes tfly{0%{transform:translate(-320px,-90px) rotate(0)}100%{transform:translate(0,0) rotate(760deg)}}
+.tduck{animation:thit .55s ease-out 1.02s both}
+@keyframes thit{0%{transform:translate(0,0) rotate(0)}
+  35%{transform:translate(26px,-14px) rotate(16deg)}
+  100%{transform:translate(18px,4px) rotate(9deg)}}
+.tfeather{opacity:0;animation:tpuff .9s ease-out 1.05s forwards}
+@keyframes tpuff{0%{opacity:1;transform:translate(0,0) rotate(0) scale(.4)}
+  100%{opacity:0;transform:translate(var(--fx),var(--fy)) rotate(var(--fr)) scale(1)}}
+.tstar{opacity:0;animation:tstar 1.5s ease-out 1.08s forwards;transform-origin:center}
+@keyframes tstar{0%{opacity:0;transform:scale(.3)}18%{opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(1.1)}}
+.timpact{opacity:0;animation:timp .38s ease-out 1.02s forwards}
+@keyframes timp{0%{opacity:1;transform:scale(.3)}100%{opacity:0;transform:scale(1.9)}}
 
 /* ---------- toast ---------- */
 .toast{position:fixed;left:50%;bottom:calc(22px + var(--safe-b));transform:translateX(-50%);
@@ -344,6 +378,11 @@ table.gc .bestrow td{font-weight:800}
 .lbmid .st.s{color:var(--snots)} .lbmid .st.d{color:var(--ducks)}
 .lbmid .st.h{color:var(--muted)}
 .lbmid .thru{font-size:9.5px;color:var(--dim);margin-top:2px;font-weight:650}
+/* a finished match lights the whole box in the winner's colour */
+.lbmid.won.s{background:var(--snots-solid);border-color:var(--snots-solid)}
+.lbmid.won.d{background:var(--ducks-solid);border-color:var(--ducks-solid)}
+.lbmid.won.h{background:var(--half);border-color:var(--half)}
+.lbmid.won .st{color:#fff} .lbmid.won .thru{color:rgba(255,255,255,.72)}
 .vs{font-size:10px;font-weight:800;color:var(--dim);letter-spacing:1.2px}
 
 /* ---------- single-stat leaderboard ---------- */
@@ -356,9 +395,9 @@ table.gc .bestrow td{font-weight:800}
   background-repeat:no-repeat;background-position:right 13px center}
 .statcard{display:block;width:100%;text-align:left}
 .statcard:active{filter:brightness(.97)}
-.mvpbadge{display:inline-block;margin-left:7px;padding:2px 7px;border-radius:6px;
-  background:var(--red);color:#fff;font-size:9.5px;font-weight:850;letter-spacing:1px;
-  vertical-align:middle}
+.statcard .k{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.trophy{width:19px;height:19px;flex:none;color:var(--red)}
+.statcard.s .trophy{color:var(--snots)} .statcard.d .trophy{color:var(--ducks)}
 table.sl{border-collapse:collapse;width:100%;font-size:13.5px}
 table.sl td{padding:10px 8px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
 table.sl tr:first-child td{border-top:none}
@@ -457,6 +496,13 @@ table.st .who.s{color:var(--snots)} table.st .who.d{color:var(--ducks)}
 table.st .num{font-weight:750}
 table.st .lead{color:var(--red);font-weight:850}
 table.st tbody tr:nth-child(even){background:var(--surface2)}
+.mycode{background:var(--surface2);border:1px solid var(--line);border-radius:12px;
+  padding:13px 14px;margin-bottom:15px;text-align:center}
+.mycode .mck{font-size:10.5px;font-weight:800;letter-spacing:1.8px;color:var(--dim);
+  text-transform:uppercase}
+.mycode .mcv{font-size:30px;font-weight:850;letter-spacing:7px;color:var(--red);
+  margin:6px 0 4px;padding-left:7px}
+.mycode .mch{font-size:11.5px;color:var(--muted);line-height:1.5}
 .codelist{display:grid;grid-template-columns:1fr auto;gap:0 10px;font-size:13px;margin-bottom:15px}
 .codelist .cn{padding:7px 0;border-bottom:1px solid var(--line)}
 .codelist .cc{padding:7px 0;border-bottom:1px solid var(--line);font-weight:800;
@@ -487,7 +533,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-28.9";      // bump on every deploy; drives the update prompt
+const BUILD = "2026-07-28.11";     // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -805,6 +851,12 @@ const Store = (() => {
   const LS = `${EVENT_KEY}_data`, LS_CHAT = `${EVENT_KEY}_chat`, LS_SEEN = `${EVENT_KEY}_chatseen`;
   let data = {}, chatData = {}, chatSeen = {};
   let db = null, connected = false, authed = false, chatBlocked = null, listeners = [];
+  /* Every merge is "newest timestamp wins". If we trusted each phone's own
+     clock, one man with a wrong clock would either lose every correction he
+     makes or silently overwrite everyone else's. Firebase tells us how far
+     this device is from the server, so we stamp everything in server time. */
+  let clockOffset = 0;
+  const now = () => Date.now() + clockOffset;
   try { data = JSON.parse(localStorage.getItem(LS) || "{}"); } catch(e){ data = {}; }
   try { chatData = JSON.parse(localStorage.getItem(LS_CHAT) || "{}"); } catch(e){ chatData = {}; }
   try { chatSeen = JSON.parse(localStorage.getItem(LS_SEEN) || "{}"); } catch(e){ chatSeen = {}; }
@@ -851,7 +903,7 @@ const Store = (() => {
     /* val: a number, null to clear, or PICKED for a picked-up ball.
        silent = write through without re-rendering, so a focused input keeps focus */
     setScore(id, h, entrant, val, by, silent){
-      const b = bucket(id), t = Date.now();
+      const b = bucket(id), t = now();
       const pick = val === PICKED;
       const cell = {v: pick ? null : val, x: pick ? true : null, t, by};
       b.scores[h] = b.scores[h] || {};
@@ -863,7 +915,7 @@ const Store = (() => {
 
     scorer(id){ return (data[id] || {}).scorer || null; },
     setScorer(id, pid){
-      const b = bucket(id), t = Date.now();
+      const b = bucket(id), t = now();
       b.scorer = {id: pid, t}; flush(); this._emit();
       if (db) update(ref(db, `${EVENT_KEY}/matches/${id}/scorer`), {id: pid, t}).catch(()=>{});
     },
@@ -874,7 +926,7 @@ const Store = (() => {
     isSubmitted(id){ const s = (data[id] || {}).submitted; return !!(s && s.v); },
     submittedBy(id){ const s = (data[id] || {}).submitted; return s && s.v ? s.by : null; },
     setSubmitted(id, val, by){
-      const b = bucket(id), t = Date.now();
+      const b = bucket(id), t = now();
       b.submitted = {v: !!val, by: by || "", t}; flush(); this._emit();
       if (db) update(ref(db, `${EVENT_KEY}/matches/${id}/submitted`),
                      {v: !!val, by: by || "", t}).catch(()=>{});
@@ -884,7 +936,7 @@ const Store = (() => {
        ones this phone happens to know about — otherwise a reset issued here
        won't clear scores that only exist on someone else's phone. */
     resetMatch(id){
-      const b = bucket(id), t = Date.now(), payload = {};
+      const b = bucket(id), t = now(), payload = {};
       const entry = ALL_MATCHES[id];
       const ents = new Set(Object.keys(b.scores).flatMap(h => Object.keys(b.scores[h])));
       if (entry){
@@ -919,7 +971,7 @@ const Store = (() => {
         .sort((a, b) => a.t - b.t);
     },
     chatSend(channel, txt, by){
-      const t = Date.now();
+      const t = now();
       const id = db ? push(ref(db, `${EVENT_KEY}/chat/${channel}`)).key
                     : `local-${t}-${Math.random().toString(36).slice(2, 8)}`;
       chatData[channel] = chatData[channel] || {};
@@ -947,8 +999,67 @@ const Store = (() => {
     },
     chatMarkRead(channel){
       const list = this.chat(channel);
-      chatSeen[channel] = list.length ? list[list.length - 1].t : Date.now();
+      chatSeen[channel] = list.length ? list[list.length - 1].t : now();
       try { localStorage.setItem(LS_SEEN, JSON.stringify(chatSeen)); } catch(e){}
+    },
+
+    /* ---- backup ------------------------------------------------------------
+       A full snapshot of every score, scorer, submission and chat message.
+       Restoring feeds it back through the same newest-wins merge the live sync
+       uses, so a restore can only ever add back what was lost — it can't
+       clobber something newer that happened in the meantime. */
+    exportAll(){
+      return {app:"crusade-in-the-creek", build:BUILD, event:EVENT_KEY,
+              takenAt:new Date(now()).toISOString(), matches:data, chat:chatData};
+    },
+    /* A restore has to beat a wipe. A reset writes "deleted" markers stamped
+       LATER than the backup, so a plain newest-wins merge would refuse to bring
+       anything back — useless in the one situation a backup is for. So: a cell
+       that currently holds no score is treated as missing and always restored,
+       and everything written is re-stamped now so it propagates to phones that
+       are still holding the wipe. A cell that holds a real, newer score is left
+       alone. */
+    importAll(blob){
+      if (!blob || blob.event !== EVENT_KEY) throw new Error("That file isn't a Crusade backup.");
+      let restored = 0, skipped = 0;
+      const stamp = now();
+      const empty = c => !c || (c.v == null && !c.x);
+      for (const id in (blob.matches || {})){
+        const inc = blob.matches[id], b = bucket(id);
+        for (const h in (inc.scores || {})) for (const e in inc.scores[h]){
+          const rc = inc.scores[h][e], lc = (b.scores[h] || {})[e];
+          if (!rc || typeof rc.t !== "number") continue;
+          if (empty(rc)) continue;                       // nothing to restore
+          if (empty(lc) || rc.t > lc.t){
+            const cell = {...rc, t: stamp};
+            b.scores[h] = b.scores[h] || {}; b.scores[h][e] = cell; restored++;
+            if (db) update(ref(db, `${EVENT_KEY}/matches/${id}/scores/${h}/${e}`), cell).catch(()=>{});
+          } else skipped++;
+        }
+        for (const field of ["scorer","submitted"]){
+          const rc = inc[field];
+          if (!rc || typeof rc.t !== "number") continue;
+          const lc = b[field];
+          const lcEmpty = !lc || (field === "scorer" ? !lc.id : !lc.v);
+          if (lcEmpty || rc.t > lc.t){
+            const cell = {...rc, t: stamp};
+            b[field] = cell; restored++;
+            if (db) update(ref(db, `${EVENT_KEY}/matches/${id}/${field}`), cell).catch(()=>{});
+          } else skipped++;
+        }
+      }
+      for (const ch in (blob.chat || {})){
+        chatData[ch] = chatData[ch] || {};
+        for (const mid in blob.chat[ch]){
+          const msg = blob.chat[ch][mid];
+          if (!msg || typeof msg.t !== "number" || chatData[ch][mid]) continue;
+          delete msg.state; delete msg.err;
+          chatData[ch][mid] = msg; restored++;
+          if (db) set(ref(db, `${EVENT_KEY}/chat/${ch}/${mid}`), msg).catch(()=>{});
+        }
+      }
+      flush(); flushChat(); this._emit();
+      return {restored, skipped};
     },
 
     async connect(){
@@ -960,6 +1071,10 @@ const Store = (() => {
         catch(e){ authed = false; console.warn("anonymous auth unavailable", e.code || e); }
         db = getDatabase(app);
         onValue(ref(db, ".info/connected"), s => { connected = !!s.val(); this._emit(); });
+        onValue(ref(db, ".info/serverTimeOffset"), s => {
+          const v = s.val();
+          if (typeof v === "number") clockOffset = v;
+        });
         onValue(ref(db, `${EVENT_KEY}/matches`), snap => {
           const all = snap.val() || {}; let changed = false;
           for (const id in all) if (mergeRemote(id, all[id])) changed = true;
@@ -1011,14 +1126,17 @@ const Session = {
   }
 };
 const inMatch = (m, pid) => [...m.s.p, ...m.d.p].some(x => x[0] === pid);
+/* Scoring is never granted implicitly. Someone in the match must actively
+   declare themselves scorekeeper first — otherwise four men open the same
+   match, all get editable boxes, and the card turns to mush. */
 function canScore(m){
   const me = Session.id; if (!me) return false;
   if (Store.isSubmitted(m.id)) return false;     // signed off — reopen to edit
   if (Session.admin) return true;
   const sc = Store.scorer(m.id);
-  if (!sc || !sc.id) return inMatch(m, me);
-  return sc.id === me;
+  return !!(sc && sc.id === me);
 }
+const canClaim = m => Session.admin || inMatch(m, Session.id);
 function myMatch(){
   for (const r of ROUNDS) for (const m of r.matches){
     if (inMatch(m, Session.id) && !matchState(r, m, Store.scores(m.id)).done) return m.id;
@@ -1041,10 +1159,12 @@ let updateReady = false;
 async function checkForUpdate(){
   if (updateReady) return;
   try {
-    const res = await fetch(`index.html?cb=${Date.now()}`, {cache: "no-store"});
+    // a 12-byte file, not the whole 100KB page — this runs every 10 minutes on
+    // 20 phones using their cellular data
+    const res = await fetch(`version.txt?cb=${Date.now()}`, {cache: "no-store"});
     if (!res.ok) return;
-    const m = (await res.text()).match(/const BUILD = "([^"]+)"/);
-    if (m && m[1] !== BUILD){ updateReady = true; if (Session.id) render(); }
+    const live = (await res.text()).trim();
+    if (live && live !== BUILD){ updateReady = true; if (Session.id) render(); }
   } catch(e){ /* offline — try again later */ }
 }
 function applyUpdate(){
@@ -1246,7 +1366,7 @@ function sceneSVG(){
 function viewHome(){
   const st = standings(), me = Session.me, mineId = myMatch();
   return `<div class="topbar">
-      <h1>Crusade in the Creek<div class="sub">${esc(me.n)} &middot; ${me.t === "s" ? "Snots" : "Ducks"}</div></h1>
+      <h1>Michigan '26<div class="sub">${esc(me.n)} &middot; ${me.t === "s" ? "Snots" : "Ducks"}</div></h1>
       <button class="iconbtn" data-sheet="menu">&#9776;</button></div>
     <div class="wrap">
       ${boardHTML(st)}
@@ -1267,14 +1387,15 @@ function viewHome(){
 
 /** Round-level roll-up used by both the Matches list and the Leaderboard. */
 function roundSummary(r){
-  let s = 0, d = 0, done = 0, live = 0, sLead = 0, dLead = 0, notStarted = 0;
+  let s = 0, d = 0, done = 0, live = 0, sLead = 0, dLead = 0, allSq = 0, notStarted = 0;
   r.matches.forEach(m => {
     const ms = matchState(r, m, Store.scores(m.id));
     if (ms.done){ s += ms.pts.s; d += ms.pts.d; done++; }
-    else if (ms.started){ live++; if (ms.up > 0) sLead++; else if (ms.up < 0) dLead++; }
+    else if (ms.started){ live++;
+      if (ms.up > 0) sLead++; else if (ms.up < 0) dLead++; else allSq++; }
     else notStarted++;
   });
-  return {s, d, done, live, sLead, dLead, notStarted,
+  return {s, d, done, live, sLead, dLead, allSq, notStarted,
           complete: done === r.matches.length, started: done + live > 0};
 }
 const roundBadge = sum => sum.complete ? `<span class="badge fin">Complete</span>`
@@ -1300,7 +1421,8 @@ function viewMatches(){
   });
   return `<div class="topbar">
       <button class="iconbtn" data-nav="home">&#8592;</button>
-      <h1>All Matches<div class="sub">${MATCH_COUNT} matches across 5 rounds</div></h1></div>
+      <h1>All Matches<div class="sub">${MATCH_COUNT} matches across 5 rounds</div></h1>
+      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button></div>
     <div class="wrap"><div class="sect">Rounds</div>${rounds}
       <button class="btn ghost" data-nav="board">Leaderboard</button></div>`;
 }
@@ -1353,11 +1475,13 @@ function viewBoard(){
       const nm = k => m[k].p.map(p => last(p[0])).join(" / ");
       const win = ms.winner, done = ms.done;
       const cls = k => k === win ? `win ${k}` : (win ? "lose" : k);
-      let status, thru;
+      let status, thru, midCls = "";
       if (!ms.started){ status = `<span class="st h">&ndash;</span>`; thru = esc(m.t); }
       else if (done){
-        status = `<span class="st ${win || "h"}">${win ? esc(ms.text) : "HALVED"}</span>`;
-        thru = Store.isSubmitted(m.id) ? "FINAL" : "unconfirmed";
+        // finished: the whole box takes the winner's colour, halves stay grey
+        midCls = win ? `won ${win}` : "won h";
+        status = `<span class="st">${win ? esc(ms.text) : "AS"}</span>`;
+        thru = win ? (Store.isSubmitted(m.id) ? "FINAL" : "unconfirmed") : "HALVED";
       } else {
         status = `<span class="st ${ms.up > 0 ? "s" : ms.up < 0 ? "d" : "h"}">${
           ms.up === 0 ? "AS" : `${Math.abs(ms.up)}&#9650;`}</span>`;
@@ -1365,12 +1489,13 @@ function viewBoard(){
       }
       rows += `<button class="lbrow" data-nav="match" data-id="${m.id}">
         <span class="lbside ${cls("s")}">${esc(nm("s"))}</span>
-        <span class="lbmid">${status}<span class="thru">${thru}</span></span>
+        <span class="lbmid ${midCls}">${status}<span class="thru">${thru}</span></span>
         <span class="lbside right ${cls("d")}">${esc(nm("d"))}</span></button>`;
     });
     const tally = sum.live
       ? `<span class="s">Snots lead ${sum.sLead}</span><span class="sep">&middot;</span>
          <span class="d">Ducks lead ${sum.dLead}</span>${
+           sum.allSq ? `<span class="sep">&middot;</span><span style="color:var(--muted)">${sum.allSq} AS</span>` : ""}${
            sum.done ? `<span class="sep">&middot;</span><span style="color:var(--dim)">${sum.done} final</span>` : ""}`
       : sum.started
         ? `<span class="s">Snots ${fmtPt(sum.s)}</span><span class="sep">&middot;</span>
@@ -1385,7 +1510,8 @@ function viewBoard(){
   });
   return `<div class="topbar">
       <button class="iconbtn" data-nav="home">&#8592;</button>
-      <h1>Leaderboard<div class="sub">Snots vs Ducks &middot; ${fmtPt(CLINCH)} to clinch</div></h1></div>
+      <h1>Leaderboard<div class="sub">Snots vs Ducks &middot; ${fmtPt(CLINCH)} to clinch</div></h1>
+      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button></div>
     <div class="wrap">${boardHTML(st)}${out}${syncHTML()}</div>`;
 }
 
@@ -1420,7 +1546,8 @@ function viewChat(){
   return `<div class="topbar">
       <button class="iconbtn" data-nav="home">&#8592;</button>
       <h1>Chat<div class="sub">${ch === "all" ? "Everyone &middot; all 20 players"
-        : `${mine === "s" ? "Snots" : "Ducks"} only &middot; your 10`}</div></h1></div>
+        : `${mine === "s" ? "Snots" : "Ducks"} only &middot; your 10`}</div></h1>
+      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button></div>
     <div class="wrap">
       <div class="chanbar">
         <button class="${V.chan !== "team" ? "on" : ""}" data-chan="all">Everyone${
@@ -1450,17 +1577,26 @@ function viewChat(){
 
 /* ---------- statistics ---------- */
 const toPar = n => n === 0 ? "E" : n > 0 ? `+${n}` : `${n}`;
+const trophySVG = () => `<svg class="trophy" viewBox="0 0 24 24" aria-hidden="true">
+  <path d="M7 3h10v5a5 5 0 0 1-10 0z" fill="currentColor"/>
+  <path d="M7 4H4.5a3.5 3.5 0 0 0 3.5 3.5M17 4h2.5A3.5 3.5 0 0 1 16 7.5"
+    stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <rect x="10.6" y="12.4" width="2.8" height="4" fill="currentColor"/>
+  <rect x="7.5" y="16" width="9" height="2.6" rx="1" fill="currentColor"/>
+  <rect x="6" y="19" width="12" height="2.4" rx="1.2" fill="currentColor"/></svg>`;
 function viewStats(){
   const rows = playerStats();
   if (!rows.length) return `<div class="topbar">
       <button class="iconbtn" data-nav="home">&#8592;</button>
-      <h1>Statistics<div class="sub">Nothing scored yet</div></h1></div>
+      <h1>Statistics<div class="sub">Nothing scored yet</div></h1>
+      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button></div>
     <div class="wrap"><div class="empty">Statistics appear here once scores start going in.<br>
       Every man's gross and net contribution to par, birdies, eagles and bogeys &mdash;
       across all five rounds.</div></div>`;
 
   // every statistic the filter can show: label, how to read it, sort direction
   const STATS = {
+    mvp:     {lbl:"MVP ranking",          get:p=>p.points, fmt:fmtPt, tie:(a,b)=>b.underN - a.underN},
     net:     {lbl:"Net score to par",     get:p=>p.netToPar,   fmt:toPar, low:true},
     gross:   {lbl:"Gross score to par",   get:p=>p.grossToPar, fmt:toPar, low:true},
     worst:   {lbl:"Most over par (Gross)",get:p=>p.grossToPar, fmt:toPar},
@@ -1479,7 +1615,8 @@ function viewStats(){
   const val = p => S.get(p);
   const shown = p => (S.fmt ? S.fmt(val(p)) : String(val(p)));
   const sorted = [...rows].sort((a, b) =>
-    (S.low ? val(a) - val(b) : val(b) - val(a)) || a.netToPar - b.netToPar);
+    (S.low ? val(a) - val(b) : val(b) - val(a)) ||
+    (S.tie ? S.tie(a, b) : 0) || a.netToPar - b.netToPar);
 
   const bestBy = (fn, hi) => rows.reduce((x, y) => (hi ? fn(y) > fn(x) : fn(y) < fn(x)) ? y : x);
   const bNet = bestBy(p => p.netToPar, false), bGross = bestBy(p => p.grossToPar, false);
@@ -1500,7 +1637,7 @@ function viewStats(){
   const options = Object.keys(STATS).map(k =>
     `<option value="${k}"${k === key ? " selected" : ""}>${STATS[k].lbl}</option>`).join("");
 
-  const mvpNote = key === "points" ? `<div class="legend"><b>How MVP is decided.</b>
+  const mvpNote = (key === "mvp" || key === "points") ? `<div class="legend"><b>How MVP is decided.</b>
     Every match win is worth 1 point and a halved match &frac12;. In the four 2v2 rounds
     both partners are credited the side's full point &mdash; they won it together.
     The MVP is the man with the most points <b>on the winning team</b>.
@@ -1508,15 +1645,18 @@ function viewStats(){
 
   return `<div class="topbar">
       <button class="iconbtn" data-nav="home">&#8592;</button>
-      <h1>Statistics<div class="sub">${rows.length} players scored so far</div></h1></div>
+      <h1>Statistics<div class="sub">${rows.length} players scored so far</div></h1>
+      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button></div>
     <div class="wrap">
       <div class="statcards">
-        ${best ? `<button class="statcard ${best.team} mvpcard" data-sort="points">
-          <div class="k">${best.decided ? "MVP" : "MVP so far"}</div>
-          <div class="v">${esc(best.name)}<span class="mvpbadge">MVP</span>
-          <small>${fmtPt(best.points)} point${best.points === 1 ? "" : "s"} for the
-          ${best.team === "s" ? "Snots" : "Ducks"} &middot; ${best.underN} hole${
-          best.underN === 1 ? "" : "s"} under net par</small></div></button>` : ""}
+        <button class="statcard ${best ? best.team : ""} mvpcard" data-sort="mvp">
+          <div class="k">${best && best.decided ? "MVP" : "MVP so far"}${trophySVG()}</div>
+          <div class="v">${best ? esc(best.name) : "&mdash;"}
+          <small>${best
+            ? `${fmtPt(best.points)} point${best.points === 1 ? "" : "s"} for the
+               ${best.team === "s" ? "Snots" : "Ducks"} &middot; tie-break: ${best.underN} hole${
+               best.underN === 1 ? "" : "s"} under net par`
+            : "Decided once one team is ahead"}</small></div></button>
         ${card("Best net", bNet, esc(bNet.last), `${toPar(bNet.netToPar)} to par`, "net")}
         ${card("Best gross", bGross, esc(bGross.last), `${toPar(bGross.grossToPar)} to par`, "gross")}
         ${card("Most birdies (Gross)", bBird.birdie > 0 ? bBird : null,
@@ -1550,6 +1690,7 @@ function viewRound(){
   return `<div class="topbar">
       <button class="iconbtn" data-nav="matches">&#8592;</button>
       <h1>Round ${r.n} &middot; ${esc(r.fmt)}<div class="sub">${esc(c.n)} &middot; ${esc(r.tee)} tees</div></h1>
+      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button>
     </div><div class="wrap">
       <div class="card flat"><div style="font-size:12.5px;color:var(--muted);line-height:1.65">
         <b style="color:var(--text)">Strokes:</b> ${esc(r.rule)}<br>
@@ -1622,6 +1763,7 @@ function viewMatch(){
   return `<div class="topbar">
       <button class="iconbtn" data-nav="round" data-i="${ROUNDS.indexOf(r)}">&#8592;</button>
       <h1>${esc(r.fmt)}<div class="sub">${esc(c.n)} &middot; ${esc(m.tee || r.tee)} &middot; ${esc(m.t)}</div></h1>
+      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button>
       <button class="iconbtn" data-sheet="menu">&#9776;</button>
     </div><div class="wrap">
       <div class="resbar ${st.winner || ""}" id="resbar">
@@ -1634,7 +1776,7 @@ function viewMatch(){
       ${Store.isSubmitted(m.id) ? `<div class="lockbar"><b>Round submitted.</b>
         Signed off by ${esc(PLAYERS[Store.submittedBy(m.id)] ? PLAYERS[Store.submittedBy(m.id)].n : "a commissioner")}.
         ${Session.admin ? `<button data-unsubmit="${m.id}">Reopen &rsaquo;</button>` : "Scores are locked."}</div>`
-        : scorerBar(m, sc, editable)}
+        : scorerBar(m, sc)}
       <div class="holehead">
         <div class="holenav">
           <button class="navbtn" data-step="-1" ${h === 0 ? "disabled" : ""}>&#8592;</button>
@@ -1646,10 +1788,8 @@ function viewMatch(){
       </div>
       ${sideBox("s")}${sideBox("d")}
       <div class="holebar">
-        <button class="side" data-step="-1" ${h === 0 ? "disabled" : ""}>&lsaquo; Prev Hole</button>
         <button class="go ${h === 17 || V.fromCard ? "fin" : ""}" data-proceed="1">${
           V.fromCard ? "Back to Review" : h === 17 ? "Review Round" : "Save Scores &amp; Proceed"}</button>
-        <button class="side" data-step="1" ${h === 17 ? "disabled" : ""}>Next Hole &rsaquo;</button>
       </div>
       <div class="savedtag">Every score saves the moment you type it${
         Store.online ? " and syncs to everyone" : " &mdash; will sync when you get service"}.${
@@ -1709,6 +1849,54 @@ function holeVerdict(r, m, h, scores){
   return {w, html:`<b class="win ${w}">${esc(nm(w))}</b> beat ${esc(nm(l))} on Hole ${h + 1}
     with ${term(win.gross, par)}${win.picked ? " (picked up)" : ""}`};
 }
+/* The taunt. Shown once per match, on the way in, always at the duck's expense. */
+const TAUNT_KEY = `${EVENT_KEY}_taunted`;
+function taunted(){ try { return JSON.parse(localStorage.getItem(TAUNT_KEY) || "{}"); } catch(e){ return {}; } }
+function markTaunted(id){
+  const t = taunted(); t[id] = 1;
+  try { localStorage.setItem(TAUNT_KEY, JSON.stringify(t)); } catch(e){}
+}
+function tauntSVG(){
+  const CREAM = "#f2e7cd", DEEP = "#0b2a1c", GOLD = "#c9a227";
+  const feather = (i, fx, fy, fr) => `<g class="tfeather" style="--fx:${fx}px;--fy:${fy}px;--fr:${fr}deg">
+    <path d="M0 0 c9 -5 17 -2 20 6 c-9 5 -17 2 -20 -6 z" fill="${CREAM}"
+      transform="translate(196 96) rotate(${i * 47})"/></g>`;
+  const star = (x, y, s) => `<g class="tstar" style="animation-delay:${1.08 + s * .07}s">
+    <path d="M0 -9 L2.6 -2.6 L9 0 L2.6 2.6 L0 9 L-2.6 2.6 L-9 0 L-2.6 -2.6 Z"
+      fill="${GOLD}" transform="translate(${x} ${y})"/></g>`;
+  return `<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <ellipse cx="215" cy="222" rx="86" ry="9" fill="#000" opacity=".28"/>
+    <g class="tduck">
+      <path d="M244 214 h-58 a20 20 0 0 1 -20 -20 v-30 h82 z" fill="${CREAM}" stroke="${DEEP}" stroke-width="4"/>
+      <ellipse cx="205" cy="150" rx="52" ry="42" fill="${CREAM}" stroke="${DEEP}" stroke-width="4"/>
+      <circle cx="196" cy="96" r="36" fill="#1f5f3f" stroke="${DEEP}" stroke-width="4"/>
+      <path d="M162 92 l-34 9 l34 12 z" fill="#e8820c" stroke="${DEEP}" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M180 84 l14 10 M194 84 l-14 10" stroke="${DEEP}" stroke-width="4" stroke-linecap="round"/>
+      <path d="M214 82 l14 10 M228 82 l-14 10" stroke="${DEEP}" stroke-width="4" stroke-linecap="round"/>
+      <path d="M232 152 c22 6 30 22 26 40" stroke="${DEEP}" stroke-width="5" fill="none" stroke-linecap="round"/>
+    </g>
+    <g class="timpact"><circle cx="196" cy="96" r="30" fill="none" stroke="#fff" stroke-width="5" opacity=".9"/></g>
+    ${star(150,54,0)}${star(238,58,1)}${star(196,38,2)}${star(126,92,3)}
+    ${[0,1,2,3,4,5].map((i) => feather(i, (i%2?-1:1)*(60+i*13), -50 - i*11, (i%2?-1:1)*(120+i*40))).join("")}
+    <g class="tball"><circle cx="196" cy="96" r="13" fill="#fff" stroke="${DEEP}" stroke-width="3"/>
+      <circle cx="192" cy="92" r="1.6" fill="#c9ccd1"/><circle cx="199" cy="93" r="1.6" fill="#c9ccd1"/>
+      <circle cx="196" cy="99" r="1.6" fill="#c9ccd1"/><circle cx="201" cy="99" r="1.6" fill="#c9ccd1"/>
+    </g></svg>`;
+}
+function playTaunt(r, m){
+  const el = document.createElement("div");
+  el.className = "taunt";
+  el.innerHTML = `${tauntSVG()}
+    <div class="tline">Round ${r.n} &middot; ${esc(r.fmt)}</div>
+    <div class="tsub">${esc(COURSES[r.course].n)} &middot; Play well</div>
+    <div class="tskip">tap to skip</div>`;
+  const close = () => { el.classList.add("out"); setTimeout(() => el.remove(), 320); };
+  el.onclick = close;
+  document.body.appendChild(el);
+  clearTimeout(playTaunt._t);
+  playTaunt._t = setTimeout(close, 3600);
+}
+
 function showToast(html){
   const old = document.querySelector(".toast"); if (old) old.remove();
   const t = document.createElement("div");
@@ -1731,12 +1919,15 @@ function matchLine(st){
 }
 /* Always rendered at the same height — if this bar appears or disappears as
    scores go in, every button below it jumps under the scorer's thumb. */
-function scorerBar(m, sc, editable){
+function scorerBar(m, sc){
+  const mine = sc && sc.id === Session.id;
   let body;
-  if (sc && sc.id === Session.id) body = `<b>You're keeping score.</b> Everyone else sees this live.`;
+  if (mine) body = `<b>You're keeping score.</b> Everyone else sees this live.
+    <button data-release="${m.id}">Hand off &rsaquo;</button>`;
   else if (sc && sc.id) body = `<b>${esc(PLAYERS[sc.id].n)}</b> is keeping score.` +
-    (Session.admin ? ` <button data-claim="${m.id}">Take over &rsaquo;</button>` : ` View only.`);
-  else if (editable) body = `Nobody is keeping score yet. <button data-claim="${m.id}">I'll keep score &rsaquo;</button>`;
+    (canClaim(m) ? ` <button data-claim="${m.id}">Take over &rsaquo;</button>` : ` View only.`);
+  else if (canClaim(m)) body = `<b>Nobody is keeping score yet.</b> Scores are locked until
+    someone takes it on. <button data-claim="${m.id}">I'll keep score &rsaquo;</button>`;
   else body = `<b>View only.</b> You're not in this match.`;
   return `<div class="lockbar">${body}</div>`;
 }
@@ -1863,6 +2054,7 @@ function viewCard(){
   return `<div class="topbar">
       <button class="iconbtn" data-nav="match" data-id="${m.id}">&#8592;</button>
       <h1>Review Round<div class="sub">${esc(c.n)} &middot; ${esc(r.fmt)} &middot; ${esc(m.tee || r.tee)}</div></h1>
+      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button>
     </div><div class="wrap">
       <div class="resbar ${st.done && !st.winner ? "halved" : (st.winner || "")}">
         <div class="r1">${submitted ? "Submitted &middot; official" : "Match result"}</div>
@@ -1907,7 +2099,17 @@ function viewSheet(){
       Session.admin ? " &middot; Commissioner" : ""}<br>
       ${Store.online ? "Live sync is on." : "Offline &mdash; scores save here and sync when you get service."}<br>
       <span style="color:var(--dim)">Version ${BUILD}</span></p>
+    <div class="mycode"><div class="mck">Your login code</div>
+      <div class="mcv mono">${Session.me.code}</div>
+      <div class="mch">Write this down. It's how you get back in if you're ever signed out.</div></div>
     ${codes}
+    ${Session.admin ? `<div class="sect" style="margin-top:4px">Backup</div>
+      <p style="margin-bottom:10px">Downloads every score, scorecard and chat message as a
+      single file. If anything is ever lost, load that file back and it restores &mdash;
+      it can only add back what's missing, never overwrite something newer.</p>
+      <button class="btn ghost" data-export="1">Download backup</button>
+      <button class="btn ghost" data-restore="1">Restore from backup&hellip;</button>
+      <input type="file" id="restorefile" accept="application/json,.json" style="display:none">` : ""}
     <button class="btn ghost" data-closebtn="1">Close</button>
     <button class="btn ghost" data-signout="1">Return to lock screen</button>
   </div></div>`;
@@ -1919,6 +2121,7 @@ function viewSheet(){
 function wire(){
   document.querySelectorAll("[data-nav]").forEach(el => el.onclick = () => {
     const n = el.dataset.nav;
+    if (n !== "match") V.fromCard = false;   // leaving the card/hole loop
     if (n === "home")  V.view = "home";
     if (n === "board") V.view = "board";
     if (n === "matches") V.view = "matches";
@@ -1937,9 +2140,16 @@ function wire(){
         if (!sideHole(r, m, "s", h, sc) || !sideHole(r, m, "d", h, sc)){ first = h; break; }
       }
       V.hole = first;
+      // first time into a match that hasn't begun: play the taunt
+      V.pendingTaunt = !matchState(r, m, sc).started && !taunted()[m.id] ? m.id : null;
     }
     if (n === "card"){ V.view = "card"; V.matchId = el.dataset.id; }
     V.sheet = null; render(); window.scrollTo(0, 0);
+    if (V.pendingTaunt){
+      const {r, m} = ALL_MATCHES[V.pendingTaunt];
+      markTaunted(V.pendingTaunt); V.pendingTaunt = null;
+      playTaunt(r, m);
+    }
   });
 
   const upd = document.querySelector("[data-update]");
@@ -1993,6 +2203,38 @@ function wire(){
     el.onclick = e => { if (e.target === el){ V.sheet = null; render(); } });
   document.querySelectorAll("[data-closebtn]").forEach(el =>
     el.onclick = () => { V.sheet = null; render(); });
+  const exp = document.querySelector("[data-export]");
+  if (exp) exp.onclick = () => {
+    const blob = new Blob([JSON.stringify(Store.exportAll(), null, 1)], {type:"application/json"});
+    const a = document.createElement("a");
+    const d = new Date();
+    const stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${
+      String(d.getDate()).padStart(2,"0")}-${String(d.getHours()).padStart(2,"0")}${
+      String(d.getMinutes()).padStart(2,"0")}`;
+    a.href = URL.createObjectURL(blob);
+    a.download = `crusade-backup-${stamp}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    showToast("Backup downloaded");
+  };
+  const rst2 = document.querySelector("[data-restore]");
+  const rf = document.getElementById("restorefile");
+  if (rst2 && rf){
+    rst2.onclick = () => rf.click();
+    rf.onchange = () => {
+      const f = rf.files && rf.files[0]; if (!f) return;
+      const rd = new FileReader();
+      rd.onload = () => {
+        try {
+          const res = Store.importAll(JSON.parse(rd.result));
+          showToast(`Restored ${res.restored} entr${res.restored === 1 ? "y" : "ies"}` +
+                    (res.skipped ? ` &middot; ${res.skipped} already current` : ""));
+          V.sheet = null; render();
+        } catch(e){ alert("Couldn't read that file.\n\n" + e.message); }
+      };
+      rd.readAsText(f);
+    };
+  }
   const so = document.querySelector("[data-signout]");
   if (so) so.onclick = () => { Session.id = null; V.sheet = null; V.view = "home"; render(); };
 
@@ -2007,6 +2249,11 @@ function wire(){
 
   const claim = document.querySelector("[data-claim]");
   if (claim) claim.onclick = () => { Store.setScorer(claim.dataset.claim, Session.id); render(); };
+  const rel = document.querySelector("[data-release]");
+  if (rel) rel.onclick = () => {
+    if (confirm("Hand off scorekeeping?\n\nScores lock until someone else in the match takes it on."))
+      { Store.setScorer(rel.dataset.release, null); render(); }
+  };
   const sub = document.querySelector("[data-submit]");
   if (sub) sub.onclick = () => {
     Store.setSubmitted(sub.dataset.submit, true, Session.id);
@@ -2033,8 +2280,6 @@ function wire(){
       let v = raw === "" ? null : parseInt(raw, 10);
       if (v !== null && (v < 1 || v > 15)) return;      // wait for a valid number
       const {r, m} = ALL_MATCHES[V.matchId];
-      const sc = Store.scorer(m.id);
-      if ((!sc || !sc.id) && inMatch(m, Session.id)) Store.setScorer(m.id, Session.id);
       const before = !!holeVerdict(r, m, V.hole, Store.scores(m.id));
       Store.setScore(m.id, V.hole, el.dataset.entrant, v, Session.id, true);
       patch();
@@ -2156,6 +2401,7 @@ document.addEventListener("visibilitychange", () => {
 window.MI26 = {PLAYERS, COURSES, ROUNDS, ALL_MATCHES, Store, Session, V,
   strokesOn, playerStrokes, teamStrokes, sideHole, holeScores, matchState, standings, markCls, PICKED,
   playerStats, playerPoints, mvp, toPar, roundSummary, holeVerdict, briefHTML, seriesHTML, rColour,
+  playTaunt, tauntSVG, taunted, markTaunted,
   render, patch, MATCH_COUNT, myMatch, BUILD, checkForUpdate,
   resetAll(){ Object.keys(ALL_MATCHES).forEach(id => Store.resetMatch(id)); render(); }};
 </script>
