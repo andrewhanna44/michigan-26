@@ -56,9 +56,8 @@ input,textarea{font-family:inherit}
 .tbb:active{background:var(--surface2)}
 .tbb i{font-style:normal;font-size:8.5px;font-weight:800;letter-spacing:.4px;
   text-transform:uppercase;color:var(--dim);line-height:1}
-.tbb .ava{width:26px;height:26px}
-.tbb.ava-b .ava{width:27px;height:27px}
-.tbb.lbl .tbi{width:20px;height:20px}
+.tbb .ava{width:27px;height:27px}
+.tbb.lbl .tbi{width:27px;height:27px}
 .wrap{padding:14px 14px 40px}
 
 /* Course texture — deliberately kept off the scoring screens, where contrast
@@ -262,20 +261,29 @@ input,textarea{font-family:inherit}
 /* SVG elements default to transform-box:view-box with transform-origin 0 0, so
    any rotate() or scale() pivots on the top-left of the whole picture and flings
    the shape off screen. Everything that rotates or scales names its own pivot. */
-/* ball flies in, then the duck gets it */
-.tball{transform-origin:196px 96px;animation:tfly 1.05s cubic-bezier(.35,.1,.7,.5) forwards}
-@keyframes tfly{0%{transform:translate(-320px,-90px) rotate(0)}100%{transform:translate(0,0) rotate(760deg)}}
-.tduck{transform-origin:205px 175px;animation:thit .55s ease-out 1.02s both}
+/* Ball flies in, loops once around the duck's head, then hits home — a
+   straight-line approach read as "thrown at" rather than "hit and flew off",
+   which is what the loop is there to sell. Impact-linked pieces (duck flinch,
+   flash ring, feathers, stars) all shift together with the longer flight. */
+.tball{transform-origin:196px 96px;animation:tfly 1.35s cubic-bezier(.4,.1,.4,1) forwards}
+@keyframes tfly{
+  0%{transform:translate(-320px,-90px) rotate(0deg)}
+  34%{transform:translate(70px,-6px) rotate(240deg)}
+  50%{transform:translate(18px,-72px) rotate(430deg)}
+  66%{transform:translate(-68px,-4px) rotate(600deg)}
+  80%{transform:translate(-18px,42px) rotate(760deg)}
+  100%{transform:translate(0,0) rotate(940deg)}}
+.tduck{transform-origin:205px 175px;animation:thit .55s ease-out 1.32s both}
 @keyframes thit{0%{transform:translate(0,0) rotate(0)}
   35%{transform:translate(26px,-14px) rotate(16deg)}
   100%{transform:translate(18px,4px) rotate(9deg)}}
-.tfeather{transform-origin:196px 96px;opacity:0;animation:tpuff .9s ease-out 1.05s forwards}
+.tfeather{transform-origin:196px 96px;opacity:0;animation:tpuff .9s ease-out 1.35s forwards}
 @keyframes tpuff{0%{opacity:1;transform:translate(0,0) rotate(0) scale(.4)}
   100%{opacity:0;transform:translate(var(--fx),var(--fy)) rotate(var(--fr)) scale(1)}}
-.tstar{opacity:0;animation:tstar 1.5s ease-out 1.08s forwards;transform-origin:center}
+.tstar{opacity:0;animation:tstar 1.5s ease-out 1.38s forwards;transform-origin:center}
 @keyframes tstar{0%{opacity:0;transform:scale(.3)}18%{opacity:1;transform:scale(1)}
   100%{opacity:0;transform:scale(1.1)}}
-.timpact{transform-origin:196px 96px;opacity:0;animation:timp .38s ease-out 1.02s forwards}
+.timpact{transform-origin:196px 96px;opacity:0;animation:timp .38s ease-out 1.32s forwards}
 @keyframes timp{0%{opacity:1;transform:scale(.3)}100%{opacity:0;transform:scale(1.9)}}
 
 /* ---------- shared scene animations ---------- */
@@ -302,6 +310,18 @@ input,textarea{font-family:inherit}
 @keyframes msw{0%{transform:rotate(-22deg)}60%{transform:rotate(8deg)}100%{transform:rotate(0)}}
 .mduck{transform-origin:330px 58px;animation:mfly 1.9s cubic-bezier(.3,0,.7,.4) .45s both}
 @keyframes mfly{0%{transform:translate(-190px,86px) scale(1.25)}100%{transform:translate(0,0) scale(1)}}
+/* Lunar rover drives in from off-screen; the ducks were mid-crossing and
+   scatter the instant it arrives. Wheels spin the whole time it's rolling. */
+.rvrover{animation:rvdrive 1.05s cubic-bezier(.3,.4,.2,1) forwards}
+@keyframes rvdrive{0%{transform:translateX(-230px)}100%{transform:translateX(0)}}
+.rvwheel{transform-origin:0 0;animation:rduckspin .5s linear infinite}
+/* Ducks stand there crossing, visible the whole approach, then scatter the
+   instant the rover reaches them. */
+.rvduck{transform-origin:0 0;animation:rvscatter .5s ease-out 1.05s both}
+@keyframes rvscatter{0%{transform:translate(0,0) rotate(0)}
+  100%{transform:translate(26px,-32px) rotate(210deg)}}
+.rvdust{opacity:0;animation:rvpuff .55s ease-out 1s forwards}
+@keyframes rvpuff{0%{opacity:.7;transform:scale(.5)}100%{opacity:0;transform:scale(1.6)}}
 .tkball{transform-origin:150px 152px;animation:tkroll 1s cubic-bezier(.4,0,.9,.6) .2s both}
 @keyframes tkroll{0%{transform:translateX(-180px) rotate(0)}100%{transform:translateX(56px) rotate(540deg)}}
 .tkastro{transform-origin:57px 160px;animation:tkth .6s ease-out both}
@@ -312,6 +332,10 @@ input,textarea{font-family:inherit}
 @keyframes bdfly{0%{transform:translateY(150px) scale(.5);opacity:0}
   100%{transform:translateY(0) scale(1);opacity:1}}
 @keyframes bdhov{from{transform:translateY(0)}to{transform:translateY(-12px)}}
+/* Alert beacon: two rings pulsing outward on a stagger, like a real siren. */
+.bapulse,.bapulse2{transform-origin:0 0;opacity:0;animation:bapulse 1.1s ease-out infinite}
+.bapulse2{animation-delay:.5s}
+@keyframes bapulse{0%{opacity:.9;transform:scale(.4)}100%{opacity:0;transform:scale(1.7)}}
 .vtrophy{transform-origin:200px 56px;animation:vtr 1.8s ease-in-out infinite alternate}
 @keyframes vtr{from{transform:translateY(0) rotate(-3deg)}to{transform:translateY(-8px) rotate(3deg)}}
 .vtear{animation:vtd 1.5s ease-in infinite}
@@ -766,6 +790,11 @@ table.st tbody tr:nth-child(even){background:var(--surface2)}
 .codelist .cn{padding:7px 0;border-bottom:1px solid var(--line)}
 .codelist .cc{padding:7px 0;border-bottom:1px solid var(--line);font-weight:800;
   letter-spacing:1.5px;text-align:right;color:var(--red)}
+.rules{margin:0 0 15px;padding:0;list-style:none}
+.rules li{font-size:13px;color:var(--muted);line-height:1.6;padding:10px 0;
+  border-top:1px solid var(--line)}
+.rules li:first-child{border-top:none;padding-top:0}
+.rules li b{color:var(--text);font-weight:750}
 </style>
 </head>
 <body>
@@ -792,7 +821,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-30.2";      // must match version.txt — that's what phones poll
+const BUILD = "2026-07-30.3";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -1922,7 +1951,7 @@ function navBtnsHTML(opts){
   return `${o.noHome ? "" : `<button class="tbb lbl" data-nav="home" aria-label="Home">
       ${homeIcon}<i>Home</i></button>`}
     <button class="tbb lbl" data-sheet="menu" aria-label="Info">${infoIcon}<i>Info</i></button>
-    <button class="tbb lbl ava-b ${Session.me.t}" data-nav="profile" aria-label="Your profile">
+    <button class="tbb lbl ${Session.me.t}" data-nav="profile" aria-label="Your profile">
       ${avatarSVG(Session.id)}<i>Profile</i></button>`;
 }
 
@@ -2522,19 +2551,14 @@ function holeVerdict(r, m, h, scores){
   return {w, html:`<b class="win ${w}">${esc(nm(w))}</b> beat ${esc(nm(l))} on Hole ${h + 1}
     with ${term(win.gross, par)}${win.picked ? " (picked up)" : ""}`};
 }
-/* The taunt. Shown once per match, on the way in, always at the duck's expense. */
-const TAUNT_KEY = `${EVENT_KEY}_taunted`;
-function taunted(){ try { return JSON.parse(localStorage.getItem(TAUNT_KEY) || "{}"); } catch(e){ return {}; } }
-function markTaunted(id){
-  const t = taunted(); t[id] = 1;
-  try { localStorage.setItem(TAUNT_KEY, JSON.stringify(t)); } catch(e){}
-}
+/* The taunt. Plays every time anyone clicks into a match — no once-per-match
+   memory — always at the duck's expense. */
 function tauntSVG(){
   const CREAM = "#f2e7cd", DEEP = "#0b2a1c", GOLD = "#c9a227";
   const feather = (i, fx, fy, fr) => `<g class="tfeather" style="--fx:${fx}px;--fy:${fy}px;--fr:${fr}deg">
     <path d="M0 0 c9 -5 17 -2 20 6 c-9 5 -17 2 -20 -6 z" fill="${CREAM}"
       transform="translate(196 96) rotate(${i * 47})"/></g>`;
-  const star = (x, y, s) => `<g class="tstar" style="animation-delay:${1.08 + s * .07}s">
+  const star = (x, y, s) => `<g class="tstar" style="animation-delay:${1.38 + s * .07}s">
     <path d="M0 -9 L2.6 -2.6 L9 0 L2.6 2.6 L0 9 L-2.6 2.6 L-9 0 L-2.6 -2.6 Z"
       fill="${GOLD}" transform="translate(${x} ${y})"/></g>`;
   return `<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -2652,6 +2676,66 @@ function moonSVG(){
     <ellipse cx="250" cy="220" rx="26" ry="7" fill="#2c3640"/></svg>`;
 }
 
+/** A Snot teeing off a duck from the surface of Mars — same mechanic as the
+    moon shot, reskinned rust-red, with Mars's two little moons standing in
+    for Earth. */
+function marsSVG(){
+  return `<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    ${[[36,34],[356,44],[300,22],[80,60]].map(([x,y],i)=>`<circle class="rstar"
+      style="animation-delay:${i*.3}s" cx="${x}" cy="${y}" r="2.4" fill="${CREAMC}"/>`).join("")}
+    <circle cx="52" cy="46" r="7" fill="#9a9a9a" opacity=".7"/>
+    <circle cx="76" cy="60" r="4" fill="#9a9a9a" opacity=".55"/>
+    <path class="marc" d="M150 150 Q244 40 344 62" stroke="${GOLDC}" stroke-width="3.5"
+      fill="none" stroke-dasharray="8 9" stroke-linecap="round"/>
+    <g class="mduck">
+      <ellipse cx="330" cy="64" rx="26" ry="18" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3.5"/>
+      <circle cx="350" cy="50" r="12" fill="${GREENC}" stroke="${DEEPC}" stroke-width="3.5"/>
+      <path d="M342 44 l6 5 M356 44 l-6 5" stroke="${DEEPC}" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M362 48 l14 -4 l-12 10 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M306 60 l-16 -6 l4 14 z" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3" stroke-linejoin="round"/>
+    </g>
+    <g class="mswing">
+      <rect x="86" y="150" width="42" height="52" rx="15" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+      <circle cx="107" cy="122" r="28" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+      <path d="M109 100 a22 22 0 0 1 0 44 z" fill="#16202b"/>
+      <path d="M126 166 L182 128" stroke="${GOLDC}" stroke-width="8" stroke-linecap="round"/>
+      <path d="M180 124 l16 -6 l5 11 l-16 6 z" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="2.6"/>
+    </g>
+    <path d="M0 196 q60 -22 120 -6 t130 2 t150 -8 v56 H0 z" fill="#9a4222"/>
+    <ellipse cx="90" cy="212" rx="20" ry="6" fill="#732f18"/>
+    <ellipse cx="250" cy="220" rx="26" ry="7" fill="#732f18"/></svg>`;
+}
+
+/** A Snot in a lunar rover, ducks crossing the moon at the worst possible
+    time. The rover drives in and stops right where they were standing. */
+function roverSVG(){
+  return `<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    ${[[40,30],[340,40],[300,18],[80,50],[200,20]].map(([x,y],i)=>`<circle class="rstar"
+      style="animation-delay:${i*.25}s" cx="${x}" cy="${y}" r="2.2" fill="${CREAMC}"/>`).join("")}
+    <path d="M0 188 q60 -14 120 0 t130 0 t150 0 v52 H0 z" fill="#3a4652"/>
+    <ellipse cx="70" cy="204" rx="20" ry="6" fill="#2c3640"/>
+    <ellipse cx="300" cy="210" rx="26" ry="7" fill="#2c3640"/>
+    <g transform="translate(262 170)"><g class="rvduck" style="animation-delay:0s">${rocketDuck()}</g></g>
+    <g transform="translate(300 178) scale(-1,1)"><g class="rvduck" style="animation-delay:.06s">${rocketDuck()}</g></g>
+    <g class="rvrover">
+      <g class="rvdust">
+        <ellipse cx="55" cy="196" rx="26" ry="9" fill="#c9ccd1" opacity=".55"/>
+        <ellipse cx="150" cy="200" rx="20" ry="7" fill="#c9ccd1" opacity=".4"/>
+      </g>
+      <path d="M60 176 h160 l-16 -32 h-38 l-10 -14 h-42 l-10 14 h-38 z"
+        fill="${GOLDC}" stroke="${DEEPC}" stroke-width="4" stroke-linejoin="round"/>
+      <g transform="translate(90 182)"><g class="rvwheel"><circle r="22" fill="#1a1f26" stroke="${DEEPC}" stroke-width="3"/>
+        <circle r="7" fill="#6b7078"/><path d="M0 -22 V22 M-22 0 H22" stroke="#6b7078" stroke-width="2.4"/></g></g>
+      <g transform="translate(190 182)"><g class="rvwheel" style="animation-delay:.1s"><circle r="22" fill="#1a1f26" stroke="${DEEPC}" stroke-width="3"/>
+        <circle r="7" fill="#6b7078"/><path d="M0 -22 V22 M-22 0 H22" stroke="#6b7078" stroke-width="2.4"/></g></g>
+      <rect x="118" y="136" width="42" height="32" rx="10" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3.5"/>
+      <circle cx="139" cy="118" r="21" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3.5"/>
+      <path d="M141 100 a17 17 0 0 1 0 34 z" fill="#16202b"/>
+      <path d="M212 140 l16 -28" stroke="${DEEPC}" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="230" cy="108" r="4.5" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="2"/>
+    </g></svg>`;
+}
+
 /** Three duck pins going over. */
 function turkeySVG(){
   // A CSS transform REPLACES the SVG transform attribute, so the positioning
@@ -2678,19 +2762,38 @@ function turkeySVG(){
     </g></svg>`;
 }
 
-/** Eagle, for a Snot eagle or net eagle. */
+/** A bald eagle landing on the astronaut's shoulder, on a grey moon — Big
+    Bird Alert, for a Snot eagle or net eagle. The siren in the corner is the
+    "alert"; the moon and the landing are the joke. */
 function bigDuckSVG(){
-  return `<svg viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <circle cx="200" cy="110" r="86" fill="none" stroke="${GOLDC}" stroke-width="3" opacity=".3"/>
-    <circle cx="200" cy="110" r="62" fill="none" stroke="${GOLDC}" stroke-width="3" opacity=".45"/>
-    <g class="bdbird">
-      <path d="M200 74 c-46 -34 -104 -20 -120 8 c34 -8 62 4 84 24 z" fill="#6b4a2a" stroke="${DEEPC}" stroke-width="3.5" stroke-linejoin="round"/>
-      <path d="M200 74 c46 -34 104 -20 120 8 c-34 -8 -62 4 -84 24 z" fill="#6b4a2a" stroke="${DEEPC}" stroke-width="3.5" stroke-linejoin="round"/>
-      <ellipse cx="200" cy="116" rx="30" ry="38" fill="#7d5730" stroke="${DEEPC}" stroke-width="3.5"/>
-      <circle cx="200" cy="76" r="24" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3.5"/>
-      <path d="M200 70 l26 8 l-26 10 z" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="2.8" stroke-linejoin="round"/>
-      <circle cx="190" cy="70" r="4" fill="${DEEPC}"/>
-      <path d="M186 152 l-6 18 M214 152 l6 18" stroke="${GOLDC}" stroke-width="5" stroke-linecap="round"/>
+  return `<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    ${[[40,30],[350,86],[300,18],[80,50]].map(([x,y],i)=>`<circle class="rstar"
+      style="animation-delay:${i*.28}s" cx="${x}" cy="${y}" r="2.4" fill="${CREAMC}"/>`).join("")}
+    <path d="M0 188 q60 -14 120 0 t130 0 t150 0 v52 H0 z" fill="#3a4652"/>
+    <ellipse cx="90" cy="206" rx="22" ry="6" fill="#2c3640"/>
+    <ellipse cx="300" cy="212" rx="28" ry="7" fill="#2c3640"/>
+    <g transform="translate(340 48)">
+      <g class="bapulse"><circle r="24" fill="none" stroke="#c8102e" stroke-width="3"/></g>
+      <g class="bapulse2"><circle r="16" fill="none" stroke="#c8102e" stroke-width="3"/></g>
+      <rect x="-11" y="6" width="22" height="7" rx="2.5" fill="#1a1f26"/>
+      <path d="M-10 6 a10 10 0 0 1 20 0 z" fill="#c8102e" stroke="#1a1f26" stroke-width="2"/>
+      <circle cy="-3" r="3.4" fill="#ffb3b3" opacity=".95"/>
+    </g>
+    <rect x="168" y="152" width="46" height="56" rx="16" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+    <circle cx="191" cy="126" r="29" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+    <path d="M193 100 a24 24 0 0 1 0 48 z" fill="#16202b"/>
+    <path d="M212 168 q12 -24 26 -32" stroke="${CREAMC}" stroke-width="11" fill="none" stroke-linecap="round"/>
+    <circle cx="238" cy="136" r="7" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3"/>
+    <g transform="translate(138 52) scale(.5)">
+      <g class="bdbird">
+        <path d="M200 74 c-46 -34 -104 -20 -120 8 c34 -8 62 4 84 24 z" fill="#6b4a2a" stroke="${DEEPC}" stroke-width="3.5" stroke-linejoin="round"/>
+        <path d="M200 74 c46 -34 104 -20 120 8 c-34 -8 -62 4 -84 24 z" fill="#6b4a2a" stroke="${DEEPC}" stroke-width="3.5" stroke-linejoin="round"/>
+        <ellipse cx="200" cy="116" rx="30" ry="38" fill="#7d5730" stroke="${DEEPC}" stroke-width="3.5"/>
+        <circle cx="200" cy="76" r="24" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3.5"/>
+        <path d="M200 70 l26 8 l-26 10 z" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="2.8" stroke-linejoin="round"/>
+        <circle cx="190" cy="70" r="4" fill="${DEEPC}"/>
+        <path d="M186 152 l-6 18 M214 152 l6 18" stroke="${GOLDC}" stroke-width="5" stroke-linecap="round"/>
+      </g>
     </g></svg>`;
 }
 
@@ -2744,15 +2847,20 @@ function playScene(o){
 }
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
-/* Match start — always at the duck's expense, drawn at random. */
+/* Match open — plays every single time, on the way in, always at the duck's
+   expense. Draws from the full roster: everything tagged for either a match
+   open or a Snots win. */
 function playTaunt(r, m){
   const sub = `${esc(COURSES[r.course].n)} &middot; Play well`;
   const line = `Round ${r.n} &middot; ${esc(r.fmt)}`;
   pick([
-    () => playScene({svg: tauntSVG(),  line, sub}),
-    () => playScene({svg: rocketSVG(), line, sub, ms: 4200}),
-    () => playScene({svg: darthSVG(),  line, sub}),
-    () => playScene({svg: moonSVG(),   line, sub, ms: 4200})
+    () => playScene({svg: tauntSVG(),    line, sub}),
+    () => playScene({svg: rocketSVG(),   line, sub, ms: 4200}),
+    () => playScene({svg: darthSVG(),    line, sub}),
+    () => playScene({svg: moonSVG(),     line, sub, ms: 4200}),
+    () => playScene({svg: marsSVG(),     line, sub, ms: 4200}),
+    () => playScene({svg: roverSVG(),    line, sub, ms: 4200}),
+    () => playScene({svg: duckHuntSVG(), line, sub, ms: 4200})
   ])();
 }
 
@@ -2794,6 +2902,14 @@ function duckHuntSVG(){
         <path d="M175 180 a20 20 0 0 1 0 40 z" fill="#14472f"/>
         <path d="M183 188 a13 13 0 0 0 -3 22" stroke="${CREAM}" stroke-width="3"
           fill="none" stroke-linecap="round" opacity=".65"/>
+        <!-- yesterday's kills, strapped to his belt -->
+        <path d="M152 229 L192 238" stroke="${DEEP}" stroke-width="3.5" stroke-linecap="round" opacity=".85"/>
+        ${[[160,231,.5],[182,236,.44]].map(([hx,hy,s])=>`<g transform="translate(${hx} ${hy}) scale(${s})">
+          <path d="M0 0 l-3 7 M0 0 l3 7" stroke="${DEEP}" stroke-width="2.4" stroke-linecap="round"/>
+          <ellipse cx="0" cy="24" rx="11" ry="16" fill="${CREAM}" stroke="${DEEP}" stroke-width="2.6"/>
+          <circle cx="0" cy="42" r="8" fill="${CREAM}" stroke="${DEEP}" stroke-width="2.6"/>
+          <path d="M-6 46 l-11 3 l11 4 z" fill="#e8820c" stroke="${DEEP}" stroke-width="1.8" stroke-linejoin="round"/>
+        </g>`).join("")}
         <path d="M188 224 L246 176" stroke="${GOLD}" stroke-width="9"
           stroke-linecap="round"/>
         <path d="M244 172 l16 -6 l4 10 l-16 6 z" fill="${GOLD}" stroke="${DEEP}" stroke-width="2.6"/>
@@ -2809,18 +2925,20 @@ function playWin(r, m, st){
     () => playScene({svg: duckHuntSVG(), line, sub, ms: 4200}),
     () => playScene({svg: rocketSVG(),   line, sub, ms: 4200}),
     () => playScene({svg: darthSVG(),    line, sub}),
-    () => playScene({svg: moonSVG(),     line, sub, ms: 4200})
+    () => playScene({svg: moonSVG(),     line, sub, ms: 4200}),
+    () => playScene({svg: marsSVG(),     line, sub, ms: 4200}),
+    () => playScene({svg: roverSVG(),    line, sub, ms: 4200})
   ])();
 }
 
 /* Three straight holes to the Snots. */
 function playTurkey(names){
   playScene({svg: turkeySVG(), line: "TURKEY", ms: 4200,
-    sub: `${[].concat(names).map(esc).join(" &amp; ")} &middot; three holes on the bounce`});
+    sub: `${[].concat(names).map(esc).join(" &amp; ")} &middot; won three holes in a row`});
 }
 /* A Snot eagle, gross or net. */
 function playBigDuck(who, kind){
-  playScene({svg: bigDuckSVG(), line: "BIG DUCK ALERT", ms: 4200,
+  playScene({svg: bigDuckSVG(), line: "BIG BIRD ALERT", ms: 4200,
     sub: `${esc(who)} &middot; ${kind === "net" ? "net eagle" : "eagle"}`});
 }
 /* The Crusade is won. Longer, and it plays on every phone. */
@@ -3168,6 +3286,7 @@ function viewCard(){
 
 /* ---------- menu ---------- */
 function viewSheet(){
+  if (V.sheet === "event") return viewEventSheet();
   if (V.sheet !== "menu") return "";
   let codes = "";
   if (Session.admin) codes = `<div class="sect" style="margin-top:4px">Player codes</div>
@@ -3182,6 +3301,7 @@ function viewSheet(){
       Session.me.title ? " &middot; " + esc(Session.me.title) : ""}<br>
       ${Store.online ? "Live sync is on." : "Offline &mdash; scores save here and sync when you get service."}<br>
       <span style="color:var(--dim)">Version ${BUILD}</span></p>
+    <button class="btn ghost" data-sheet="event" style="margin-bottom:15px">Event Overview</button>
     <div class="mycode"><div class="mck">Your login code</div>
       <div class="mcv mono">${Session.me.code}</div>
       <div class="mch">Write this down. It's how you get back in if you're ever signed out.</div></div>
@@ -3195,6 +3315,86 @@ function viewSheet(){
       <input type="file" id="restorefile" accept="application/json,.json" style="display:none">` : ""}
     <button class="btn ghost" data-closebtn="1">Close</button>
     <button class="btn ghost" data-signout="1">Return to lock screen</button>
+  </div></div>`;
+}
+
+/** Tee times run every 10 minutes; show the span rather than just the first
+    group off, so nobody reads it as a shotgun start. */
+const teeSpan = r => {
+  const t = r.matches.map(m => m.t);
+  return t[0] === t[t.length - 1] ? t[0] : `${t[0]} &ndash; ${t[t.length - 1]}`;
+};
+
+/** The whole trip on one scrollable sheet — schedule, points, buy-in, travel,
+    and the rules every match plays under. Pulls the schedule straight off
+    ROUNDS/COURSES so it can never drift from what the app actually plays. */
+function viewEventSheet(){
+  const rows = ROUNDS.map(r => { const c = COURSES[r.course], col = rColour(r.n);
+    return `<div class="card flat"><div class="rowline">
+      <div class="rnum" style="color:${col};border-color:${col};background:${col}14">${r.n}</div>
+      <div class="rmeta"><div class="t1">${esc(c.n)} &middot; ${esc(r.fmt)}</div>
+        <div class="t2">${esc(r.day)} &middot; ${teeSpan(r)}</div></div>
+    </div></div>`;
+  }).join("");
+
+  return `<div class="sheet" data-close="1"><div class="sheet-in">
+    <div class="sheethdr">
+      <button class="iconbtn" data-sheet="menu" aria-label="Back">&#8592;</button>
+      <h3>Event Overview</h3>
+      <button class="iconbtn" data-closebtn="1">&times;</button>
+    </div>
+
+    <p><b style="color:var(--text)">Shanty Creek Resort</b> &middot; Bellaire, Michigan<br>
+      Five 18-hole matches, Thursday Aug 13 &ndash; Saturday Aug 15. Rooms are booked
+      Thursday (8/13) through Sunday (8/16).</p>
+
+    <div class="sect">Schedule</div>
+    ${rows}
+
+    <div class="sect">Points &amp; Tiebreaker</div>
+    <p>30 points are up for grabs across the week. If it finishes 15&ndash;15, we'll work
+      with the course to set up on a par 3 or chipping green. All 20 players get one
+      attempt at closest to the pin &mdash; ball must be on the green to count &mdash; and
+      the single closest ball wins the Cup for his team.</p>
+
+    <div class="sect">Buy-In &amp; Side Games</div>
+    <p>The <b style="color:var(--text)">$130 buy-in</b> covers all 3 Long Drive / Closest
+      to the Pin contests. Each pays <b style="color:var(--text)">$100</b> to the individual
+      winner, plus <b style="color:var(--text)">$200</b> to every player on the winning
+      team. Long Drives must land in the fairway to count; Closest to the Pin must finish
+      on the green.</p>
+
+    <div class="sect">Getting There</div>
+    <p><b style="color:var(--text)">Day 1:</b> Arrive at Cedar River no later than 1:00 PM.
+      Everyone is staying at the Cedar River property and playing that course for Round 1.
+      Early arrivals can try to check in, but rooms aren't guaranteed.</p>
+    <p><b style="color:var(--text)">Days 2 &amp; 3:</b> Shuttles leave the Cedar River
+      property at 6:30 AM each day, and run straight to the second round between matches.
+      Come prepared for all 36 holes &mdash; extra shirts, socks, shoes, and Gold Bond.
+      Missing the shuttle puts your team behind in the morning match, so don't be late.</p>
+    <p><b style="color:var(--text)">Evenings:</b> Nothing's planned. The hotel has a pool,
+      and there's a shuttle into town for dinner if the group wants it &mdash; otherwise
+      it's the resort.</p>
+
+    <div class="sect">General Rules</div>
+    <ul class="rules">
+      <li><b>Match value</b> &mdash; 1 point for a win, &frac12; for a tie, 0 for a loss.</li>
+      <li><b>Handicap</b> &mdash; reflects each player's submitted index; every match
+        applies course handicap and that format's own stroke rule.</li>
+      <li><b>Max 18 strokes</b> in any match.</li>
+      <li><b>Out of bounds</b> &mdash; every stake color (white, yellow, red) plays as a
+        lateral. Re-hit from the tee, or drop at the point the ball crossed &mdash; not
+        parallel to where it landed &mdash; for a 1-stroke penalty (1st shot OB, drop 2,
+        hit 3). Red stakes may be played out of; white/yellow always play as a lateral,
+        for pace of play.</li>
+      <li><b>Gimmies</b> &mdash; entirely up to your opponents. Be a Dick, get treated like
+        a Dick.</li>
+      <li><b>Order of play</b> &mdash; the team that wins the hole has honors on the next
+        tee, not just the individual who won it. Ready golf everywhere else, but don't set
+        your partner up for a read if you're out of the hole.</li>
+      <li><b>Breakfast balls</b> &mdash; allowed only in Best Ball and Alternate Shot
+        (Rounds 2 and 4).</li>
+    </ul>
   </div></div>`;
 }
 
@@ -3231,13 +3431,13 @@ function wire(){
       const begun = matchBegun(m.id);
       if (!begun) V.view = "brief";
       V.briefOpen = false;
-      V.pendingTaunt = !begun && !taunted()[m.id] ? m.id : null;
+      V.pendingTaunt = m.id;   // every click into a match plays one, every time
     }
     if (n === "card"){ V.view = "card"; V.matchId = el.dataset.id; }
     V.sheet = null; render(); window.scrollTo(0, 0);
     if (V.pendingTaunt){
       const {r, m} = ALL_MATCHES[V.pendingTaunt];
-      markTaunted(V.pendingTaunt); V.pendingTaunt = null;
+      V.pendingTaunt = null;
       playTaunt(r, m);
     }
   });
@@ -3596,12 +3796,12 @@ document.addEventListener("visibilitychange", () => {
 window.MI26 = {PLAYERS, COURSES, ROUNDS, ALL_MATCHES, Store, Session, V,
   strokesOn, playerStrokes, teamStrokes, sideHole, holeScores, holeEntered, matchState, standings, markCls, PICKED,
   playerStats, playerPoints, mvp, toPar, roundSummary, holeVerdict, briefBody, viewBrief, seriesHTML, rColour,
-  eventResult, tiebreakHTML, tugSVG, avatarSVG, viewProfile,
+  eventResult, tiebreakHTML, tugSVG, avatarSVG, viewProfile, viewSheet, viewEventSheet,
   SPECIALS, specialAt, flashSpecial, afterHoleComplete, showToast, flashHoleResult, navBtnsHTML,
   mentionsMe, renderMsgText, taggedUnread, taggedTotal,
-  playTaunt, tauntSVG, taunted, markTaunted, playWin, duckHuntSVG, matchLine, holeLine,
+  playTaunt, tauntSVG, playWin, duckHuntSVG, matchLine, holeLine,
   playScene, playTurkey, playBigDuck, playVictory, checkVictory,
-  rocketSVG, darthSVG, moonSVG, turkeySVG, bigDuckSVG, victorySVG,
+  rocketSVG, darthSVG, moonSVG, marsSVG, roverSVG, turkeySVG, bigDuckSVG, victorySVG,
   render, patch, MATCH_COUNT, myMatch, BUILD, checkForUpdate,
   resetAll(){ Object.keys(ALL_MATCHES).forEach(id => Store.resetMatch(id)); render(); }};
 </script>
