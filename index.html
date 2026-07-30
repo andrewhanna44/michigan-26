@@ -50,6 +50,15 @@ input,textarea{font-family:inherit}
   flex:none;font-size:16px;line-height:1}
 .iconbtn:active{background:var(--surface3)}
 .tbi{width:19px;height:19px;color:var(--muted)}
+/* home | info | profile, always in that order, profile furthest right */
+.tbb{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1px;padding:3px 5px;border-radius:9px;background:none;border:none;min-width:38px}
+.tbb:active{background:var(--surface2)}
+.tbb i{font-style:normal;font-size:8.5px;font-weight:800;letter-spacing:.4px;
+  text-transform:uppercase;color:var(--dim);line-height:1}
+.tbb .ava{width:26px;height:26px}
+.tbb.ava-b .ava{width:27px;height:27px}
+.tbb.lbl .tbi{width:20px;height:20px}
 .wrap{padding:14px 14px 40px}
 
 /* Course texture — deliberately kept off the scoring screens, where contrast
@@ -196,6 +205,41 @@ input,textarea{font-family:inherit}
 .brief li .hl{color:var(--muted)}
 .brief .none{color:var(--dim)}
 
+/* ---------- match briefing screen + its collapsed twin ---------- */
+.vsbox{display:flex;align-items:center;gap:10px;background:var(--surface);
+  border:1px solid var(--line);border-radius:13px;padding:14px 12px;margin-bottom:10px;
+  box-shadow:var(--shadow)}
+.vsside{flex:1;font-size:13.5px;font-weight:750;line-height:1.35;text-align:center}
+.vsside.s{color:var(--snots)} .vsside.d{color:var(--ducks)}
+.vsmid{font-size:10.5px;font-weight:800;letter-spacing:1.4px;color:var(--dim);
+  border:1px solid var(--line);border-radius:20px;padding:4px 8px}
+/* The collapsed header inside scoring: says what round you're on, opens the brief. */
+.roundbar{display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  background:var(--surface);border:1px solid var(--line);border-radius:11px;
+  padding:9px 12px;margin-bottom:10px;box-shadow:var(--shadow)}
+.roundbar .rbn{width:20px;height:20px;border-radius:50%;color:#fff;font-size:11px;
+  font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+.roundbar .rbt{flex:1;font-size:13px;font-weight:750;color:var(--text)}
+.roundbar .rbc{display:flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;
+  letter-spacing:1px;text-transform:uppercase;color:var(--red)}
+.roundbar .rbc i{font-style:normal;font-size:13px;transition:transform .18s}
+.roundbar.open{border-radius:11px 11px 0 0;margin-bottom:0;border-bottom-color:transparent}
+.roundbar.open .rbc i{transform:rotate(180deg)}
+.briefdrop{border-radius:0 0 13px 13px;border-top:none;margin-bottom:11px}
+/* Hand the card to a named player — one tap, no typing, works for everyone in the group. */
+.handoff{margin-top:11px;border-top:1px solid var(--line);padding-top:11px}
+.handoff .hoh{font-size:11px;font-weight:800;letter-spacing:1.2px;color:var(--dim);
+  text-transform:uppercase;margin-bottom:8px}
+.honame{display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  background:var(--surface2);border:1px solid var(--line);border-radius:10px;
+  padding:8px 10px;margin-bottom:6px;font-size:13px;font-weight:700;color:var(--text)}
+.honame.s{border-left:3px solid var(--snots)} .honame.d{border-left:3px solid var(--ducks)}
+.honame span{flex:1}
+.honame em{font-style:normal;font-size:11px;font-weight:700;color:var(--dim);
+  letter-spacing:.4px;text-transform:uppercase}
+.hodrop{width:100%;padding:8px;font-size:12px;font-weight:700;color:var(--muted);
+  text-decoration:underline;margin-top:2px}
+
 /* ---------- pre-match taunt ----------
    Plays once per match, on the way in. Always pro-Snots by design. Tap to skip.
    Pure CSS on inline SVG: nothing downloaded, nothing that can fail on course. */
@@ -210,25 +254,64 @@ input,textarea{font-family:inherit}
   text-transform:uppercase;margin-top:20px;opacity:0;animation:tin .4s ease-out 1.25s forwards;
   text-align:center;padding:0 20px;line-height:1.5}
 .taunt .tsub{color:#c9a227;font-size:11.5px;font-weight:750;letter-spacing:1.6px;
-  text-transform:uppercase;margin-top:8px;opacity:0;animation:tin .4s ease-out 1.5s forwards}
+  text-transform:uppercase;margin-top:8px;opacity:0;animation:tin .4s ease-out 1.5s forwards;
+  text-align:center;padding:0 24px;line-height:1.6}
 .taunt .tskip{position:absolute;bottom:calc(26px + var(--safe-b));color:#7d9a88;
   font-size:11.5px;font-weight:650;letter-spacing:.6px}
 @keyframes tin{to{opacity:1}}
+/* SVG elements default to transform-box:view-box with transform-origin 0 0, so
+   any rotate() or scale() pivots on the top-left of the whole picture and flings
+   the shape off screen. Everything that rotates or scales names its own pivot. */
 /* ball flies in, then the duck gets it */
-.tball{animation:tfly 1.05s cubic-bezier(.35,.1,.7,.5) forwards}
+.tball{transform-origin:196px 96px;animation:tfly 1.05s cubic-bezier(.35,.1,.7,.5) forwards}
 @keyframes tfly{0%{transform:translate(-320px,-90px) rotate(0)}100%{transform:translate(0,0) rotate(760deg)}}
-.tduck{animation:thit .55s ease-out 1.02s both}
+.tduck{transform-origin:205px 175px;animation:thit .55s ease-out 1.02s both}
 @keyframes thit{0%{transform:translate(0,0) rotate(0)}
   35%{transform:translate(26px,-14px) rotate(16deg)}
   100%{transform:translate(18px,4px) rotate(9deg)}}
-.tfeather{opacity:0;animation:tpuff .9s ease-out 1.05s forwards}
+.tfeather{transform-origin:196px 96px;opacity:0;animation:tpuff .9s ease-out 1.05s forwards}
 @keyframes tpuff{0%{opacity:1;transform:translate(0,0) rotate(0) scale(.4)}
   100%{opacity:0;transform:translate(var(--fx),var(--fy)) rotate(var(--fr)) scale(1)}}
 .tstar{opacity:0;animation:tstar 1.5s ease-out 1.08s forwards;transform-origin:center}
 @keyframes tstar{0%{opacity:0;transform:scale(.3)}18%{opacity:1;transform:scale(1)}
   100%{opacity:0;transform:scale(1.1)}}
-.timpact{opacity:0;animation:timp .38s ease-out 1.02s forwards}
+.timpact{transform-origin:196px 96px;opacity:0;animation:timp .38s ease-out 1.02s forwards}
 @keyframes timp{0%{opacity:1;transform:scale(.3)}100%{opacity:0;transform:scale(1.9)}}
+
+/* ---------- shared scene animations ---------- */
+.rstar{animation:rtw 1.6s ease-in-out infinite alternate}
+@keyframes rtw{from{opacity:.25}to{opacity:1}}
+.rrocket{animation:rlift 2.6s cubic-bezier(.5,0,.85,.4) .5s forwards}
+@keyframes rlift{0%{transform:translateY(0)}18%{transform:translateY(6px)}
+  100%{transform:translateY(-300px)}}
+.rflame{transform-origin:200px 164px;animation:rfl .12s ease-in-out infinite alternate,
+  rlift 2.6s cubic-bezier(.5,0,.85,.4) .5s forwards}
+@keyframes rfl{from{transform:scaleY(.75)}to{transform:scaleY(1.25)}}
+.dbolt{animation:dbz .5s ease-in-out infinite alternate}
+@keyframes dbz{from{opacity:.2;transform:translateX(-4px)}to{opacity:.95;transform:translateX(4px)}}
+.dchoke{transform-origin:300px 110px;animation:dch 1.4s ease-in-out infinite alternate}
+@keyframes dch{from{transform:translateY(0) rotate(0)}to{transform:translateY(-12px) rotate(4deg)}}
+.marc{stroke-dasharray:9 10;animation:mdash 1.2s linear infinite}
+@keyframes mdash{to{stroke-dashoffset:-38}}
+.mswing{transform-origin:110px 180px;animation:msw .8s ease-out both}
+@keyframes msw{0%{transform:rotate(-22deg)}60%{transform:rotate(8deg)}100%{transform:rotate(0)}}
+.mduck{transform-origin:330px 58px;animation:mfly 1.9s cubic-bezier(.3,0,.7,.4) .45s both}
+@keyframes mfly{0%{transform:translate(-190px,86px) scale(1.25)}100%{transform:translate(0,0) scale(1)}}
+.tkball{transform-origin:150px 152px;animation:tkroll 1s cubic-bezier(.4,0,.9,.6) .2s both}
+@keyframes tkroll{0%{transform:translateX(-180px) rotate(0)}100%{transform:translateX(56px) rotate(540deg)}}
+.tkastro{transform-origin:57px 160px;animation:tkth .6s ease-out both}
+@keyframes tkth{0%{transform:rotate(16deg)}100%{transform:rotate(0)}}
+.tkpin{transform-origin:0 176px;animation:tkfall .5s cubic-bezier(.4,0,.8,1) both}
+@keyframes tkfall{0%{transform:rotate(0)}100%{transform:rotate(74deg) translateY(6px)}}
+.bdbird{transform-origin:200px 110px;animation:bdfly 1.1s ease-out both, bdhov 2.2s ease-in-out 1.1s infinite alternate}
+@keyframes bdfly{0%{transform:translateY(150px) scale(.5);opacity:0}
+  100%{transform:translateY(0) scale(1);opacity:1}}
+@keyframes bdhov{from{transform:translateY(0)}to{transform:translateY(-12px)}}
+.vtrophy{transform-origin:200px 56px;animation:vtr 1.8s ease-in-out infinite alternate}
+@keyframes vtr{from{transform:translateY(0) rotate(-3deg)}to{transform:translateY(-8px) rotate(3deg)}}
+.vtear{animation:vtd 1.5s ease-in infinite}
+@keyframes vtd{0%{opacity:0;transform:translateY(0)}20%{opacity:1}
+  100%{opacity:0;transform:translateY(26px)}}
 
 /* ---------- Snots win: duck hunt ---------- */
 .wsky{animation:tfade .3s ease-out}
@@ -686,7 +769,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-29.4";      // must match version.txt — that's what phones poll
+const BUILD = "2026-07-29.5";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -1376,7 +1459,7 @@ function myMatch(){
    ========================================================================== */
 let V = {view:"home", round:0, matchId:null, hole:0, sheet:null, pending:false,
          chan:"all", draft:null, refocusChat:false, statSort:"net", fromCard:false,
-         profileId:null, tagOpen:false};
+         profileId:null, tagOpen:false, briefOpen:false};
 
 /* GitHub Pages caches the page, so a phone can keep running an old build for
    hours after a fix ships. Poll for a newer BUILD and offer a one-tap reload —
@@ -1437,12 +1520,13 @@ function render(){
   if (V.view === "stats") html += viewStats();
   if (V.view === "chat")  html += viewChat();
   if (V.view === "round") html += viewRound();
+  if (V.view === "brief") html += viewBrief();
   if (V.view === "match") html += viewMatch();
   if (V.view === "card")  html += viewCard();
   if (V.sheet) html += viewSheet();
   app.innerHTML = html;
   // turf only where legibility isn't critical: never on match entry or the card
-  const TURF = ["home", "board", "matches", "profile", "stats", "round"];
+  const TURF = ["home", "board", "matches", "profile", "stats", "round", "brief"];
   document.body.classList.toggle("turf", TURF.includes(V.view));
   wire();
 }
@@ -1597,9 +1681,7 @@ function viewHome(){
   const st = standings(), me = Session.me, mineId = myMatch();
   return `<div class="topbar">
       <h1>Michigan '26<div class="sub">${esc(me.n)} &middot; ${me.t === "s" ? "Snots" : "Ducks"}</div></h1>
-      <button class="avabtn ${me.t}" data-nav="profile" title="Your profile"
-        aria-label="Your profile">${avatarSVG(Session.id)}</button>
-      <button class="iconbtn" data-sheet="menu" aria-label="Menu">&#9776;</button></div>
+      ${navBtnsHTML({noHome: true})}</div>
     <div class="wrap">
       ${taggedTotal() ? `<button class="tagbar" data-nav="chat">
         <span style="font-size:17px">@</span>
@@ -1781,10 +1863,19 @@ const homeIcon = `<svg viewBox="0 0 24 24" class="tbi" aria-hidden="true">
     stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M10 20v-5h4v5" stroke="currentColor" stroke-width="2" fill="none"
     stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-function navBtnsHTML(){
-  return `<button class="iconbtn" data-nav="home" title="Home" aria-label="Home">${homeIcon}</button>
-    <button class="avabtn ${Session.me.t}" data-nav="profile" title="Your profile"
-      aria-label="Your profile">${avatarSVG(Session.id)}</button>`;
+const infoIcon = `<svg viewBox="0 0 24 24" class="tbi" aria-hidden="true">
+  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none"/>
+  <circle cx="12" cy="7.6" r="1.3" fill="currentColor"/>
+  <path d="M12 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+/* Fixed order on every screen, right-hand side: home, info, profile.
+   Profile is always furthest right; the two that need explaining are labelled. */
+function navBtnsHTML(opts){
+  const o = opts || {};
+  return `${o.noHome ? "" : `<button class="tbb" data-nav="home" aria-label="Home">
+      ${homeIcon}</button>`}
+    <button class="tbb lbl" data-sheet="menu" aria-label="Info">${infoIcon}<i>Info</i></button>
+    <button class="tbb lbl ava-b ${Session.me.t}" data-nav="profile" aria-label="Your profile">
+      ${avatarSVG(Session.id)}<i>Profile</i></button>`;
 }
 
 const chatBadge = () => {
@@ -2243,7 +2334,7 @@ function viewMatch(){
 
   return `<div class="topbar">
       <button class="iconbtn" data-nav="round" data-i="${ROUNDS.indexOf(r)}">&#8592;</button>
-      <h1>${esc(r.fmt)}<div class="sub">${esc(c.n)} &middot; ${esc(m.tee || r.tee)} &middot; ${esc(m.t)}</div></h1>
+      <h1>${esc(c.n)}<div class="sub">${esc(m.tee || r.tee)} &middot; ${esc(m.t)}</div></h1>
       ${navBtnsHTML()}
     </div><div class="wrap">
       <div class="resbar ${st.winner || ""}" id="resbar">
@@ -2252,7 +2343,12 @@ function viewMatch(){
       </div>
       ${st.done && !Store.isSubmitted(m.id) ? `<button class="btn" style="margin:0 0 10px"
         data-nav="card" data-id="${m.id}">Match decided &mdash; Review &amp; Submit &rsaquo;</button>` : ""}
-      ${!st.started ? briefHTML(r, m) : ""}
+      <button class="roundbar ${V.briefOpen ? "open" : ""}" data-briefopen="1">
+        <span class="rbn" style="background:${rColour(r.n)}">${r.n}</span>
+        <span class="rbt">Round ${r.n} &middot; ${esc(r.fmt)}</span>
+        <span class="rbc">${V.briefOpen ? "Hide" : "Details"} <i>&#9662;</i></span></button>
+      ${V.briefOpen ? `<div class="brief briefdrop">${briefBody(r, m)}${
+        Store.isSubmitted(m.id) ? "" : handoffHTML(m)}</div>` : ""}
       ${Store.isSubmitted(m.id) ? `<div class="lockbar"><b>Round submitted.</b>
         Signed off by ${esc(PLAYERS[Store.submittedBy(m.id)] ? PLAYERS[Store.submittedBy(m.id)].n : "a commissioner")}.
         ${Session.admin ? `<button data-unsubmit="${m.id}">Reopen &rsaquo;</button>` : "Scores are locked."}</div>`
@@ -2286,9 +2382,8 @@ function viewMatch(){
         style="color:var(--red);margin-top:9px">Reset this match</button>` : ""}
     </div>`;
 }
-/** Opening briefing: what this round is, and exactly who gets shots where. */
-function briefHTML(r, m){
-  const c = COURSES[r.course];
+/** The briefing detail — used standalone before a match, and collapsed inside it. */
+function briefBody(r, m){
   const rows = [];
   if (r.mode === "team"){
     ["s","d"].forEach(k => {
@@ -2302,9 +2397,7 @@ function briefHTML(r, m){
       for (let i = 0; i < n; i++) holes.push(h + 1); }
     rows.push({k, name: PLAYERS[pl[0]].n, n: pl[2], holes});
   }));
-  return `<div class="brief">
-    <div class="bt">Round ${r.n} &middot; ${esc(r.fmt)}</div>
-    <div class="bd">${fmtBlurb(r)}<br><b>Strokes:</b> ${esc(r.rule)}</div>
+  return `<div class="bd">${fmtBlurb(r)}<br><b>Strokes:</b> ${esc(r.rule)}</div>
     <ul>${rows.map(x => `<li><span class="who ${x.k}">${esc(x.name)}</span>
       <span class="hl">&mdash; ${x.holes.length ? `${x.holes.length} shot${x.holes.length===1?"":"s"}
       on hole${x.holes.length===1?"":"s"} ${x.holes.join(", ")}` : "no shots"}</span></li>`).join("")}</ul>
@@ -2312,8 +2405,47 @@ function briefHTML(r, m){
       lower partner's strokes.</div>` : ""}
     ${SPECIALS[r.n] ? `<div class="bd" style="margin-top:8px">
       <b>Closest to the Pin:</b> hole ${SPECIALS[r.n].ctp} &nbsp;&middot;&nbsp;
-      <b>Long Drive:</b> hole ${SPECIALS[r.n].ld}</div>` : ""}
+      <b>Long Drive:</b> hole ${SPECIALS[r.n].ld}</div>` : ""}`;
+}
+
+/** Who may be handed the card, and the button to do it. */
+function handoffHTML(m){
+  const sc = Store.scorer(m.id);
+  const others = [...m.s.p, ...m.d.p].map(p => p[0]).filter(id => !sc || id !== sc.id);
+  if (!canClaim(m) && !(sc && sc.id === Session.id)) return "";
+  return `<div class="handoff">
+    <div class="hoh">${sc && sc.id ? "Hand scoring to someone else" : "Who's keeping score?"}</div>
+    ${others.map(id => `<button class="honame ${PLAYERS[id].t}" data-give="${m.id}"
+      data-to="${id}">${avatarSVG(id, "sm")}<span>${esc(PLAYERS[id].n)}</span>
+      <em>${id === Session.id ? "that's me" : sc && sc.id ? "give the card" : "keeps score"}</em>
+      </button>`).join("")}
+    ${sc && sc.id ? `<button class="hodrop" data-release="${m.id}">Nobody &mdash; lock scoring</button>` : ""}
   </div>`;
+}
+
+/** The standalone screen you land on when a match hasn't started. */
+function viewBrief(){
+  const {r, m} = ALL_MATCHES[V.matchId], c = COURSES[r.course];
+  const sc = Store.scorer(m.id);
+  const nm = k => m[k].p.map(p => PLAYERS[p[0]].n).join(" & ");
+  return `<div class="topbar">
+      <button class="iconbtn" data-nav="round" data-i="${ROUNDS.indexOf(r)}">&#8592;</button>
+      <h1>Round ${r.n} &middot; ${esc(r.fmt)}<div class="sub">${esc(c.n)} &middot; ${
+        esc(m.tee || r.tee)} &middot; ${esc(m.t)}</div></h1>
+      ${navBtnsHTML()}</div>
+    <div class="wrap">
+      <div class="vsbox">
+        <div class="vsside s">${esc(nm("s"))}</div>
+        <div class="vsmid">VS</div>
+        <div class="vsside d">${esc(nm("d"))}</div>
+      </div>
+      <div class="brief">${briefBody(r, m)}</div>
+      ${sc && sc.id ? `<div class="lockbar"><b>${esc(PLAYERS[sc.id].n)}</b> is keeping score.</div>`
+        : `<div class="lockbar"><b>Nobody is keeping score yet.</b> Scores stay locked
+           until someone takes it on.</div>`}
+      ${handoffHTML(m)}
+      <button class="btn big" data-toscoring="${m.id}">Proceed to scoring &rsaquo;</button>
+    </div>`;
 }
 
 /** "Hodgman / Bertolini beat Mosele / MacDonald on Hole 1 with a Birdie" */
@@ -2370,18 +2502,188 @@ function tauntSVG(){
       <circle cx="196" cy="99" r="1.6" fill="#c9ccd1"/><circle cx="201" cy="99" r="1.6" fill="#c9ccd1"/>
     </g></svg>`;
 }
-function playTaunt(r, m){
+/* ---------- the trash-talk scene library ----------
+   One shell, many scenes. Match starts and Snots match wins each draw at random
+   from their own pool so it doesn't get stale over 30 matches. */
+const CREAMC = "#f2e7cd", DEEPC = "#0b2a1c", GOLDC = "#c9a227", GREENC = "#1f5f3f";
+
+/** Ducks strapped to a rocket, going up. */
+function rocketSVG(){
+  return `<svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    ${[[40,40],[340,60],[70,190],[330,200],[200,26],[120,90],[290,120]]
+      .map(([x,y],i)=>`<circle class="rstar" style="animation-delay:${i*.22}s"
+        cx="${x}" cy="${y}" r="2.6" fill="${CREAMC}"/>`).join("")}
+    <g class="rrocket">
+      <path d="M200 20 c26 26 38 60 38 96 v46 h-76 v-46 c0-36 12-70 38-96 z"
+        fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+      <path d="M162 128 l-30 40 h30 z" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M238 128 l30 40 h-30 z" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="4" stroke-linejoin="round"/>
+      <circle cx="200" cy="86" r="20" fill="${GREENC}" stroke="${DEEPC}" stroke-width="4"/>
+      <circle cx="193" cy="80" r="4" fill="${CREAMC}"/><circle cx="207" cy="80" r="4" fill="${CREAMC}"/>
+      <path d="M188 78 l10 6 M208 78 l-10 6" stroke="${DEEPC}" stroke-width="3" stroke-linecap="round"/>
+      <path d="M180 92 l-16 4 l16 6 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="2.6" stroke-linejoin="round"/>
+      <circle cx="200" cy="130" r="13" fill="${GREENC}" stroke="${DEEPC}" stroke-width="4"/>
+      <path d="M191 126 l7 5 M207 126 l-7 5" stroke="${DEEPC}" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <g class="rflame">
+      <path d="M182 164 q18 44 18 62 q0-18 18-62 z" fill="#e8820c"/>
+      <path d="M190 164 q10 30 10 44 q0-14 10-44 z" fill="${GOLDC}"/>
+    </g></svg>`;
+}
+
+/** Darth Snot, force-choking a duck. */
+function darthSVG(){
+  return `<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <g>
+      <rect x="46" y="128" width="66" height="80" rx="20" fill="#1a1f26" stroke="${DEEPC}" stroke-width="4"/>
+      <circle cx="79" cy="92" r="40" fill="#1a1f26" stroke="${DEEPC}" stroke-width="4"/>
+      <path d="M52 88 a28 28 0 0 1 54 0 v8 a28 28 0 0 1 -54 0 z" fill="#c8102e" opacity=".92"/>
+      <path d="M62 78 l10 8 M96 78 l-10 8" stroke="#1a1f26" stroke-width="4" stroke-linecap="round"/>
+      <path d="M112 140 L196 118" stroke="#1a1f26" stroke-width="20" stroke-linecap="round"/>
+      <path d="M196 108 l14 6 l-14 8 l6 -7 z" fill="#1a1f26"/>
+    </g>
+    ${[0,1,2,3].map(i=>`<path class="dbolt" style="animation-delay:${i*.1}s"
+      d="M212 ${104+i*10} q22 ${i%2?-8:8} 44 0" stroke="#c8102e" stroke-width="3"
+      fill="none" stroke-linecap="round" opacity=".85"/>`).join("")}
+    <g class="dchoke">
+      <ellipse cx="300" cy="132" rx="42" ry="32" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+      <circle cx="292" cy="82" r="30" fill="${GREENC}" stroke="${DEEPC}" stroke-width="4"/>
+      <path d="M264 78 l-26 6 l26 10 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M278 70 l12 10 M302 70 l-12 10" stroke="${DEEPC}" stroke-width="4" stroke-linecap="round"/>
+      <path d="M272 108 q20 12 40 0" stroke="${DEEPC}" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path d="M338 128 c18 8 24 22 20 38" stroke="${DEEPC}" stroke-width="5" fill="none" stroke-linecap="round"/>
+    </g></svg>`;
+}
+
+/** A Snot teeing off a duck from the surface of the moon. */
+function moonSVG(){
+  return `<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    ${[[36,34],[356,44],[300,22],[80,60]].map(([x,y],i)=>`<circle class="rstar"
+      style="animation-delay:${i*.3}s" cx="${x}" cy="${y}" r="2.4" fill="${CREAMC}"/>`).join("")}
+    <circle cx="60" cy="52" r="26" fill="#2b6ea8" opacity=".45"/>
+    <path class="marc" d="M150 150 Q244 40 344 62" stroke="${GOLDC}" stroke-width="3.5"
+      fill="none" stroke-dasharray="8 9" stroke-linecap="round"/>
+    <g class="mduck">
+      <ellipse cx="330" cy="64" rx="26" ry="18" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3.5"/>
+      <circle cx="350" cy="50" r="12" fill="${GREENC}" stroke="${DEEPC}" stroke-width="3.5"/>
+      <path d="M342 44 l6 5 M356 44 l-6 5" stroke="${DEEPC}" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M362 48 l14 -4 l-12 10 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M306 60 l-16 -6 l4 14 z" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3" stroke-linejoin="round"/>
+    </g>
+    <g class="mswing">
+      <rect x="86" y="150" width="42" height="52" rx="15" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+      <circle cx="107" cy="122" r="28" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+      <path d="M109 100 a22 22 0 0 1 0 44 z" fill="#16202b"/>
+      <path d="M126 166 L182 128" stroke="${GOLDC}" stroke-width="8" stroke-linecap="round"/>
+      <path d="M180 124 l16 -6 l5 11 l-16 6 z" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="2.6"/>
+    </g>
+    <path d="M0 196 q60 -22 120 -6 t130 2 t150 -8 v56 H0 z" fill="#3a4652"/>
+    <ellipse cx="90" cy="212" rx="20" ry="6" fill="#2c3640"/>
+    <ellipse cx="250" cy="220" rx="26" ry="7" fill="#2c3640"/></svg>`;
+}
+
+/** Three duck pins going over. */
+function turkeySVG(){
+  // A CSS transform REPLACES the SVG transform attribute, so the positioning
+  // translate has to live on an outer <g> the animation never touches.
+  const pin = (x, d) => `<g transform="translate(${x} 0)">
+    <g class="tkpin" style="animation-delay:${d}s">
+    <ellipse cx="0" cy="150" rx="19" ry="26" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3.5"/>
+    <circle cx="0" cy="112" r="15" fill="${GREENC}" stroke="${DEEPC}" stroke-width="3.5"/>
+    <path d="M-14 108 l-14 4 l14 7 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M-7 104 l7 6 M7 104 l-7 6" stroke="${DEEPC}" stroke-width="2.8" stroke-linecap="round"/></g></g>`;
+  return `<svg viewBox="0 68 400 128" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M0 178 h400" stroke="${GOLDC}" stroke-width="3" opacity=".4"/>
+    ${pin(216, .55)}${pin(268, .68)}${pin(320, .8)}
+    <g class="tkball">
+      <circle cx="150" cy="152" r="26" fill="#1a1f26" stroke="${DEEPC}" stroke-width="3.5"/>
+      <circle cx="143" cy="144" r="3.6" fill="${CREAMC}"/><circle cx="156" cy="143" r="3.6" fill="${CREAMC}"/>
+      <circle cx="150" cy="156" r="3.6" fill="${CREAMC}"/>
+    </g>
+    <g class="tkastro">
+      <rect x="36" y="132" width="42" height="54" rx="15" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+      <circle cx="57" cy="104" r="27" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+      <path d="M59 82 a22 22 0 0 1 0 44 z" fill="#16202b"/>
+      <path d="M76 150 q30 8 44 2" stroke="${CREAMC}" stroke-width="13" fill="none" stroke-linecap="round"/>
+    </g></svg>`;
+}
+
+/** Eagle, for a Snot eagle or net eagle. */
+function bigDuckSVG(){
+  return `<svg viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle cx="200" cy="110" r="86" fill="none" stroke="${GOLDC}" stroke-width="3" opacity=".3"/>
+    <circle cx="200" cy="110" r="62" fill="none" stroke="${GOLDC}" stroke-width="3" opacity=".45"/>
+    <g class="bdbird">
+      <path d="M200 74 c-46 -34 -104 -20 -120 8 c34 -8 62 4 84 24 z" fill="#6b4a2a" stroke="${DEEPC}" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M200 74 c46 -34 104 -20 120 8 c-34 -8 -62 4 -84 24 z" fill="#6b4a2a" stroke="${DEEPC}" stroke-width="3.5" stroke-linejoin="round"/>
+      <ellipse cx="200" cy="116" rx="30" ry="38" fill="#7d5730" stroke="${DEEPC}" stroke-width="3.5"/>
+      <circle cx="200" cy="76" r="24" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3.5"/>
+      <path d="M200 70 l26 8 l-26 10 z" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="2.8" stroke-linejoin="round"/>
+      <circle cx="190" cy="70" r="4" fill="${DEEPC}"/>
+      <path d="M186 152 l-6 18 M214 152 l6 18" stroke="${GOLDC}" stroke-width="5" stroke-linecap="round"/>
+    </g></svg>`;
+}
+
+/** Snots on the podium, ducks in bits. */
+function victorySVG(){
+  const tear = (x, y, d) => `<circle class="vtear" style="animation-delay:${d}s"
+    cx="${x}" cy="${y}" r="3.4" fill="#8fd0ff"/>`;
+  const sadDuck = (x, s, d) => `<g transform="translate(${x} 196) scale(${s})">
+    <ellipse cx="0" cy="0" rx="26" ry="19" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3.5"/>
+    <circle cx="4" cy="-30" r="18" fill="${GREENC}" stroke="${DEEPC}" stroke-width="3.5"/>
+    <path d="M-14 -32 l-18 5 l18 8 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M-4 -38 q5 5 10 0 M8 -38 q5 5 10 0" stroke="${DEEPC}" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <path d="M-6 -22 q10 -7 20 0" stroke="${DEEPC}" stroke-width="3" fill="none" stroke-linecap="round"/>
+    ${tear(-6, -26, d)}${tear(16, -26, d + .5)}</g>`;
+  const snot = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})">
+    <rect x="-20" y="0" width="40" height="46" rx="14" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+    <circle cx="0" cy="-24" r="25" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+    <path d="M2 -44 a20 20 0 0 1 0 40 z" fill="#16202b"/></g>`;
+  return `<svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    ${[[30,26],[368,34],[210,14],[110,40],[300,22]].map(([x,y],i)=>`<circle class="rstar"
+      style="animation-delay:${i*.25}s" cx="${x}" cy="${y}" r="2.6" fill="${GOLDC}"/>`).join("")}
+    <g class="vtrophy">
+      <path d="M178 20 h44 v26 c0 14 -10 24 -22 24 s-22 -10 -22 -24 z" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="3"/>
+      <path d="M178 26 c-16 0 -16 22 0 24 M222 26 c16 0 16 22 0 24" stroke="${DEEPC}"
+        stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <rect x="195" y="70" width="10" height="14" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="2.4"/>
+      <rect x="180" y="84" width="40" height="9" rx="3" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="3"/>
+    </g>
+    ${snot(200, 116, 1)}${snot(146, 140, .82)}${snot(254, 140, .82)}
+    <rect x="164" y="162" width="72" height="52" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="3.5"/>
+    <rect x="106" y="182" width="58" height="32" fill="#b9c2cc" stroke="${DEEPC}" stroke-width="3.5"/>
+    <rect x="236" y="186" width="58" height="28" fill="#b07a3c" stroke="${DEEPC}" stroke-width="3.5"/>
+    ${sadDuck(48, .8, 0)}${sadDuck(352, .8, .35)}
+    <path d="M0 214 h400" stroke="${DEEPC}" stroke-width="4" opacity=".35"/></svg>`;
+}
+
+/** One shell for every scene. */
+function playScene(o){
+  document.querySelectorAll(".taunt").forEach(e => e.remove());
   const el = document.createElement("div");
-  el.className = "taunt";
-  el.innerHTML = `${tauntSVG()}
-    <div class="tline">Round ${r.n} &middot; ${esc(r.fmt)}</div>
-    <div class="tsub">${esc(COURSES[r.course].n)} &middot; Play well</div>
+  el.className = "taunt" + (o.cls ? " " + o.cls : "");
+  el.innerHTML = `${o.svg}
+    <div class="tline">${o.line}</div>
+    ${o.sub ? `<div class="tsub">${o.sub}</div>` : ""}
     <div class="tskip">tap to skip</div>`;
   const close = () => { el.classList.add("out"); setTimeout(() => el.remove(), 320); };
   el.onclick = close;
   document.body.appendChild(el);
-  clearTimeout(playTaunt._t);
-  playTaunt._t = setTimeout(close, 3600);
+  clearTimeout(playScene._t);
+  playScene._t = setTimeout(close, o.ms || 3800);
+}
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+/* Match start — always at the duck's expense, drawn at random. */
+function playTaunt(r, m){
+  const sub = `${esc(COURSES[r.course].n)} &middot; Play well`;
+  const line = `Round ${r.n} &middot; ${esc(r.fmt)}`;
+  pick([
+    () => playScene({svg: tauntSVG(),  line, sub}),
+    () => playScene({svg: rocketSVG(), line, sub, ms: 4200}),
+    () => playScene({svg: darthSVG(),  line, sub}),
+    () => playScene({svg: moonSVG(),   line, sub, ms: 4200})
+  ])();
 }
 
 /* Snots take a match: astronauts on a duck hunt. Ducks winning shows nothing,
@@ -2429,19 +2731,32 @@ function duckHuntSVG(){
       <path d="M0 244 q46 -20 92 0 t92 0 t92 0 t92 0 v58 H0 z" fill="#0b2f1e"/>
     </g></svg>`;
 }
+/* Snots take a match — also drawn at random from the pool. */
 function playWin(r, m, st){
-  const nm = m.s.p.map(p => last(p[0])).join(" / ");
-  const el = document.createElement("div");
-  el.className = "taunt";
-  el.innerHTML = `${duckHuntSVG()}
-    <div class="tline">Snots win ${esc(st.text)}</div>
-    <div class="tsub">${esc(nm)}</div>
-    <div class="tskip">tap to skip</div>`;
-  const close = () => { el.classList.add("out"); setTimeout(() => el.remove(), 320); };
-  el.onclick = close;
-  document.body.appendChild(el);
-  clearTimeout(playWin._t);
-  playWin._t = setTimeout(close, 4200);
+  const sub = esc(m.s.p.map(p => last(p[0])).join(" / "));
+  const line = `Snots win ${esc(st.text)}`;
+  pick([
+    () => playScene({svg: duckHuntSVG(), line, sub, ms: 4200}),
+    () => playScene({svg: rocketSVG(),   line, sub, ms: 4200}),
+    () => playScene({svg: darthSVG(),    line, sub}),
+    () => playScene({svg: moonSVG(),     line, sub, ms: 4200})
+  ])();
+}
+
+/* Three straight holes to the Snots. */
+function playTurkey(names){
+  playScene({svg: turkeySVG(), line: "TURKEY", ms: 4200,
+    sub: `${[].concat(names).map(esc).join(" &amp; ")} &middot; three holes on the bounce`});
+}
+/* A Snot eagle, gross or net. */
+function playBigDuck(who, kind){
+  playScene({svg: bigDuckSVG(), line: "BIG DUCK ALERT", ms: 4200,
+    sub: `${esc(who)} &middot; ${kind === "net" ? "net eagle" : "eagle"}`});
+}
+/* The Crusade is won. Longer, and it plays on every phone. */
+function playVictory(pts){
+  playScene({svg: victorySVG(), line: "SNOTS WIN THE CRUSADE", ms: 8000,
+    sub: `${fmtPt(pts)} points &middot; ${fmtPt(CLINCH)} to clinch`});
 }
 
 /* Fires when the hole you just finished is followed by a side contest. */
@@ -2482,8 +2797,44 @@ function flashSpecial(kind, holeNo){
  */
 function afterHoleComplete(r, m, h, verdict){
   showToast(verdict.html);
+  let delay = 1500;
+
+  // three straight holes to the Snots — Turkey
+  const st = matchState(r, m, Store.scores(m.id));
+  const played = [];
+  for (let i = 0; i <= h; i++) if (st.holes[i] !== null) played.push({i, w: st.holes[i]});
+  const tail = played.slice(-3);
+  if (tail.length === 3 && tail.every(x => x.w === "s") && tail[2].i === h){
+    const names = m.s.p.map(p => last(p[0])).join(" / ");
+    setTimeout(() => playTurkey(names), delay);
+    delay += 4400;
+  }
+
+  // a Snot eagle, gross or net
+  const hs = holeScores(r, m, h, Store.scores(m.id));
+  const par = COURSES[r.course].par[h];
+  const ents = r.mode === "team" ? ["s"] : m.s.p.map(p => p[0]);
+  for (const id of ents){
+    const v = hs[id]; if (!v || v.picked) continue;
+    const who = r.mode === "team" ? m.s.p.map(p => last(p[0])).join(" / ") : PLAYERS[id].n;
+    if (v.gross - par <= -2){ setTimeout(() => playBigDuck(who, "gross"), delay); delay += 4400; break; }
+    if (v.net - par <= -2){ setTimeout(() => playBigDuck(who, "net"), delay); delay += 4400; break; }
+  }
+
+  // the next hole is a side contest
   const nxt = specialAt(r.n, h + 1);
-  if (nxt && h + 1 <= 17) setTimeout(() => flashSpecial(nxt, h + 2), 1500);
+  if (nxt && h + 1 <= 17) setTimeout(() => flashSpecial(nxt, h + 2), delay);
+}
+
+/* The Crusade being won plays once, on every phone that sees it happen. */
+const VICTORY_KEY = `${EVENT_KEY}_victory`;
+function checkVictory(){
+  if (!Session.id) return;
+  const st = standings();
+  if (st.s < CLINCH) return;
+  try { if (localStorage.getItem(VICTORY_KEY)) return;
+        localStorage.setItem(VICTORY_KEY, "1"); } catch(e){}
+  playVictory(st.s);
 }
 
 function showToast(html){
@@ -2512,7 +2863,7 @@ function scorerBar(m, sc){
   const mine = sc && sc.id === Session.id;
   let body;
   if (mine) body = `<b>You're keeping score.</b> Everyone else sees this live.
-    <button data-release="${m.id}">Hand off &rsaquo;</button>`;
+    <button data-briefopen="1">Hand off scoring &rsaquo;</button>`;
   else if (sc && sc.id) body = `<b>${esc(PLAYERS[sc.id].n)}</b> is keeping score.` +
     (canClaim(m) ? ` <button data-claim="${m.id}">Take over &rsaquo;</button>` : ` View only.`);
   else if (canClaim(m)) body = `<b>Nobody is keeping score yet.</b> Scores are locked until
@@ -2737,8 +3088,12 @@ function wire(){
         if (!sideHole(r, m, "s", h, sc) || !sideHole(r, m, "d", h, sc)){ first = h; break; }
       }
       V.hole = first;
-      // first time into a match that hasn't begun: play the taunt
-      V.pendingTaunt = !matchState(r, m, sc).started && !taunted()[m.id] ? m.id : null;
+      // A match that hasn't begun opens on its own briefing screen — format,
+      // who's stroking where, and who's picking up the card — before any scoring.
+      const started = matchState(r, m, sc).started;
+      if (!started) V.view = "brief";
+      V.briefOpen = false;
+      V.pendingTaunt = !started && !taunted()[m.id] ? m.id : null;
     }
     if (n === "card"){ V.view = "card"; V.matchId = el.dataset.id; }
     V.sheet = null; render(); window.scrollTo(0, 0);
@@ -2888,6 +3243,20 @@ function wire(){
     if (confirm("Hand off scorekeeping?\n\nScores lock until someone else in the match takes it on."))
       { Store.setScorer(rel.dataset.release, null); render(); }
   };
+  // hand the card to a named player straight from the briefing
+  document.querySelectorAll("[data-give]").forEach(el => el.onclick = () => {
+    const to = el.dataset.to;
+    if (to !== Session.id && !confirm(`Hand scoring to ${PLAYERS[to].n}?\n\n`
+      + `${PLAYERS[to].n} enters the scores from their own phone.`)) return;
+    Store.setScorer(el.dataset.give, to); render();
+  });
+  document.querySelectorAll("[data-briefopen]").forEach(el => el.onclick = () => {
+    V.briefOpen = !V.briefOpen; render();
+    if (V.briefOpen){ const d = document.querySelector(".briefdrop");
+      if (d) d.scrollIntoView({behavior: "smooth", block: "nearest"}); }
+  });
+  const pro = document.querySelector("[data-toscoring]");
+  if (pro) pro.onclick = () => { V.view = "match"; render(); window.scrollTo(0, 0); };
   const sub = document.querySelector("[data-submit]");
   if (sub) sub.onclick = () => {
     const id = sub.dataset.submit, {r, m} = ALL_MATCHES[id];
@@ -3025,6 +3394,7 @@ function patch(){
    ========================================================================== */
 Store.onChange(() => {
   if (!Session.id) return;
+  checkVictory();
   const ae = document.activeElement, cls = ae && ae.classList;
   // Never rebuild the DOM out from under someone who is typing a score.
   if (cls && cls.contains("gsin")){ V.pending = true; return; }
@@ -3045,11 +3415,13 @@ document.addEventListener("visibilitychange", () => {
 
 window.MI26 = {PLAYERS, COURSES, ROUNDS, ALL_MATCHES, Store, Session, V,
   strokesOn, playerStrokes, teamStrokes, sideHole, holeScores, matchState, standings, markCls, PICKED,
-  playerStats, playerPoints, mvp, toPar, roundSummary, holeVerdict, briefHTML, seriesHTML, rColour,
+  playerStats, playerPoints, mvp, toPar, roundSummary, holeVerdict, briefBody, viewBrief, seriesHTML, rColour,
   eventResult, tiebreakHTML, tugSVG, avatarSVG, viewProfile,
   SPECIALS, specialAt, flashSpecial, afterHoleComplete, showToast, navBtnsHTML,
   mentionsMe, renderMsgText, taggedUnread, taggedTotal,
   playTaunt, tauntSVG, taunted, markTaunted, playWin, duckHuntSVG, matchLine, holeLine,
+  playScene, playTurkey, playBigDuck, playVictory, checkVictory,
+  rocketSVG, darthSVG, moonSVG, turkeySVG, bigDuckSVG, victorySVG,
   render, patch, MATCH_COUNT, myMatch, BUILD, checkForUpdate,
   resetAll(){ Object.keys(ALL_MATCHES).forEach(id => Store.resetMatch(id)); render(); }};
 </script>
