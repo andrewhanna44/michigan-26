@@ -426,6 +426,7 @@ input,textarea{font-family:inherit}
 .gate{background:#fff6e5;border:1px solid #f0d9a8;color:#7a5600;border-radius:11px;
   padding:10px 13px;margin-top:9px;font-size:12.5px;font-weight:650;text-align:center}
 .gate b{color:#5c4100}
+.gate.off{display:none}   /* always in the DOM so patch() can toggle it live */
 .strip button.w{background:var(--snots-solid);border-color:var(--snots-solid);color:#fff}
 .strip button.l{background:var(--ducks-solid);border-color:var(--ducks-solid);color:#fff}
 .strip button.h{background:var(--half);border-color:var(--half);color:#fff}
@@ -463,10 +464,10 @@ input,textarea{font-family:inherit}
 /* Two clearly-labelled actions. Previously an unlabelled X and a ↺ arrow, which
    read as if the X was the clear button. */
 .entry .acts{display:flex;gap:6px;flex:none}
-.entry .act{width:46px;padding:5px 2px;border-radius:9px;background:var(--surface2);
+.entry .act{width:54px;padding:5px 2px;border-radius:9px;background:var(--surface2);
   border:1px solid var(--line);color:var(--muted);display:flex;flex-direction:column;
   align-items:center;justify-content:center;line-height:1.1}
-.entry .act b{font-size:14px;font-weight:850}
+.entry .act b{font-size:11.5px;font-weight:850}
 .entry .act i{font-size:8.5px;font-style:normal;font-weight:750;letter-spacing:.2px;
   text-transform:uppercase;margin-top:1px}
 .entry .act:disabled{opacity:.32}
@@ -507,6 +508,23 @@ table.gc td.tap:active{background:var(--surface3)}
 .resbar.halved{background:var(--surface3);border-color:var(--line)}
 .resbar.s .r2{color:var(--snots)} .resbar.d .r2{color:var(--ducks)}
 .resbar.halved .r2{color:var(--muted)}
+/* Hole-won announcements flash right over the match bar, not mid-screen —
+   the old centre-screen banner covered the scorecard the scorer was using.
+   Two at once (two singles matches in a group, or a quick correction) stack
+   downward in the same spot rather than covering each other. */
+.resbarwrap{position:relative;margin-bottom:9px}
+.resbarwrap .resbar{margin-bottom:0}
+.vflashstack{position:absolute;left:0;right:0;top:0;min-height:100%;z-index:8;
+  display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.vflash{flex:1 0 auto;border-radius:13px;
+  background:#0e1216;color:#fff;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:10px 16px;font-size:13px;font-weight:700;line-height:1.4;
+  box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;box-sizing:border-box;
+  animation:vfin .2s ease-out forwards, vfout .3s ease-in 2.7s forwards}
+@keyframes vfin{to{opacity:1}}
+@keyframes vfout{to{opacity:0}}
+.vflash b{font-weight:850}
+.vflash .win.s{color:#f0d78a} .vflash .win.d{color:#7fc79b}
 table.gc .rowres .tot.s{background:var(--snots-solid);color:#fff}
 table.gc .rowres .tot.d{background:var(--ducks-solid);color:#fff}
 table.gc .rowres .tot.h{background:var(--half);color:#fff}
@@ -769,7 +787,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-29.5";      // must match version.txt — that's what phones poll
+const BUILD = "2026-07-30.1";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -962,6 +980,19 @@ function holeScores(r, m, h, scores){
   return out;
 }
 
+/**
+ * Every expected score for the hole is in — a number or an X for each team
+ * (scramble / alt shot) or each of the four players (best ball / shamble) or
+ * both singles players. Nothing is announced, counted toward the match, or
+ * unlocked off a half-entered hole: in best ball, two of four scores can LOOK
+ * like a result and then flip when the other two land.
+ */
+function holeEntered(r, m, h, scores){
+  const row = scores[h] || {};
+  const ids = r.mode === "team" ? ["s", "d"] : [...m.s.p, ...m.d.p].map(p => p[0]);
+  return ids.every(id => row[id] != null);
+}
+
 function sideHole(r, m, key, h, scores){
   const hs = holeScores(r, m, h, scores);
   if (r.mode === "team"){
@@ -982,6 +1013,7 @@ function matchState(r, m, scores){
   const holes = new Array(18).fill(null);
   let closedAt = null, closedMargin = 0;
   for (let h = 0; h < 18; h++){
+    if (!holeEntered(r, m, h, scores)) continue;   // partial holes count for nothing
     const s = sideHole(r, m, "s", h, scores);
     const d = sideHole(r, m, "d", h, scores);
     if (!s || !d) continue;
@@ -1014,13 +1046,21 @@ function matchState(r, m, scores){
                 d: done ? (up < 0 ? PT_WIN : up > 0 ? 0 : PT_HALVE) : 0}};
 }
 
+/** Any score at all has been entered — a match mid-hole-1 is live, even though
+    no hole is COMPLETE yet (completed holes are a stricter test). */
+function matchBegun(id){
+  const sc = Store.scores(id);
+  for (const h in sc) if (sc[h] && Object.keys(sc[h]).length) return true;
+  return false;
+}
+
 function standings(){
   let s = 0, d = 0, ps = 0, pd = 0, fin = 0, live = 0;
   for (const id in ALL_MATCHES){
     const {r, m} = ALL_MATCHES[id];
     const st = matchState(r, m, Store.scores(id));
     if (st.done){ s += st.pts.s; d += st.pts.d; ps += st.pts.s; pd += st.pts.d; fin++; }
-    else if (st.started){
+    else if (st.started || matchBegun(id)){
       live++;
       if (st.up > 0) ps += PT_WIN; else if (st.up < 0) pd += PT_WIN;
       else { ps += PT_HALVE; pd += PT_HALVE; }
@@ -1529,6 +1569,7 @@ function render(){
   const TURF = ["home", "board", "matches", "profile", "stats", "round", "brief"];
   document.body.classList.toggle("turf", TURF.includes(V.view));
   wire();
+  mountVflashes();   // any live hole banners re-attach to the rebuilt DOM
 }
 
 /* ---------- lock screen ---------- */
@@ -1710,7 +1751,7 @@ function roundSummary(r){
   r.matches.forEach(m => {
     const ms = matchState(r, m, Store.scores(m.id));
     if (ms.done){ s += ms.pts.s; d += ms.pts.d; done++; }
-    else if (ms.started){ live++;
+    else if (ms.started || matchBegun(m.id)){ live++;
       if (ms.up > 0) sLead++; else if (ms.up < 0) dLead++; else allSq++; }
     else notStarted++;
   });
@@ -2337,9 +2378,12 @@ function viewMatch(){
       <h1>${esc(c.n)}<div class="sub">${esc(m.tee || r.tee)} &middot; ${esc(m.t)}</div></h1>
       ${navBtnsHTML()}
     </div><div class="wrap">
-      <div class="resbar ${st.winner || ""}" id="resbar">
-        <div class="r1" id="res1">${holeLine(r, m, h, scores)}</div>
-        <div class="r2" id="res2">${st.started ? matchLine(st) : "Match not started"}</div>
+      <div class="resbarwrap" id="resbarwrap">
+        <div class="resbar ${st.winner || ""}" id="resbar">
+          <div class="r1" id="res1">${holeLine(r, m, h, scores)}</div>
+          <div class="r2" id="res2">${matchBegun(m.id) ? matchLine(st) : "Match not started"}</div>
+        </div>
+        <div class="vflashstack" id="vflashstack"></div>
       </div>
       ${st.done && !Store.isSubmitted(m.id) ? `<button class="btn" style="margin:0 0 10px"
         data-nav="card" data-id="${m.id}">Match decided &mdash; Review &amp; Submit &rsaquo;</button>` : ""}
@@ -2369,8 +2413,8 @@ function viewMatch(){
           ${holeDone || V.fromCard ? "" : "disabled"}>${
           V.fromCard ? "Back to Review" : h === 17 ? "Review Round" : "Save Scores &amp; Proceed"}</button>
       </div>
-      ${!holeDone && !V.fromCard ? `<div class="gate">Enter a score for
-        <b>both sides</b> before moving on.</div>` : ""}
+      <div class="gate${holeDone || V.fromCard ? " off" : ""}" id="gatebar">Enter a score for
+        <b>every player</b> before moving on.</div>
       <div class="savedtag">Every score saves the moment you type it${
         Store.online ? " and syncs to everyone" : " &mdash; will sync when you get service"}.${
         st.done ? " Keep going &mdash; the remaining holes still count for statistics." : ""}</div>
@@ -2450,6 +2494,7 @@ function viewBrief(){
 
 /** "Hodgman / Bertolini beat Mosele / MacDonald on Hole 1 with a Birdie" */
 function holeVerdict(r, m, h, scores){
+  if (!holeEntered(r, m, h, scores)) return null;  // wait for every score, not just one per side
   const s = sideHole(r, m, "s", h, scores), d = sideHole(r, m, "d", h, scores);
   if (!s || !d) return null;
   const nm = k => m[k].p.map(p => last(p[0])).join(" / ");
@@ -2795,8 +2840,30 @@ function flashSpecial(kind, holeNo){
  * Deliberately does NOT celebrate the match being won: a fat-fingered score can
  * make a match look over when it isn't. That fires on submit instead.
  */
+/**
+ * The last expected score for a hole just came off the keyboard. Give the
+ * scorer a beat to finish a two-digit number, then do everything at once:
+ * commit, rebuild the screen (which unlocks the forward arrow and Save
+ * button), and announce the verdict. Any further keystroke or a cleared
+ * score cancels it.
+ */
+function scheduleHoleSettle(r, m, h){
+  clearTimeout(scheduleHoleSettle._t);
+  scheduleHoleSettle._armed = {mId: m.id, h};   // so further keystrokes push it back
+  scheduleHoleSettle._t = setTimeout(() => {
+    scheduleHoleSettle._armed = null;
+    if ((V.view !== "match" && V.view !== "card") || V.matchId !== m.id) return;
+    const verdict = holeVerdict(r, m, h, Store.scores(m.id));
+    if (!verdict) return;                     // a score was cleared in the meantime
+    const ae = document.activeElement;
+    if (ae && ae.classList.contains("gsin")) ae.blur();
+    V.pending = false; render();
+    afterHoleComplete(r, m, h, verdict);
+  }, 900);
+}
+
 function afterHoleComplete(r, m, h, verdict){
-  showToast(verdict.html);
+  flashHoleResult(verdict.html);
   let delay = 1500;
 
   // three straight holes to the Snots — Turkey
@@ -2830,11 +2897,51 @@ function afterHoleComplete(r, m, h, verdict){
 const VICTORY_KEY = `${EVENT_KEY}_victory`;
 function checkVictory(){
   if (!Session.id) return;
-  const st = standings();
-  if (st.s < CLINCH) return;
+  // Count SUBMITTED cards only — same principle as the match-win scene: a
+  // mistyped score must never start a party, and this one can only ever fire
+  // once. The clinching point arrives when its card is signed off.
+  let s = 0;
+  for (const id in ALL_MATCHES){
+    if (!Store.isSubmitted(id)) continue;
+    const {r, m} = ALL_MATCHES[id];
+    const st = matchState(r, m, Store.scores(id));
+    if (st.done) s += st.pts.s;
+  }
+  if (s < CLINCH) return;
   try { if (localStorage.getItem(VICTORY_KEY)) return;
         localStorage.setItem(VICTORY_KEY, "1"); } catch(e){}
-  playVictory(st.s);
+  playVictory(s);
+}
+
+/**
+ * Hole-won announcements — flash right over the match bar, not mid-screen.
+ * If a second one lands while the first is still up (two singles matches in
+ * the same group, or a quick correction), they stack instead of overlapping.
+ * Live banners are tracked outside the render cycle: a re-render rebuilds the
+ * DOM underneath them, so they re-attach to the fresh stack each time.
+ */
+const VFLASH_LIVE = [];
+function flashHoleResult(html){
+  const el = document.createElement("div");
+  el.className = "vflash"; el.innerHTML = html;
+  VFLASH_LIVE.push(el);
+  while (VFLASH_LIVE.length > 3) VFLASH_LIVE.shift().remove();
+  setTimeout(() => {
+    const i = VFLASH_LIVE.indexOf(el);
+    if (i > -1) VFLASH_LIVE.splice(i, 1);
+    el.remove();
+  }, 3000);
+  mountVflashes();
+}
+function mountVflashes(){
+  const stack = document.getElementById("vflashstack");
+  if (!stack) return;                       // not on the hole screen right now
+  VFLASH_LIVE.forEach(el => {
+    if (el.parentNode === stack) return;
+    // survived a re-render: re-attach without replaying the fade-in
+    if (el.parentNode){ el.style.animation = "none"; el.style.opacity = "1"; }
+    stack.appendChild(el);
+  });
 }
 
 function showToast(html){
@@ -2847,8 +2954,9 @@ function showToast(html){
 }
 
 function holeLine(r, m, h, scores){
+  if (!holeEntered(r, m, h, scores)) return "";
   const s = sideHole(r, m, "s", h, scores), d = sideHole(r, m, "d", h, scores);
-  if (!s || !d) return "Enter both sides to score the hole";
+  if (!s || !d) return "";
   return s.net < d.net ? "Snots win the hole" : d.net < s.net ? "Ducks win the hole" : "Hole halved";
 }
 function matchLine(st){
@@ -2891,9 +2999,9 @@ function entryRow(o){
         o.gross == null ? "" : `${picked ? "plays" : "net"}<b>${o.gross - o.strokes}</b>`}</span>
       ${o.editable ? `<span class="acts">
         <button class="act pick ${picked ? "on" : ""}" data-pick="${o.entrant}">
-          <b>X</b><i>picked up</i></button>
-        <button class="act clear" data-clear="${o.entrant}"${
-          o.raw == null ? " disabled" : ""}><b>&times;</b><i>clear</i></button>
+          <b>Picked</b><i>up</i></button>
+        <button class="act clear" data-clear="${o.entrant}">
+          <b>Clear</b><i>score</i></button>
       </span>` : ""}
     </div></div>`;
 }
@@ -2914,14 +3022,15 @@ function viewCard(){
   const shortSide = key => m[key].p.length > 1
     ? m[key].p.map(p => last(p[0])[0]).join("/") : last(m[key].p[0][0]);
 
-  const rowPair = (name, colour, entrantId, from, to) => {
+  const rowPair = (name, colour, entrantId, strokesFor, from, to) => {
     let g = `<tr class="gr"><td class="lbl" style="color:${colour}">${esc(name)}</td>`;
     let n = `<tr class="netrow"><td class="lbl">net</td>`;
     let gt = 0, nt = 0, any = false;
     for (let h = from; h <= to; h++){
       const hs = holeScores(r, m, h, scores);
       const v = hs[entrantId], raw = (scores[h] || {})[entrantId];
-      const s = v ? v.strokes : 0;
+      // strokes show whether or not the hole has been scored yet, same as live entry
+      const s = strokesFor(h);
       const cell = !v ? ""
         : raw === PICKED ? `<span class="mk picked">X</span>`
         : `<span class="mk ${markCls(v.gross, c.par[h])}">${v.gross}</span>`;
@@ -2952,9 +3061,11 @@ function viewCard(){
     ["s","d"].forEach(key => {
       const side = m[key], colour = key === "s" ? "var(--snots)" : "var(--ducks)";
       if (r.mode === "team"){
-        body += rowPair(side.p.map(p => last(p[0])).join(" / "), colour, key, from, to);
+        body += rowPair(side.p.map(p => last(p[0])).join(" / "), colour, key,
+          h => teamStrokes(r, side, h), from, to);
       } else {
-        side.p.forEach(pl => body += rowPair(PLAYERS[pl[0]].n, colour, pl[0], from, to));
+        side.p.forEach(pl => body += rowPair(PLAYERS[pl[0]].n, colour, pl[0],
+          h => playerStrokes(r, side, pl, h), from, to));
         if (side.p.length > 1){
           let g = `<tr class="bestrow"><td class="lbl" style="color:${colour}">${
             key === "s" ? "SNOTS" : "DUCKS"} net</td>`;
@@ -3085,15 +3196,17 @@ function wire(){
       const sc = Store.scores(m.id);
       let first = 17;
       for (let h = 0; h < 18; h++){
-        if (!sideHole(r, m, "s", h, sc) || !sideHole(r, m, "d", h, sc)){ first = h; break; }
+        if (!holeEntered(r, m, h, sc)){ first = h; break; }
       }
       V.hole = first;
-      // A match that hasn't begun opens on its own briefing screen — format,
+      // A match with no scores AT ALL opens on its own briefing screen — format,
       // who's stroking where, and who's picking up the card — before any scoring.
-      const started = matchState(r, m, sc).started;
-      if (!started) V.view = "brief";
+      // "Any score" and not "a completed hole": a half-entered hole means the
+      // group is mid-round and must land back on the scoring screen.
+      const begun = matchBegun(m.id);
+      if (!begun) V.view = "brief";
       V.briefOpen = false;
-      V.pendingTaunt = !started && !taunted()[m.id] ? m.id : null;
+      V.pendingTaunt = !begun && !taunted()[m.id] ? m.id : null;
     }
     if (n === "card"){ V.view = "card"; V.matchId = el.dataset.id; }
     V.sheet = null; render(); window.scrollTo(0, 0);
@@ -3285,21 +3398,47 @@ function wire(){
       const raw = el.value.replace(/[^0-9]/g, "").slice(0, 2);
       if (el.value !== raw) el.value = raw;
       let v = raw === "" ? null : parseInt(raw, 10);
-      if (v !== null && (v < 1 || v > 15)) return;      // wait for a valid number
+      // Out of range: refuse the keystroke and put the box back to what is
+      // actually stored. Letting "16" sit in the box while a 1 is saved is how
+      // a scorer ends up certain he entered a number the card never got.
+      if (v !== null && (v < 1 || v > 15)){
+        const {m: mm} = ALL_MATCHES[V.matchId];
+        const cur = (Store.scores(mm.id)[V.hole] || {})[el.dataset.entrant];
+        el.value = (cur == null || cur === PICKED) ? "" : String(cur);
+        el.select();
+        return;
+      }
       const {r, m} = ALL_MATCHES[V.matchId];
-      const before = !!holeVerdict(r, m, V.hole, Store.scores(m.id));
+      const before = holeEntered(r, m, V.hole, Store.scores(m.id));
       Store.setScore(m.id, V.hole, el.dataset.entrant, v, Session.id, true);
       patch();
-      // the moment a hole becomes complete, say who won it and with what
-      const after = holeVerdict(r, m, V.hole, Store.scores(m.id));
-      if (after && !before){ el.blur(); afterHoleComplete(r, m, V.hole, after); }
+      // The LAST expected score just landed. Don't judge it instantly — the "1"
+      // may be about to become "12". Settle, then announce and unlock together.
+      // While a settle is armed, every further keystroke pushes it back, so the
+      // verdict always reads the finished number. It never re-arms for a hole
+      // that was already complete, so corrections don't re-announce.
+      const after = holeEntered(r, m, V.hole, Store.scores(m.id));
+      const armed = scheduleHoleSettle._armed;
+      if (after && (!before || (armed && armed.mId === m.id && armed.h === V.hole)))
+        scheduleHoleSettle(r, m, V.hole);
+      else if (!after){
+        clearTimeout(scheduleHoleSettle._t);
+        scheduleHoleSettle._armed = null;
+      }
     };
     el.onfocus = () => {
       el.select();
       // iOS slides the keyboard up over the page; put the active box mid-screen.
       setTimeout(() => el.scrollIntoView({block: "center", behavior: "smooth"}), 260);
     };
-    el.onblur = () => { if (V.pending){ V.pending = false; render(); } else patch(); };
+    el.onblur = () => {
+      // last line of defence: the box must always show what the card holds
+      const {m: mm} = ALL_MATCHES[V.matchId];
+      const cur = (Store.scores(mm.id)[V.hole] || {})[el.dataset.entrant];
+      const shown = (cur == null) ? "" : cur === PICKED ? "X" : String(cur);
+      if (el.value !== shown) el.value = shown;
+      if (V.pending){ V.pending = false; render(); } else patch();
+    };
   });
   const proceed = document.querySelector("[data-proceed]");
   if (proceed) proceed.onclick = () => {
@@ -3318,13 +3457,14 @@ function wire(){
   document.querySelectorAll("[data-pick]").forEach(el => el.onclick = () => {
     const {r, m} = ALL_MATCHES[V.matchId];
     const cur = (Store.scores(m.id)[V.hole] || {})[el.dataset.pick];
-    const before = !!holeVerdict(r, m, V.hole, Store.scores(m.id));
-    // tapping X again un-picks
+    const before = holeEntered(r, m, V.hole, Store.scores(m.id));
+    // tapping Picked Up again un-picks
     Store.setScore(m.id, V.hole, el.dataset.pick,
       cur === PICKED ? null : PICKED, Session.id, true);
     render();
-    const after = holeVerdict(r, m, V.hole, Store.scores(m.id));
-    if (after && !before) afterHoleComplete(r, m, V.hole, after);
+    // a tap is deliberate — no settle delay needed, announce right away
+    const verdict = holeVerdict(r, m, V.hole, Store.scores(m.id));
+    if (verdict && !before) afterHoleComplete(r, m, V.hole, verdict);
   });
 
   if (V.view === "match"){
@@ -3379,14 +3519,34 @@ function patch(){
   // "5 &amp; 3"), so it must go in as innerHTML — textContent would print the
   // escape literally. holeLine() is plain text and stays textContent.
   if (r1) r1.textContent = holeLine(r, m, h, scores);
-  if (r2) r2.innerHTML = st.started ? matchLine(st) : "Match not started";
+  if (r2) r2.innerHTML = matchBegun(m.id) ? matchLine(st) : "Match not started";
   const rb = document.getElementById("resbar");
   if (rb) rb.className = "resbar " + (st.winner || "");
+
+  /* Navigation gating has to follow the scores LIVE — patch() runs on every
+     keystroke while render() can't (it would rebuild the DOM under the
+     scorer's thumb). Before this, the forward arrow and Save button kept
+     whatever disabled state they were rendered with, so a hole completed
+     from the keyboard stayed locked until something else forced a render. */
+  let firstOpen = 17;
+  for (let i = 0; i < 18; i++){ if (st.holes[i] === null){ firstOpen = i; break; } }
+  const holeDone = st.holes[h] !== null;
   for (let i = 0; i < 18; i++){
     const chip = document.getElementById(`chip-${i}`), w = st.holes[i];
-    if (chip) chip.className = (i === h ? "cur " : "") +
+    if (!chip) continue;
+    const locked = i > firstOpen, sp = specialAt(r.n, i);
+    // rebuild the FULL class list — dropping "lock"/"sp" here is what used to
+    // erase the CTP/LD dots from the strip after the first keystroke
+    chip.className = (i === h ? "cur " : "") + (locked ? "lock " : "") + (sp ? "sp " : "") +
       (w === "s" ? "w" : w === "d" ? "l" : w === "h" ? "h" : "");
+    chip.disabled = locked;
   }
+  const fwd = document.querySelector('.navbtn[data-step="1"]');
+  if (fwd) fwd.disabled = h === 17 || !holeDone;
+  const go = document.querySelector("[data-proceed]");
+  if (go) go.disabled = !(holeDone || V.fromCard);
+  const gate = document.getElementById("gatebar");
+  if (gate) gate.classList.toggle("off", holeDone || V.fromCard);
 }
 
 /* ==========================================================================
@@ -3414,10 +3574,10 @@ document.addEventListener("visibilitychange", () => {
 });
 
 window.MI26 = {PLAYERS, COURSES, ROUNDS, ALL_MATCHES, Store, Session, V,
-  strokesOn, playerStrokes, teamStrokes, sideHole, holeScores, matchState, standings, markCls, PICKED,
+  strokesOn, playerStrokes, teamStrokes, sideHole, holeScores, holeEntered, matchState, standings, markCls, PICKED,
   playerStats, playerPoints, mvp, toPar, roundSummary, holeVerdict, briefBody, viewBrief, seriesHTML, rColour,
   eventResult, tiebreakHTML, tugSVG, avatarSVG, viewProfile,
-  SPECIALS, specialAt, flashSpecial, afterHoleComplete, showToast, navBtnsHTML,
+  SPECIALS, specialAt, flashSpecial, afterHoleComplete, showToast, flashHoleResult, navBtnsHTML,
   mentionsMe, renderMsgText, taggedUnread, taggedTotal,
   playTaunt, tauntSVG, taunted, markTaunted, playWin, duckHuntSVG, matchLine, holeLine,
   playScene, playTurkey, playBigDuck, playVictory, checkVictory,
