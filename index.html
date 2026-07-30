@@ -72,8 +72,10 @@ input,textarea{font-family:inherit}
   background-attachment:fixed}
 
 /* ---------- lock screen ---------- */
-.splash{position:fixed;inset:0;background:
-  radial-gradient(900px 620px at 50% 18%, #1a5638 0%, #0b2a1c 70%);
+.splash{position:fixed;inset:0;
+  background:
+    radial-gradient(900px 620px at 50% 18%, rgba(26,86,56,.55) 0%, rgba(11,42,28,.9) 70%),
+    url("Shanty Creek Golf Course.jpg") center/cover no-repeat, #0b2a1c;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:22px;z-index:100;overflow:hidden}
 .stars{position:absolute;inset:0;pointer-events:none}
@@ -237,8 +239,6 @@ input,textarea{font-family:inherit}
 .honame span{flex:1}
 .honame em{font-style:normal;font-size:11px;font-weight:700;color:var(--dim);
   letter-spacing:.4px;text-transform:uppercase}
-.hodrop{width:100%;padding:8px;font-size:12px;font-weight:700;color:var(--muted);
-  text-decoration:underline;margin-top:2px}
 
 /* ---------- pre-match taunt ----------
    Plays once per match, on the way in. Always pro-Snots by design. Tap to skip.
@@ -287,6 +287,11 @@ input,textarea{font-family:inherit}
 .rflame{transform-origin:200px 164px;animation:rfl .12s ease-in-out infinite alternate,
   rlift 2.6s cubic-bezier(.5,0,.85,.4) .5s forwards}
 @keyframes rfl{from{transform:scaleY(.75)}to{transform:scaleY(1.25)}}
+/* Ducks strapped to the fuselage tumble in place as the rocket climbs — the
+   spin lives on this inner group so it doesn't fight the outer translate/scale
+   that positions each duck on the hull. */
+.rduck{transform-origin:0 0;animation:rduckspin 1s linear infinite}
+@keyframes rduckspin{to{transform:rotate(360deg)}}
 .dbolt{animation:dbz .5s ease-in-out infinite alternate}
 @keyframes dbz{from{opacity:.2;transform:translateX(-4px)}to{opacity:.95;transform:translateX(4px)}}
 .dchoke{transform-origin:300px 110px;animation:dch 1.4s ease-in-out infinite alternate}
@@ -787,7 +792,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-30.1";      // must match version.txt — that's what phones poll
+const BUILD = "2026-07-30.2";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -799,24 +804,24 @@ const PLAYERS = {
   // Pat is sole Commissioner; Andrew built the thing. Both have Admin Access.
   pat:    {n:"Pat Hodgman",        t:"s", idx:6.7,  room:1, yrs:4, code:"7K4M", admin:true, title:"Commissioner"},
   andrew: {n:"Andrew Hanna",       t:"s", idx:-0.6, room:1, yrs:4, code:"3QX9", admin:true, title:"Coding Nerd"},
-  rendina:{n:"Anthony Rendina",    t:"s", idx:16.2, room:2, yrs:4, code:"R8VT"},
-  robert: {n:"Robert Leonard",     t:"s", idx:8.8,  room:3, yrs:3, code:"J2WN"},
-  curtin: {n:"Mike Curtin",        t:"s", idx:2.1,  room:2, yrs:2, code:"5FHD"},
-  gudden: {n:"Micheal Guddendorf", t:"s", idx:14.7, room:3, yrs:1, code:"T9BQ"},
-  alec:   {n:"Alec Kaczkowski",    t:"s", idx:7.4,  room:4, yrs:4, code:"6MZL"},
-  bert:   {n:"Alex Bertolini",     t:"s", idx:10.0, room:5, yrs:4, code:"P4RC"},
-  jordan: {n:"Jordan Watt",        t:"s", idx:16.0, room:5, yrs:4, code:"W7GK"},
-  luke:   {n:"Luke Smeester",      t:"s", idx:9.1,  room:4, yrs:1, code:"N2DX"},
-  jacobs: {n:"Alex Jacobs",        t:"d", idx:5.8,  room:1, yrs:4, code:"8CJV"},
-  blohm:  {n:"Jason Blohm",        t:"d", idx:6.9,  room:1, yrs:4, code:"L5TR"},
-  ryan:   {n:"Ryan Raupach",       t:"d", idx:11.9, room:2, yrs:4, code:"V3NP"},
-  cam:    {n:"Cameron Raupach",    t:"d", idx:9.4,  room:2, yrs:4, code:"K9HM"},
-  mosele: {n:"Nick Mosele",        t:"d", idx:6.0,  room:3, yrs:2, code:"D6QW"},
-  eric:   {n:"Eric Petersen",      t:"d", idx:15.7, room:5, yrs:4, code:"Z4LB"},
-  reed:   {n:"Reed Hosteller",     t:"d", idx:10.3, room:5, yrs:3, code:"G7XF"},
-  matt:   {n:"Matt Emerick",       t:"d", idx:23.1, room:3, yrs:3, code:"M2VJ"},
-  cooper: {n:"Cooper Macek",       t:"d", idx:15.1, room:4, yrs:1, code:"C8RT"},
-  austin: {n:"Austin MacDonald",   t:"d", idx:9.8,  room:4, yrs:4, code:"H5KN"}
+  rendina:{n:"Anthony Rendina",    t:"s", idx:16.2, room:2, yrs:4, code:"R8VT", title:"Daddy Dina"},
+  robert: {n:"Robert Leonard",     t:"s", idx:8.8,  room:3, yrs:3, code:"J2WN", title:"Bobby"},
+  curtin: {n:"Mike Curtin",        t:"s", idx:2.1,  room:2, yrs:2, code:"5FHD", title:"Mikey"},
+  gudden: {n:"Micheal Guddendorf", t:"s", idx:14.7, room:3, yrs:1, code:"T9BQ", title:"New Guy"},
+  alec:   {n:"Alec Kaczkowski",    t:"s", idx:7.4,  room:4, yrs:4, code:"6MZL", title:"Kaz"},
+  bert:   {n:"Alex Bertolini",     t:"s", idx:10.0, room:5, yrs:4, code:"P4RC", title:"BIRDO"},
+  jordan: {n:"Jordan Watt",        t:"s", idx:16.0, room:5, yrs:4, code:"W7GK", title:"JWATT"},
+  luke:   {n:"Luke Smeester",      t:"s", idx:9.1,  room:4, yrs:1, code:"N2DX", title:"New Guy"},
+  jacobs: {n:"Alex Jacobs",        t:"d", idx:5.8,  room:1, yrs:4, code:"8CJV", title:"Duck Captain"},
+  blohm:  {n:"Jason Blohm",        t:"d", idx:6.9,  room:1, yrs:4, code:"L5TR", title:"Blohmer"},
+  ryan:   {n:"Ryan Raupach",       t:"d", idx:11.9, room:2, yrs:4, code:"V3NP", title:"Big Paw"},
+  cam:    {n:"Cameron Raupach",    t:"d", idx:9.4,  room:2, yrs:4, code:"K9HM", title:"Lil Paw"},
+  mosele: {n:"Nick Mosele",        t:"d", idx:6.0,  room:3, yrs:2, code:"D6QW", title:"Bloomington Guy"},
+  eric:   {n:"Eric Petersen",      t:"d", idx:15.7, room:5, yrs:4, code:"Z4LB", title:"Stretch"},
+  reed:   {n:"Reed Hosteller",     t:"d", idx:10.3, room:5, yrs:3, code:"G7XF", title:"Hos"},
+  matt:   {n:"Matt Emerick",       t:"d", idx:23.1, room:3, yrs:3, code:"M2VJ", title:"Sandbagger"},
+  cooper: {n:"Cooper Macek",       t:"d", idx:15.1, room:4, yrs:1, code:"C8RT", title:"New Guy"},
+  austin: {n:"Austin MacDonald",   t:"d", idx:9.8,  room:4, yrs:4, code:"H5KN", title:"Charlotte"}
 };
 const last = id => PLAYERS[id].n.split(" ").slice(-1)[0];
 
@@ -1909,11 +1914,13 @@ const infoIcon = `<svg viewBox="0 0 24 24" class="tbi" aria-hidden="true">
   <circle cx="12" cy="7.6" r="1.3" fill="currentColor"/>
   <path d="M12 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
 /* Fixed order on every screen, right-hand side: home, info, profile.
-   Profile is always furthest right; the two that need explaining are labelled. */
+   Profile is always furthest right. All three get the same icon+label
+   treatment so they sit at identical size — a bare icon button next to two
+   labelled ones read as mismatched. */
 function navBtnsHTML(opts){
   const o = opts || {};
-  return `${o.noHome ? "" : `<button class="tbb" data-nav="home" aria-label="Home">
-      ${homeIcon}</button>`}
+  return `${o.noHome ? "" : `<button class="tbb lbl" data-nav="home" aria-label="Home">
+      ${homeIcon}<i>Home</i></button>`}
     <button class="tbb lbl" data-sheet="menu" aria-label="Info">${infoIcon}<i>Info</i></button>
     <button class="tbb lbl ava-b ${Session.me.t}" data-nav="profile" aria-label="Your profile">
       ${avatarSVG(Session.id)}<i>Profile</i></button>`;
@@ -2453,6 +2460,9 @@ function briefBody(r, m){
 }
 
 /** Who may be handed the card, and the button to do it. */
+/* No "hand off to nobody" option, on purpose — once a card is claimed it
+   always has a named scorer. The only way out is to give it to someone else
+   in the match. */
 function handoffHTML(m){
   const sc = Store.scorer(m.id);
   const others = [...m.s.p, ...m.d.p].map(p => p[0]).filter(id => !sc || id !== sc.id);
@@ -2463,7 +2473,6 @@ function handoffHTML(m){
       data-to="${id}">${avatarSVG(id, "sm")}<span>${esc(PLAYERS[id].n)}</span>
       <em>${id === Session.id ? "that's me" : sc && sc.id ? "give the card" : "keeps score"}</em>
       </button>`).join("")}
-    ${sc && sc.id ? `<button class="hodrop" data-release="${m.id}">Nobody &mdash; lock scoring</button>` : ""}
   </div>`;
 }
 
@@ -2553,6 +2562,16 @@ function tauntSVG(){
 const CREAMC = "#f2e7cd", DEEPC = "#0b2a1c", GOLDC = "#c9a227", GREENC = "#1f5f3f";
 
 /** Ducks strapped to a rocket, going up. */
+/** A full duck body, drawn around its own centre so it can spin in place. */
+const rocketDuck = () => `
+  <ellipse cx="0" cy="4" rx="21" ry="13" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3"/>
+  <circle cx="16" cy="-7" r="9.5" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3"/>
+  <path d="M25 -7 l12 3.5 l-12 4.5 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="19" cy="-9.5" r="1.7" fill="${DEEPC}"/>
+  <path d="M-2 1 c-4 -15 9 -21 19 -16 c-8 3 -12 11 -9 18 z" fill="${GOLDC}"
+    stroke="${DEEPC}" stroke-width="2.4" stroke-linejoin="round"/>
+  <path d="M-21 7 l-13 -4.5 l3.5 10 z" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="2" stroke-linejoin="round"/>`;
+
 function rocketSVG(){
   return `<svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     ${[[40,40],[340,60],[70,190],[330,200],[200,26],[120,90],[290,120]]
@@ -2563,12 +2582,10 @@ function rocketSVG(){
         fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
       <path d="M162 128 l-30 40 h30 z" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="4" stroke-linejoin="round"/>
       <path d="M238 128 l30 40 h-30 z" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="4" stroke-linejoin="round"/>
-      <circle cx="200" cy="86" r="20" fill="${GREENC}" stroke="${DEEPC}" stroke-width="4"/>
-      <circle cx="193" cy="80" r="4" fill="${CREAMC}"/><circle cx="207" cy="80" r="4" fill="${CREAMC}"/>
-      <path d="M188 78 l10 6 M208 78 l-10 6" stroke="${DEEPC}" stroke-width="3" stroke-linecap="round"/>
-      <path d="M180 92 l-16 4 l16 6 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="2.6" stroke-linejoin="round"/>
-      <circle cx="200" cy="130" r="13" fill="${GREENC}" stroke="${DEEPC}" stroke-width="4"/>
-      <path d="M191 126 l7 5 M207 126 l-7 5" stroke="${DEEPC}" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="200" cy="102" r="26" fill="none" stroke="${DEEPC}" stroke-width="3" opacity=".3"/>
+      <!-- two full ducks strapped to the fuselage, each spinning around its own centre -->
+      <g transform="translate(172 90)"><g class="rduck" style="animation-delay:0s">${rocketDuck()}</g></g>
+      <g transform="translate(228 128) scale(-1,1)"><g class="rduck" style="animation-delay:.35s">${rocketDuck()}</g></g>
     </g>
     <g class="rflame">
       <path d="M182 164 q18 44 18 62 q0-18 18-62 z" fill="#e8820c"/>
@@ -2578,14 +2595,22 @@ function rocketSVG(){
 
 /** Darth Snot, force-choking a duck. */
 function darthSVG(){
+  // Same astronaut silhouette as every other scene — cream suit, round helmet,
+  // dark half-visor — just reskinned red-and-black so he still reads as
+  // "one of ours" rather than a stranger in a costume.
   return `<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <g>
-      <rect x="46" y="128" width="66" height="80" rx="20" fill="#1a1f26" stroke="${DEEPC}" stroke-width="4"/>
-      <circle cx="79" cy="92" r="40" fill="#1a1f26" stroke="${DEEPC}" stroke-width="4"/>
-      <path d="M52 88 a28 28 0 0 1 54 0 v8 a28 28 0 0 1 -54 0 z" fill="#c8102e" opacity=".92"/>
-      <path d="M62 78 l10 8 M96 78 l-10 8" stroke="#1a1f26" stroke-width="4" stroke-linecap="round"/>
-      <path d="M112 140 L196 118" stroke="#1a1f26" stroke-width="20" stroke-linecap="round"/>
-      <path d="M196 108 l14 6 l-14 8 l6 -7 z" fill="#1a1f26"/>
+      <path d="M40 208 q18 -66 4 -102" fill="none" stroke="#12161c" stroke-width="24"
+        stroke-linecap="round" opacity=".85"/>
+      <rect x="46" y="140" width="58" height="70" rx="18" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+      <rect x="61" y="160" width="28" height="15" rx="4" fill="#1a1f26"/>
+      <circle cx="68" cy="167.5" r="2.6" fill="#c8102e"/>
+      <circle cx="75" cy="167.5" r="2.6" fill="${GOLDC}"/>
+      <circle cx="82" cy="167.5" r="2.6" fill="#c8102e"/>
+      <circle cx="75" cy="104" r="35" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+      <path d="M77 76 a32 32 0 0 1 0 56 z" fill="#c8102e"/>
+      <path d="M112 168 L196 118" stroke="${DEEPC}" stroke-width="18" stroke-linecap="round"/>
+      <path d="M196 108 l15 7 l-15 9 l5 -8 z" fill="${DEEPC}"/>
     </g>
     ${[0,1,2,3].map(i=>`<path class="dbolt" style="animation-delay:${i*.1}s"
       d="M212 ${104+i*10} q22 ${i%2?-8:8} 44 0" stroke="#c8102e" stroke-width="3"
@@ -3351,11 +3376,6 @@ function wire(){
 
   const claim = document.querySelector("[data-claim]");
   if (claim) claim.onclick = () => { Store.setScorer(claim.dataset.claim, Session.id); render(); };
-  const rel = document.querySelector("[data-release]");
-  if (rel) rel.onclick = () => {
-    if (confirm("Hand off scorekeeping?\n\nScores lock until someone else in the match takes it on."))
-      { Store.setScorer(rel.dataset.release, null); render(); }
-  };
   // hand the card to a named player straight from the briefing
   document.querySelectorAll("[data-give]").forEach(el => el.onclick = () => {
     const to = el.dataset.to;
