@@ -258,6 +258,19 @@ input,textarea{font-family:inherit}
 .taunt .tskip{position:absolute;bottom:calc(26px + var(--safe-b));color:#7d9a88;
   font-size:11.5px;font-weight:650;letter-spacing:.6px}
 @keyframes tin{to{opacity:1}}
+/* Win-only banner, slapped across the artwork itself rather than tucked in
+   the caption below it. Outlined so it stays legible over any of the six
+   scenes it can land on. */
+.taunt .tstamp{position:absolute;top:26%;left:50%;z-index:6;pointer-events:none;
+  width:100%;text-align:center;font-size:min(11.5vw,54px);font-weight:900;
+  letter-spacing:.5px;text-transform:uppercase;color:#fff;
+  text-shadow:-2px -2px 0 #0b2a1c,2px -2px 0 #0b2a1c,-2px 2px 0 #0b2a1c,
+    2px 2px 0 #0b2a1c,0 8px 22px rgba(0,0,0,.5);
+  opacity:0;animation:tstampin .4s cubic-bezier(.2,1.5,.4,1) .1s forwards,
+    tstamppulse 1s ease-in-out .6s infinite alternate}
+@keyframes tstampin{0%{opacity:0;transform:translate(-50%,-50%) rotate(-7deg) scale(2.2)}
+  100%{opacity:1;transform:translate(-50%,-50%) rotate(-7deg) scale(1)}}
+@keyframes tstamppulse{from{opacity:1}to{opacity:.8}}
 /* SVG elements default to transform-box:view-box with transform-origin 0 0, so
    any rotate() or scale() pivots on the top-left of the whole picture and flings
    the shape off screen. Everything that rotates or scales names its own pivot. */
@@ -310,17 +323,37 @@ input,textarea{font-family:inherit}
 @keyframes msw{0%{transform:rotate(-22deg)}60%{transform:rotate(8deg)}100%{transform:rotate(0)}}
 .mduck{transform-origin:330px 58px;animation:mfly 1.9s cubic-bezier(.3,0,.7,.4) .45s both}
 @keyframes mfly{0%{transform:translate(-190px,86px) scale(1.25)}100%{transform:translate(0,0) scale(1)}}
-/* Lunar rover drives in from off-screen; the ducks were mid-crossing and
-   scatter the instant it arrives. Wheels spin the whole time it's rolling. */
-.rvrover{animation:rvdrive 1.05s cubic-bezier(.3,.4,.2,1) forwards}
-@keyframes rvdrive{0%{transform:translateX(-230px)}100%{transform:translateX(0)}}
+/* Mars tee-off: swing connects with the tee'd duck partway through the
+   downswing, at which point the resting duck vanishes and the launched one
+   takes over — the two are never visible at the same time. */
+.mrsswing{transform-origin:110px 180px;animation:mrsw .9s cubic-bezier(.3,0,.4,1) both}
+@keyframes mrsw{0%{transform:rotate(-70deg)}55%{transform:rotate(45deg)}100%{transform:rotate(20deg)}}
+.mrstee{animation:mrsteefade .12s ease-out .5s forwards}
+@keyframes mrsteefade{to{opacity:0}}
+.mrsburst{transform-origin:0 0;opacity:0;animation:mrsburstflash .35s ease-out .5s forwards}
+@keyframes mrsburstflash{0%{opacity:1;transform:scale(.3)}100%{opacity:0;transform:scale(1.8)}}
+.mrsduck{transform-origin:330px 58px;opacity:0;animation:mrsfly 1s cubic-bezier(.25,.1,.3,1) .5s forwards}
+@keyframes mrsfly{
+  0%{opacity:0;transform:translate(-132px,130px) scale(1.3)}
+  1%{opacity:1;transform:translate(-132px,130px) scale(1.3)}
+  30%{opacity:1;transform:translate(-86px,75px) scale(1.2)}
+  60%{opacity:1;transform:translate(-45px,33px) scale(1.08)}
+  85%{opacity:1;transform:translate(-16px,10px) scale(1.02)}
+  100%{opacity:1;transform:translate(0,0) scale(1)}}
+/* Lunar rover drives in from off-screen and PAST where the ducks are standing
+   — the front wheel's final resting spot lands right on top of them, so even
+   a single freeze-frame reads as "ran them over," not just "arrived nearby."
+   Wheels spin the whole time it's rolling. */
+.rvrover{animation:rvdrive 1.15s cubic-bezier(.3,.4,.2,1) forwards}
+@keyframes rvdrive{0%{transform:translateX(-260px)}100%{transform:translateX(80px)}}
 .rvwheel{transform-origin:0 0;animation:rduckspin .5s linear infinite}
-/* Ducks stand there crossing, visible the whole approach, then scatter the
-   instant the rover reaches them. */
-.rvduck{transform-origin:0 0;animation:rvscatter .5s ease-out 1.05s both}
+/* Ducks stand there crossing, visible the whole approach, then get knocked
+   clear — up and back over the roofline — right as the front wheel reaches
+   them, so they're never just swallowed silently under the chassis. */
+.rvduck{transform-origin:0 0;animation:rvscatter .5s ease-out .96s both}
 @keyframes rvscatter{0%{transform:translate(0,0) rotate(0)}
-  100%{transform:translate(26px,-32px) rotate(210deg)}}
-.rvdust{opacity:0;animation:rvpuff .55s ease-out 1s forwards}
+  100%{transform:translate(55px,-55px) rotate(240deg)}}
+.rvdust{opacity:0;animation:rvpuff .55s ease-out .65s forwards}
 @keyframes rvpuff{0%{opacity:.7;transform:scale(.5)}100%{opacity:0;transform:scale(1.6)}}
 .tkball{transform-origin:150px 152px;animation:tkroll 1s cubic-bezier(.4,0,.9,.6) .2s both}
 @keyframes tkroll{0%{transform:translateX(-180px) rotate(0)}100%{transform:translateX(56px) rotate(540deg)}}
@@ -821,7 +854,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-30.3";      // must match version.txt — that's what phones poll
+const BUILD = "2026-07-30.4";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -2679,22 +2712,41 @@ function moonSVG(){
 /** A Snot teeing off a duck from the surface of Mars — same mechanic as the
     moon shot, reskinned rust-red, with Mars's two little moons standing in
     for Earth. */
+/** A Snot on Mars, teeing off a duck like a golf ball — the duck sits still
+    on a tee until the swing actually connects, then launches away. Its own
+    astronaut/club shapes and swing arc, separate from the moon scene, so
+    fixing this one can never touch that one. */
 function marsSVG(){
   return `<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     ${[[36,34],[356,44],[300,22],[80,60]].map(([x,y],i)=>`<circle class="rstar"
       style="animation-delay:${i*.3}s" cx="${x}" cy="${y}" r="2.4" fill="${CREAMC}"/>`).join("")}
     <circle cx="52" cy="46" r="7" fill="#9a9a9a" opacity=".7"/>
     <circle cx="76" cy="60" r="4" fill="#9a9a9a" opacity=".55"/>
-    <path class="marc" d="M150 150 Q244 40 344 62" stroke="${GOLDC}" stroke-width="3.5"
+    <path class="marc" d="M198 194 Q280 90 330 64" stroke="${GOLDC}" stroke-width="3.5"
       fill="none" stroke-dasharray="8 9" stroke-linecap="round"/>
-    <g class="mduck">
+
+    <!-- the tee: a peg planted in the dirt, right where the club connects -->
+    <path d="M198 210 l-4 -20 h8 z" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="2"/>
+
+    <!-- resting on the tee until impact, then it vanishes and the launched
+         duck (below) takes over — never both on screen at once -->
+    <g transform="translate(198 186) scale(.6)"><g class="mrstee">${rocketDuck()}</g></g>
+
+    <!-- small impact burst, right at the moment of contact -->
+    <g class="mrsburst" transform="translate(198 190)">
+      <path d="M0 -14 L4 -4 L14 0 L4 4 L0 14 L-4 4 L-14 0 L-4 -4 Z" fill="${GOLDC}"/>
+    </g>
+
+    <!-- launched off the tee, arcing away into the Martian sky -->
+    <g class="mrsduck">
       <ellipse cx="330" cy="64" rx="26" ry="18" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3.5"/>
       <circle cx="350" cy="50" r="12" fill="${GREENC}" stroke="${DEEPC}" stroke-width="3.5"/>
       <path d="M342 44 l6 5 M356 44 l-6 5" stroke="${DEEPC}" stroke-width="2.6" stroke-linecap="round"/>
       <path d="M362 48 l14 -4 l-12 10 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="2.4" stroke-linejoin="round"/>
       <path d="M306 60 l-16 -6 l4 14 z" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3" stroke-linejoin="round"/>
     </g>
-    <g class="mswing">
+
+    <g class="mrsswing">
       <rect x="86" y="150" width="42" height="52" rx="15" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
       <circle cx="107" cy="122" r="28" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
       <path d="M109 100 a22 22 0 0 1 0 44 z" fill="#16202b"/>
@@ -2715,8 +2767,11 @@ function roverSVG(){
     <path d="M0 188 q60 -14 120 0 t130 0 t150 0 v52 H0 z" fill="#3a4652"/>
     <ellipse cx="70" cy="204" rx="20" ry="6" fill="#2c3640"/>
     <ellipse cx="300" cy="210" rx="26" ry="7" fill="#2c3640"/>
-    <g transform="translate(262 170)"><g class="rvduck" style="animation-delay:0s">${rocketDuck()}</g></g>
-    <g transform="translate(300 178) scale(-1,1)"><g class="rvduck" style="animation-delay:.06s">${rocketDuck()}</g></g>
+    <!-- ducks sit exactly where the front wheel ends up, so the rover's final
+         resting frame has the wheel parked right on top of them — the hit is
+         unmissable even on a single freeze-frame, not just implied by motion. -->
+    <g transform="translate(245 183)"><g class="rvduck" style="animation-delay:.62s">${rocketDuck()}</g></g>
+    <g transform="translate(272 187) scale(-1,1)"><g class="rvduck" style="animation-delay:.78s">${rocketDuck()}</g></g>
     <g class="rvrover">
       <g class="rvdust">
         <ellipse cx="55" cy="196" rx="26" ry="9" fill="#c9ccd1" opacity=".55"/>
@@ -2835,7 +2890,8 @@ function playScene(o){
   document.querySelectorAll(".taunt").forEach(e => e.remove());
   const el = document.createElement("div");
   el.className = "taunt" + (o.cls ? " " + o.cls : "");
-  el.innerHTML = `${o.svg}
+  el.innerHTML = `${o.stamp ? `<div class="tstamp">${o.stamp}</div>` : ""}
+    ${o.svg}
     <div class="tline">${o.line}</div>
     ${o.sub ? `<div class="tsub">${o.sub}</div>` : ""}
     <div class="tskip">tap to skip</div>`;
@@ -2921,13 +2977,14 @@ function duckHuntSVG(){
 function playWin(r, m, st){
   const sub = esc(m.s.p.map(p => last(p[0])).join(" / "));
   const line = `Snots win ${esc(st.text)}`;
+  const stamp = "Snots Win!";
   pick([
-    () => playScene({svg: duckHuntSVG(), line, sub, ms: 4200}),
-    () => playScene({svg: rocketSVG(),   line, sub, ms: 4200}),
-    () => playScene({svg: darthSVG(),    line, sub}),
-    () => playScene({svg: moonSVG(),     line, sub, ms: 4200}),
-    () => playScene({svg: marsSVG(),     line, sub, ms: 4200}),
-    () => playScene({svg: roverSVG(),    line, sub, ms: 4200})
+    () => playScene({svg: duckHuntSVG(), line, sub, stamp, ms: 4200}),
+    () => playScene({svg: rocketSVG(),   line, sub, stamp, ms: 4200}),
+    () => playScene({svg: darthSVG(),    line, sub, stamp}),
+    () => playScene({svg: moonSVG(),     line, sub, stamp, ms: 4200}),
+    () => playScene({svg: marsSVG(),     line, sub, stamp, ms: 4200}),
+    () => playScene({svg: roverSVG(),    line, sub, stamp, ms: 4200})
   ])();
 }
 
@@ -3392,8 +3449,8 @@ function viewEventSheet(){
       <li><b>Order of play</b> &mdash; the team that wins the hole has honors on the next
         tee, not just the individual who won it. Ready golf everywhere else, but don't set
         your partner up for a read if you're out of the hole.</li>
-      <li><b>Breakfast balls</b> &mdash; allowed only in Best Ball and Alternate Shot
-        (Rounds 2 and 4).</li>
+      <li><b>Breakfast balls</b> &mdash; allowed only in Best Ball and Singles
+        (Rounds 2 and 5).</li>
     </ul>
   </div></div>`;
 }
