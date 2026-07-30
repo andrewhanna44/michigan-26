@@ -49,7 +49,18 @@ input,textarea{font-family:inherit}
   justify-content:center;background:var(--surface2);border:1px solid var(--line);
   flex:none;font-size:16px;line-height:1}
 .iconbtn:active{background:var(--surface3)}
+.tbi{width:19px;height:19px;color:var(--muted)}
 .wrap{padding:14px 14px 40px}
+
+/* Course texture — deliberately kept off the scoring screens, where contrast
+   in bright sun matters more than atmosphere. */
+.turf{background-color:var(--bg);
+  background-image:
+    radial-gradient(circle at 18% 12%, rgba(31,95,63,.09) 0 38%, transparent 39%),
+    radial-gradient(circle at 82% 26%, rgba(31,95,63,.07) 0 32%, transparent 33%),
+    radial-gradient(circle at 46% 78%, rgba(31,95,63,.08) 0 42%, transparent 43%),
+    repeating-linear-gradient(115deg, rgba(31,95,63,.045) 0 22px, transparent 22px 46px);
+  background-attachment:fixed}
 
 /* ---------- lock screen ---------- */
 .splash{position:fixed;inset:0;background:
@@ -246,12 +257,30 @@ input,textarea{font-family:inherit}
 .wpuff{opacity:0;animation:wbang .5s ease-out 1.35s}
 .wpuff.two{animation-delay:1.65s}
 
+/* ---------- side contest flash ---------- */
+.flashwrap{position:fixed;inset:0;z-index:92;display:flex;align-items:center;
+  justify-content:center;background:rgba(11,42,28,.9);animation:tfade .2s ease-out;padding:24px}
+.flashwrap.out{animation:tout .3s ease-in forwards}
+.flashin{text-align:center;max-width:340px;animation:fpop .45s cubic-bezier(.2,.9,.3,1.25)}
+@keyframes fpop{from{transform:scale(.75);opacity:0}to{transform:scale(1);opacity:1}}
+.flashin .fkick{font-size:11.5px;font-weight:800;letter-spacing:3px;color:#c9a227;
+  text-transform:uppercase}
+.flashin .fbig{font-size:34px;font-weight:850;color:#f2e7cd;letter-spacing:-.5px;
+  line-height:1.05;margin:8px 0 6px}
+.flashin .fhole{font-size:15px;font-weight:750;color:#a9bfae}
+.flashin svg{width:98px;height:98px;margin:0 auto 10px;display:block}
+.flashin .ftap{font-size:11.5px;color:#7d9a88;margin-top:18px;font-weight:650}
+
 /* ---------- toast ---------- */
-.toast{position:fixed;left:50%;bottom:calc(22px + var(--safe-b));transform:translateX(-50%);
-  z-index:90;max-width:calc(100% - 28px);width:max-content;background:#0e1216;color:#fff;
-  border-radius:13px;padding:12px 16px;font-size:13.5px;font-weight:650;line-height:1.4;
-  box-shadow:0 8px 28px rgba(0,0,0,.3);text-align:center;animation:tup .22s ease-out}
-@keyframes tup{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+/* Mid-screen, not tucked at the bottom — this is the confirmation a scorer
+   actually needs to see before moving on. */
+.toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+  z-index:90;max-width:min(420px,calc(100% - 36px));width:max-content;
+  background:#0e1216;color:#fff;border-radius:16px;padding:18px 22px;
+  font-size:16px;font-weight:700;line-height:1.45;
+  box-shadow:0 14px 44px rgba(0,0,0,.42);text-align:center;animation:tup .22s ease-out}
+@keyframes tup{from{opacity:0;transform:translate(-50%,-50%) scale(.9)}
+  to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 .toast b{font-weight:850}
 .toast .win.s{color:#f0d78a} .toast .win.d{color:#7fc79b}
 
@@ -304,6 +333,16 @@ input,textarea{font-family:inherit}
   border:1px solid var(--line);font-size:10px;font-weight:700;color:var(--dim);
   display:flex;align-items:center;justify-content:center;padding:0;min-width:0}
 .strip button.cur{outline:2px solid var(--text);outline-offset:-1px;color:var(--text)}
+.strip button.lock{opacity:.34}
+.strip button.sp{position:relative}
+.strip button .spdot{position:absolute;top:1px;right:1px;width:5px;height:5px;
+  border-radius:50%;background:var(--red)}
+.spbadge{display:inline-block;margin-top:6px;padding:3px 9px;border-radius:7px;
+  font-size:10px;font-weight:850;letter-spacing:1.2px;text-transform:uppercase;
+  background:var(--red);color:#fff}
+.gate{background:#fff6e5;border:1px solid #f0d9a8;color:#7a5600;border-radius:11px;
+  padding:10px 13px;margin-top:9px;font-size:12.5px;font-weight:650;text-align:center}
+.gate b{color:#5c4100}
 .strip button.w{background:var(--snots-solid);border-color:var(--snots-solid);color:#fff}
 .strip button.l{background:var(--ducks-solid);border-color:var(--ducks-solid);color:#fff}
 .strip button.h{background:var(--half);border-color:var(--half);color:#fff}
@@ -338,10 +377,17 @@ input,textarea{font-family:inherit}
   box-shadow:0 0 0 2px var(--surface)}
 .entry .out{flex:1;text-align:right;font-size:11px;color:var(--dim);font-weight:650}
 .entry .out b{display:block;font-size:17px;color:var(--text);font-weight:800;line-height:1.15}
-.entry .clr{flex:none;width:31px;height:31px;border-radius:8px;background:var(--surface2);
-  border:1px solid var(--line);color:var(--dim);font-size:13px;font-weight:800;display:flex;
-  align-items:center;justify-content:center}
-.entry .clr.on{background:var(--red);border-color:var(--red);color:#fff}
+/* Two clearly-labelled actions. Previously an unlabelled X and a ↺ arrow, which
+   read as if the X was the clear button. */
+.entry .acts{display:flex;gap:6px;flex:none}
+.entry .act{width:46px;padding:5px 2px;border-radius:9px;background:var(--surface2);
+  border:1px solid var(--line);color:var(--muted);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;line-height:1.1}
+.entry .act b{font-size:14px;font-weight:850}
+.entry .act i{font-size:8.5px;font-style:normal;font-weight:750;letter-spacing:.2px;
+  text-transform:uppercase;margin-top:1px}
+.entry .act:disabled{opacity:.32}
+.entry .act.pick.on{background:var(--red);border-color:var(--red);color:#fff}
 .gsin.picked{background:var(--red-dim);border:1.5px solid var(--red)!important;
   color:var(--red);border-radius:11px!important}
 
@@ -402,6 +448,9 @@ table.gc .lbl{text-align:left;padding:0 8px;min-width:130px;width:130px;position
   background:var(--surface);z-index:2;border-left:none;font-weight:700;font-size:11.5px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
 table.gc thead th{background:var(--surface2);font-weight:750;color:var(--muted);font-size:11px}
+table.gc thead th.sph{background:var(--red-dim);color:var(--red);font-weight:850}
+table.gc .sptag{display:block;font-size:7.5px;font-weight:850;letter-spacing:.3px;
+  line-height:1;margin-top:1px}
 table.gc thead .lbl{background:var(--surface2)}
 table.gc .tot{background:var(--surface2);font-weight:800}
 table.gc .meta td{color:var(--dim);font-size:11px;font-weight:600}
@@ -637,7 +686,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-29.3";      // must match version.txt — that's what phones poll
+const BUILD = "2026-07-29.4";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -645,8 +694,10 @@ const PICKED = "X";                // sentinel for a picked-up ball
    ========================================================================== */
 // idx / room / yrs all come straight from Pat's Player Checklist tab.
 const PLAYERS = {
-  pat:    {n:"Pat Hodgman",        t:"s", idx:6.7,  room:1, yrs:4, code:"7K4M", admin:true},
-  andrew: {n:"Andrew Hanna",       t:"s", idx:-0.6, room:1, yrs:4, code:"3QX9", admin:true},
+  // `title` is the man's role in the trip; `admin` is what he can do in the app.
+  // Pat is sole Commissioner; Andrew built the thing. Both have Admin Access.
+  pat:    {n:"Pat Hodgman",        t:"s", idx:6.7,  room:1, yrs:4, code:"7K4M", admin:true, title:"Commissioner"},
+  andrew: {n:"Andrew Hanna",       t:"s", idx:-0.6, room:1, yrs:4, code:"3QX9", admin:true, title:"Coding Nerd"},
   rendina:{n:"Anthony Rendina",    t:"s", idx:16.2, room:2, yrs:4, code:"R8VT"},
   robert: {n:"Robert Leonard",     t:"s", idx:8.8,  room:3, yrs:3, code:"J2WN"},
   curtin: {n:"Mike Curtin",        t:"s", idx:2.1,  room:2, yrs:2, code:"5FHD"},
@@ -742,6 +793,23 @@ const ROUNDS = [
   {id:"r5m09", t:"3:20 PM", tee:"White",      s:{p:[["alec",8,0]]},     d:{p:[["cam",10,2]]}},
   {id:"r5m10", t:"3:20 PM", tee:"White",      s:{p:[["luke",10,0]]},    d:{p:[["reed",11,1]]}}]}
 ];
+
+/* Side contests. Hole numbers are as printed on the card, matching COURSES. */
+const SPECIALS = {
+  1: {ctp: 14, ld: 6},
+  3: {ctp: 3,  ld: 8},
+  4: {ctp: 15, ld: 7}
+};
+/** What's on this hole, if anything: "ctp" | "ld" | null. h is 0-indexed. */
+function specialAt(roundNo, h){
+  const s = SPECIALS[roundNo];
+  if (!s) return null;
+  if (s.ctp === h + 1) return "ctp";
+  if (s.ld === h + 1) return "ld";
+  return null;
+}
+const SPECIAL_LABEL = {ctp: "Closest to the Pin", ld: "Long Drive"};
+const SPECIAL_SHORT = {ctp: "CTP", ld: "LD"};
 
 /* A restrained colour per round so they're easy to tell apart at a glance —
    deliberately nothing near the Snots gold or Ducks green. */
@@ -1373,6 +1441,9 @@ function render(){
   if (V.view === "card")  html += viewCard();
   if (V.sheet) html += viewSheet();
   app.innerHTML = html;
+  // turf only where legibility isn't critical: never on match entry or the card
+  const TURF = ["home", "board", "matches", "profile", "stats", "round"];
+  document.body.classList.toggle("turf", TURF.includes(V.view));
   wire();
 }
 
@@ -1525,10 +1596,10 @@ function sceneSVG(){
 function viewHome(){
   const st = standings(), me = Session.me, mineId = myMatch();
   return `<div class="topbar">
-      <button class="avabtn ${me.t}" data-nav="profile" title="Your profile">${
-        avatarSVG(Session.id)}</button>
       <h1>Michigan '26<div class="sub">${esc(me.n)} &middot; ${me.t === "s" ? "Snots" : "Ducks"}</div></h1>
-      <button class="iconbtn" data-sheet="menu">&#9776;</button></div>
+      <button class="avabtn ${me.t}" data-nav="profile" title="Your profile"
+        aria-label="Your profile">${avatarSVG(Session.id)}</button>
+      <button class="iconbtn" data-sheet="menu" aria-label="Menu">&#9776;</button></div>
     <div class="wrap">
       ${taggedTotal() ? `<button class="tagbar" data-nav="chat">
         <span style="font-size:17px">@</span>
@@ -1588,7 +1659,7 @@ function viewMatches(){
   return `<div class="topbar">
       <button class="iconbtn" data-nav="home">&#8592;</button>
       <h1>All Matches<div class="sub">${MATCH_COUNT} matches across 5 rounds</div></h1>
-      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button></div>
+      ${navBtnsHTML()}</div>
     <div class="wrap"><div class="sect">Rounds</div>${rounds}
       <button class="btn ghost" data-nav="board">Leaderboard</button></div>`;
 }
@@ -1700,6 +1771,22 @@ function tiebreakHTML(){
   </div>`;
 }
 
+/* The same two controls in the same place on every screen: go home, and open
+   your profile (where your login code lives). Drawn rather than typed, because
+   the ⌂ character renders as a wonky box on iOS. */
+const homeIcon = `<svg viewBox="0 0 24 24" class="tbi" aria-hidden="true">
+  <path d="M3 11.2 12 4l9 7.2" stroke="currentColor" stroke-width="2" fill="none"
+    stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M5.6 10.6V20h12.8v-9.4" stroke="currentColor" stroke-width="2" fill="none"
+    stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M10 20v-5h4v5" stroke="currentColor" stroke-width="2" fill="none"
+    stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+function navBtnsHTML(){
+  return `<button class="iconbtn" data-nav="home" title="Home" aria-label="Home">${homeIcon}</button>
+    <button class="avabtn ${Session.me.t}" data-nav="profile" title="Your profile"
+      aria-label="Your profile">${avatarSVG(Session.id)}</button>`;
+}
+
 const chatBadge = () => {
   const n = Store.chatUnread("all") + Store.chatUnread(myChannel());
   return n > 0 ? `<span class="dotbadge">${n > 99 ? "99+" : n}</span>` : "";
@@ -1758,7 +1845,7 @@ function viewBoard(){
   return `<div class="topbar">
       <button class="iconbtn" data-nav="home">&#8592;</button>
       <h1>Leaderboard<div class="sub">Snots vs Ducks &middot; ${fmtPt(CLINCH)} to clinch</div></h1>
-      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button></div>
+      ${navBtnsHTML()}</div>
     <div class="wrap">${boardHTML(st)}${tiebreakHTML()}${out}${syncHTML()}</div>`;
 }
 
@@ -1819,7 +1906,7 @@ function viewChat(){
       <button class="iconbtn" data-nav="home">&#8592;</button>
       <h1>Chat<div class="sub">${ch === "all" ? "Everyone &middot; all 20 players"
         : `${mine === "s" ? "Snots" : "Ducks"} only &middot; your 10`}</div></h1>
-      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button></div>
+      ${navBtnsHTML()}</div>
     <div class="wrap">
       <div class="chanbar">
         <button class="${V.chan !== "team" ? "on" : ""}" data-chan="all">Everyone${
@@ -1863,12 +1950,15 @@ function avatarSVG(id, cls){
   const snot = p.t === "s";
   const CREAM = "#f2e7cd", DEEP = "#0b2a1c";
   const inner = snot
-    ? `<circle cx="32" cy="32" r="19" fill="${CREAM}" stroke="${DEEP}" stroke-width="2.6"/>
-       <path d="M33 20 a13 13 0 0 1 0 25 z" fill="#8a6d00"/>
-       <path d="M38 25 a9 9 0 0 0 -2 15" stroke="${CREAM}" stroke-width="2.2" fill="none"
-         stroke-linecap="round" opacity=".7"/>
-       <rect x="9" y="27" width="6" height="11" rx="3" fill="${CREAM}" stroke="${DEEP}" stroke-width="2.2"/>
-       <rect x="49" y="27" width="6" height="11" rx="3" fill="${CREAM}" stroke="${DEEP}" stroke-width="2.2"/>`
+    // helmet shell, then a wide dark visor across the face — the previous
+    // version read as a tennis ball because the visor was a thin crescent
+    ? `<rect x="17" y="44" width="30" height="17" rx="7" fill="#8a6d00" stroke="${DEEP}" stroke-width="2.4"/>
+       <circle cx="32" cy="31" r="20" fill="${CREAM}" stroke="${DEEP}" stroke-width="2.6"/>
+       <path d="M18 28 a14 14 0 0 1 28 0 v5 a14 14 0 0 1 -28 0 z" fill="#16202b" stroke="${DEEP}" stroke-width="2"/>
+       <path d="M23 24 c3 -4 8 -6 13 -6" stroke="#8fd0ff" stroke-width="3"
+         fill="none" stroke-linecap="round" opacity=".85"/>
+       <rect x="8" y="25" width="7" height="13" rx="3.5" fill="#8a6d00" stroke="${DEEP}" stroke-width="2.2"/>
+       <rect x="49" y="25" width="7" height="13" rx="3.5" fill="#8a6d00" stroke="${DEEP}" stroke-width="2.2"/>`
     : `<circle cx="36" cy="30" r="18" fill="#1b6b3f" stroke="${DEEP}" stroke-width="2.6"/>
        <path d="M18 28 l-11 4 l11 5 z" fill="#e8820c" stroke="${DEEP}" stroke-width="2.2" stroke-linejoin="round"/>
        <circle cx="28" cy="24" r="3.4" fill="${CREAM}"/><circle cx="27" cy="23.2" r="1.5" fill="${DEEP}"/>
@@ -1918,7 +2008,7 @@ function viewProfile(){
         const q = PLAYERS[id];
         roster += `<button class="card ${id === Session.id ? "me" : ""}" data-profile="${id}">
           <div class="rowline">${avatarSVG(id, "sm")}
-          <div class="rmeta"><div class="t1">${esc(q.n)}${q.admin ? ` <span class="cmsh">COMMISH</span>` : ""}</div>
+          <div class="rmeta"><div class="t1">${esc(q.n)}${q.admin ? ` <span class="cmsh">ADMIN</span>` : ""}</div>
             <div class="t2">Index ${fmtIdx(q.idx)} &middot; Room ${q.room} &middot; ${q.yrs} year${q.yrs === 1 ? "" : "s"}</div></div>
           <div class="chev">&rsaquo;</div></div></button>`;
       });
@@ -1927,13 +2017,15 @@ function viewProfile(){
   return `<div class="topbar">
       <button class="iconbtn" data-nav="home">&#8592;</button>
       <h1>${own ? "Your profile" : esc(p.n)}<div class="sub">${
-        p.t === "s" ? "Snots" : "Ducks"}${p.admin ? " &middot; Commissioner" : ""}</div></h1>
-      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button></div>
+        p.t === "s" ? "Snots" : "Ducks"}${p.title ? " &middot; " + esc(p.title) : ""}</div></h1>
+      ${navBtnsHTML()}</div>
     <div class="wrap">
       <div class="pcard ${p.t}">
         ${avatarSVG(meId, "big")}
         <div class="pname">${esc(p.n)}</div>
-        <div class="pteam">${p.t === "s" ? "SNOTS" : "DUCKS"}${p.admin ? " &middot; COMMISSIONER" : ""}</div>
+        <div class="pteam">${p.t === "s" ? "SNOTS" : "DUCKS"}${
+          p.title ? ` &middot; ${esc(p.title.toUpperCase())}` : ""}</div>
+        ${p.admin ? `<div class="padmin">ADMIN ACCESS</div>` : ""}
         <div class="pfacts">
           ${fact("Handicap", fmtIdx(p.idx))}
           ${fact("Room", p.room)}
@@ -1968,7 +2060,7 @@ function viewStats(){
   if (!rows.length) return `<div class="topbar">
       <button class="iconbtn" data-nav="home">&#8592;</button>
       <h1>Statistics<div class="sub">Nothing scored yet</div></h1>
-      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button></div>
+      ${navBtnsHTML()}</div>
     <div class="wrap"><div class="empty">Statistics appear here once scores start going in.<br>
       Every man's gross and net contribution to par, birdies, eagles and bogeys &mdash;
       across all five rounds.</div></div>`;
@@ -2025,7 +2117,7 @@ function viewStats(){
   return `<div class="topbar">
       <button class="iconbtn" data-nav="home">&#8592;</button>
       <h1>Statistics<div class="sub">${rows.length} players scored so far</div></h1>
-      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button></div>
+      ${navBtnsHTML()}</div>
     <div class="wrap">
       <div class="statcards">
         <button class="statcard ${best ? best.team : ""} mvpcard" data-sort="mvp">
@@ -2069,7 +2161,7 @@ function viewRound(){
   return `<div class="topbar">
       <button class="iconbtn" data-nav="matches">&#8592;</button>
       <h1>Round ${r.n} &middot; ${esc(r.fmt)}<div class="sub">${esc(c.n)} &middot; ${esc(r.tee)} tees</div></h1>
-      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button>
+      ${navBtnsHTML()}
     </div><div class="wrap">
       <div class="card flat"><div style="font-size:12.5px;color:var(--muted);line-height:1.65">
         <b style="color:var(--text)">Strokes:</b> ${esc(r.rule)}<br>
@@ -2110,13 +2202,23 @@ function viewMatch(){
   const scores = Store.scores(m.id), st = matchState(r, m, scores);
   const h = V.hole, editable = canScore(m), sc = Store.scorer(m.id), par = c.par[h];
 
+  // You can't run ahead of the card: the first hole without a result is as far
+  // as anyone may go. Everything behind it stays open for corrections.
+  let firstOpen = 17;
+  for (let i = 0; i < 18; i++){ if (st.holes[i] === null){ firstOpen = i; break; } }
+  const holeDone = st.holes[h] !== null;
+
   let strip = "";
   for (let i = 0; i < 18; i++){
-    const w = st.holes[i];
-    strip += `<button data-hole="${i}" id="chip-${i}" class="${i === h ? "cur " : ""}${
-      w === "s" ? "w" : w === "d" ? "l" : w === "h" ? "h" : ""}">${i + 1}</button>`;
+    const w = st.holes[i], sp = specialAt(r.n, i);
+    const locked = i > firstOpen;
+    strip += `<button data-hole="${i}" id="chip-${i}" ${locked ? "disabled" : ""}
+      class="${i === h ? "cur " : ""}${locked ? "lock " : ""}${sp ? "sp " : ""}${
+      w === "s" ? "w" : w === "d" ? "l" : w === "h" ? "h" : ""}">${i + 1}${
+      sp ? `<span class="spdot"></span>` : ""}</button>`;
   }
   const yd = yards(r, m, h);
+  const sp = specialAt(r.n, h);
 
   const hs = holeScores(r, m, h, scores), row = scores[h] || {};
   const sideBox = key => {
@@ -2142,8 +2244,7 @@ function viewMatch(){
   return `<div class="topbar">
       <button class="iconbtn" data-nav="round" data-i="${ROUNDS.indexOf(r)}">&#8592;</button>
       <h1>${esc(r.fmt)}<div class="sub">${esc(c.n)} &middot; ${esc(m.tee || r.tee)} &middot; ${esc(m.t)}</div></h1>
-      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button>
-      <button class="iconbtn" data-sheet="menu">&#9776;</button>
+      ${navBtnsHTML()}
     </div><div class="wrap">
       <div class="resbar ${st.winner || ""}" id="resbar">
         <div class="r1" id="res1">${holeLine(r, m, h, scores)}</div>
@@ -2160,16 +2261,20 @@ function viewMatch(){
         <div class="holenav">
           <button class="navbtn" data-step="-1" ${h === 0 ? "disabled" : ""}>&#8592;</button>
           <div class="holeinfo"><div class="hn">Hole ${h + 1}</div>
-            <div class="hd">Par ${par}${yd ? " &middot; " + yd : ""} &middot; S.I. ${c.hcp[h]}</div></div>
-          <button class="navbtn" data-step="1" ${h === 17 ? "disabled" : ""}>&rsaquo;</button>
+            <div class="hd">Par ${par}${yd ? " &middot; " + yd : ""} &middot; S.I. ${c.hcp[h]}</div>
+            ${sp ? `<div class="spbadge ${sp}">${SPECIAL_LABEL[sp]}</div>` : ""}</div>
+          <button class="navbtn" data-step="1" ${h === 17 || !holeDone ? "disabled" : ""}>&rsaquo;</button>
         </div>
         <div class="strip">${strip}</div>
       </div>
       ${sideBox("s")}${sideBox("d")}
       <div class="holebar">
-        <button class="go ${h === 17 || V.fromCard ? "fin" : ""}" data-proceed="1">${
+        <button class="go ${h === 17 || V.fromCard ? "fin" : ""}" data-proceed="1"
+          ${holeDone || V.fromCard ? "" : "disabled"}>${
           V.fromCard ? "Back to Review" : h === 17 ? "Review Round" : "Save Scores &amp; Proceed"}</button>
       </div>
+      ${!holeDone && !V.fromCard ? `<div class="gate">Enter a score for
+        <b>both sides</b> before moving on.</div>` : ""}
       <div class="savedtag">Every score saves the moment you type it${
         Store.online ? " and syncs to everyone" : " &mdash; will sync when you get service"}.${
         st.done ? " Keep going &mdash; the remaining holes still count for statistics." : ""}</div>
@@ -2205,6 +2310,9 @@ function briefHTML(r, m){
       on hole${x.holes.length===1?"":"s"} ${x.holes.join(", ")}` : "no shots"}</span></li>`).join("")}</ul>
     ${r.par3Low ? `<div class="bd" style="margin-top:8px">On par 3s the pair plays off the
       lower partner's strokes.</div>` : ""}
+    ${SPECIALS[r.n] ? `<div class="bd" style="margin-top:8px">
+      <b>Closest to the Pin:</b> hole ${SPECIALS[r.n].ctp} &nbsp;&middot;&nbsp;
+      <b>Long Drive:</b> hole ${SPECIALS[r.n].ld}</div>` : ""}
   </div>`;
 }
 
@@ -2336,6 +2444,48 @@ function playWin(r, m, st){
   playWin._t = setTimeout(close, 4200);
 }
 
+/* Fires when the hole you just finished is followed by a side contest. */
+function flashSpecial(kind, holeNo){
+  const GOLD = "#c9a227", CREAM = "#f2e7cd";
+  const art = kind === "ctp"
+    ? `<svg viewBox="0 0 100 100" aria-hidden="true">
+         <circle cx="50" cy="62" r="30" fill="none" stroke="${CREAM}" stroke-width="3" opacity=".35"/>
+         <ellipse cx="50" cy="62" rx="12" ry="5" fill="#0b2a1c" stroke="${CREAM}" stroke-width="3"/>
+         <path d="M50 58 V16" stroke="${CREAM}" stroke-width="4" stroke-linecap="round"/>
+         <path d="M50 18 L78 26 L50 34 Z" fill="${GOLD}"/>
+         <circle cx="38" cy="70" r="5" fill="#fff"/></svg>`
+    : `<svg viewBox="0 0 100 100" aria-hidden="true">
+         <path d="M8 78 Q50 74 92 78" stroke="${CREAM}" stroke-width="3" fill="none" opacity=".35"/>
+         <path d="M14 74 Q46 18 88 30" stroke="${GOLD}" stroke-width="4" fill="none"
+           stroke-dasharray="7 7" stroke-linecap="round"/>
+         <circle cx="88" cy="30" r="7" fill="#fff" stroke="#0b2a1c" stroke-width="2"/>
+         <path d="M14 74 l-6 8" stroke="${CREAM}" stroke-width="5" stroke-linecap="round"/></svg>`;
+  const el = document.createElement("div");
+  el.className = "flashwrap";
+  el.innerHTML = `<div class="flashin">${art}
+    <div class="fkick">Coming up</div>
+    <div class="fbig">${SPECIAL_LABEL[kind].toUpperCase()}</div>
+    <div class="fhole">Hole ${holeNo}</div>
+    <div class="ftap">tap to continue</div></div>`;
+  const close = () => { el.classList.add("out"); setTimeout(() => el.remove(), 300); };
+  el.onclick = close;
+  document.body.appendChild(el);
+  clearTimeout(flashSpecial._t);
+  flashSpecial._t = setTimeout(close, 3800);
+}
+
+/**
+ * A hole just became complete. Announce who won it, then — if the NEXT hole is a
+ * side contest — flash that too, one after the other.
+ * Deliberately does NOT celebrate the match being won: a fat-fingered score can
+ * make a match look over when it isn't. That fires on submit instead.
+ */
+function afterHoleComplete(r, m, h, verdict){
+  showToast(verdict.html);
+  const nxt = specialAt(r.n, h + 1);
+  if (nxt && h + 1 <= 17) setTimeout(() => flashSpecial(nxt, h + 2), 1500);
+}
+
 function showToast(html){
   const old = document.querySelector(".toast"); if (old) old.remove();
   const t = document.createElement("div");
@@ -2388,9 +2538,12 @@ function entryRow(o){
       </span>
       <span class="out" id="net-${o.entrant}">${
         o.gross == null ? "" : `${picked ? "plays" : "net"}<b>${o.gross - o.strokes}</b>`}</span>
-      ${o.editable ? `<button class="clr ${picked ? "on" : ""}" data-pick="${o.entrant}"
-        title="Picked up">X</button>
-        <button class="clr" data-clear="${o.entrant}">&#8630;</button>` : ""}
+      ${o.editable ? `<span class="acts">
+        <button class="act pick ${picked ? "on" : ""}" data-pick="${o.entrant}">
+          <b>X</b><i>picked up</i></button>
+        <button class="act clear" data-clear="${o.entrant}"${
+          o.raw == null ? " disabled" : ""}><b>&times;</b><i>clear</i></button>
+      </span>` : ""}
     </div></div>`;
 }
 
@@ -2433,7 +2586,11 @@ function viewCard(){
 
   const nine = (from, to, label) => {
     let head = `<tr><th class="lbl">${label}</th>`;
-    for (let h = from; h <= to; h++) head += `<th>${h + 1}</th>`;
+    for (let h = from; h <= to; h++){
+      const sp = specialAt(r.n, h);
+      head += `<th${sp ? ` class="sph" title="${SPECIAL_LABEL[sp]}"` : ""}>${h + 1}${
+        sp ? `<span class="sptag">${SPECIAL_SHORT[sp]}</span>` : ""}</th>`;
+    }
     head += `<th class="tot">${label}</th></tr>`;
     let par = `<tr class="meta"><td class="lbl">Par</td>`, si = `<tr class="meta"><td class="lbl">Stroke index</td>`;
     let pT = 0;
@@ -2493,7 +2650,7 @@ function viewCard(){
   return `<div class="topbar">
       <button class="iconbtn" data-nav="match" data-id="${m.id}">&#8592;</button>
       <h1>Review Round<div class="sub">${esc(c.n)} &middot; ${esc(r.fmt)} &middot; ${esc(m.tee || r.tee)}</div></h1>
-      <button class="iconbtn" data-nav="home" title="Home">&#8962;</button>
+      ${navBtnsHTML()}
     </div><div class="wrap">
       <div class="resbar ${st.done && !st.winner ? "halved" : (st.winner || "")}">
         <div class="r1">${submitted ? "Submitted &middot; official" : "Match result"}</div>
@@ -2535,7 +2692,7 @@ function viewSheet(){
     <div class="sheethdr"><h3>${esc(Session.me.n)}</h3>
       <button class="iconbtn" data-closebtn="1">&times;</button></div>
     <p>${Session.me.t === "s" ? "Snots" : "Ducks"} &middot; Index ${fmtIdx(Session.me.idx)}${
-      Session.admin ? " &middot; Commissioner" : ""}<br>
+      Session.me.title ? " &middot; " + esc(Session.me.title) : ""}<br>
       ${Store.online ? "Live sync is on." : "Offline &mdash; scores save here and sync when you get service."}<br>
       <span style="color:var(--dim)">Version ${BUILD}</span></p>
     <div class="mycode"><div class="mck">Your login code</div>
@@ -2733,8 +2890,12 @@ function wire(){
   };
   const sub = document.querySelector("[data-submit]");
   if (sub) sub.onclick = () => {
-    Store.setSubmitted(sub.dataset.submit, true, Session.id);
+    const id = sub.dataset.submit, {r, m} = ALL_MATCHES[id];
+    const st = matchState(r, m, Store.scores(id));
+    Store.setSubmitted(id, true, Session.id);
     V.view = "home"; render(); window.scrollTo(0, 0);
+    // celebrate only once the card is signed off, never on a mistyped score
+    if (st.winner === "s") playWin(r, m, st);
   };
   const unsub = document.querySelector("[data-unsubmit]");
   if (unsub) unsub.onclick = () => {
@@ -2758,14 +2919,11 @@ function wire(){
       if (v !== null && (v < 1 || v > 15)) return;      // wait for a valid number
       const {r, m} = ALL_MATCHES[V.matchId];
       const before = !!holeVerdict(r, m, V.hole, Store.scores(m.id));
-      const wasDone = matchState(r, m, Store.scores(m.id)).done;
       Store.setScore(m.id, V.hole, el.dataset.entrant, v, Session.id, true);
       patch();
       // the moment a hole becomes complete, say who won it and with what
       const after = holeVerdict(r, m, V.hole, Store.scores(m.id));
-      const now = matchState(r, m, Store.scores(m.id));
-      if (!wasDone && now.done && now.winner === "s"){ el.blur(); playWin(r, m, now); }
-      else if (after && !before) showToast(after.html);
+      if (after && !before){ el.blur(); afterHoleComplete(r, m, V.hole, after); }
     };
     el.onfocus = () => {
       el.select();
@@ -2792,15 +2950,12 @@ function wire(){
     const {r, m} = ALL_MATCHES[V.matchId];
     const cur = (Store.scores(m.id)[V.hole] || {})[el.dataset.pick];
     const before = !!holeVerdict(r, m, V.hole, Store.scores(m.id));
-    const wasDone = matchState(r, m, Store.scores(m.id)).done;
     // tapping X again un-picks
     Store.setScore(m.id, V.hole, el.dataset.pick,
       cur === PICKED ? null : PICKED, Session.id, true);
     render();
     const after = holeVerdict(r, m, V.hole, Store.scores(m.id));
-    const now = matchState(r, m, Store.scores(m.id));
-    if (!wasDone && now.done && now.winner === "s") playWin(r, m, now);
-    else if (after && !before) showToast(after.html);
+    if (after && !before) afterHoleComplete(r, m, V.hole, after);
   });
 
   if (V.view === "match"){
@@ -2811,7 +2966,11 @@ function wire(){
       if (x0 === null || document.activeElement.classList.contains("gsin")) { x0 = null; return; }
       const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
       if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.8){
-        V.hole = Math.max(0, Math.min(17, V.hole + (dx < 0 ? 1 : -1))); render();
+        const fwd = dx < 0;
+        // swiping forward obeys the same gate as the buttons
+        const {r: rr, m: mm2} = ALL_MATCHES[V.matchId];
+        const done = matchState(rr, mm2, Store.scores(mm2.id)).holes[V.hole] !== null;
+        if (!fwd || done){ V.hole = Math.max(0, Math.min(17, V.hole + (fwd ? 1 : -1))); render(); }
       }
       x0 = null;
     };
@@ -2888,6 +3047,7 @@ window.MI26 = {PLAYERS, COURSES, ROUNDS, ALL_MATCHES, Store, Session, V,
   strokesOn, playerStrokes, teamStrokes, sideHole, holeScores, matchState, standings, markCls, PICKED,
   playerStats, playerPoints, mvp, toPar, roundSummary, holeVerdict, briefHTML, seriesHTML, rColour,
   eventResult, tiebreakHTML, tugSVG, avatarSVG, viewProfile,
+  SPECIALS, specialAt, flashSpecial, afterHoleComplete, showToast, navBtnsHTML,
   mentionsMe, renderMsgText, taggedUnread, taggedTotal,
   playTaunt, tauntSVG, taunted, markTaunted, playWin, duckHuntSVG, matchLine, holeLine,
   render, patch, MATCH_COUNT, myMatch, BUILD, checkForUpdate,
