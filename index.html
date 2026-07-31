@@ -126,6 +126,14 @@ input,textarea{font-family:inherit}
 .ava{width:38px;height:38px;flex:none;display:block}
 .ava.sm{width:34px;height:34px}
 .ava.big{width:86px;height:86px;margin:0 auto 10px}
+.ava.beermono{width:24px;height:24px;display:inline-block;vertical-align:middle;margin-left:6px}
+.mully{display:inline-flex;align-items:center;gap:5px;margin:0 8px}
+.mully .beermono{width:32px;height:32px;margin-left:0}
+.mystep{width:22px;height:22px;border-radius:7px;flex:none;display:flex;align-items:center;
+  justify-content:center;background:var(--surface2);border:1px solid var(--line);
+  font-weight:800;font-size:15px;line-height:1;color:var(--text)}
+.mystep:active{filter:brightness(.92)}
+.mystep:disabled{opacity:.4}
 .avabtn{width:38px;height:38px;border-radius:50%;flex:none;padding:0;overflow:hidden;
   border:1.5px solid var(--line);background:var(--surface)}
 .avabtn.s{border-color:var(--snots-edge)} .avabtn.d{border-color:var(--ducks-edge)}
@@ -502,7 +510,7 @@ input,textarea{font-family:inherit}
 .pname .hc{color:var(--dim);font-weight:600;font-size:10.5px;margin-left:5px}
 .pname .ball{color:var(--red);font-weight:800;font-size:9.5px;letter-spacing:.6px;
   text-transform:uppercase;margin-left:5px}
-.entry{display:flex;align-items:center;gap:9px;margin-top:5px}
+.entry{display:flex;align-items:center;gap:9px;margin-top:5px;flex-wrap:wrap}
 .entry .lab{font-size:11.5px;color:var(--muted);font-weight:650;flex:none}
 .gswrap{position:relative;flex:none}
 .gsin{width:54px;height:44px;text-align:center;font-size:20px;font-weight:800;
@@ -698,6 +706,10 @@ table.sl .nm{font-weight:750}
 table.sl .tm{font-size:10.5px;font-weight:800;letter-spacing:1px;color:var(--muted);
   text-transform:uppercase;text-align:right;width:58px}
 table.sl .vl{width:62px;text-align:right;font-weight:850;font-size:15px;padding-right:12px}
+table.sl .hl{color:var(--muted);font-size:12px;line-height:1.45;white-space:normal}
+table.sl thead th{padding:8px 8px;font-size:10.5px;font-weight:800;letter-spacing:.5px;
+  color:var(--dim);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--line)}
+table.sl thead .rk, table.sl thead .vl{text-align:right}
 table.sl tr.s{background:rgba(169,132,12,.09)}
 table.sl tr.d{background:rgba(27,107,63,.08)}
 table.sl tr.s .tm{color:var(--snots)} table.sl tr.d .tm{color:var(--ducks)}
@@ -849,7 +861,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-30.6";      // must match version.txt — that's what phones poll
+const BUILD = "2026-07-30.7";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -1192,6 +1204,31 @@ function playerStats(){
   }).filter(p => p.holes > 0);
 }
 
+/** Shotgun mulligans — Round 3 only. One row per Round-3 player: total taken,
+    and which holes, folding repeats on the same hole into "5 (2x)". */
+function mulliganStats(){
+  const r3 = ROUNDS.find(rr => rr.n === 3);
+  if (!r3) return [];
+  const byPlayer = {};
+  r3.matches.forEach(m => {
+    [...m.s.p, ...m.d.p].forEach(pl => { byPlayer[pl[0]] = byPlayer[pl[0]] || {total:0, holes:{}}; });
+    const mul = Store.mulligans(m.id);
+    for (const h in mul) for (const e in mul[h]){
+      const n = mul[h][e]; if (!n) continue;
+      byPlayer[e] = byPlayer[e] || {total:0, holes:{}};
+      byPlayer[e].total += n;
+      byPlayer[e].holes[h] = (byPlayer[e].holes[h] || 0) + n;
+    }
+  });
+  return Object.keys(byPlayer).map(id => {
+    const d = byPlayer[id];
+    const holesTxt = Object.keys(d.holes).map(Number).sort((a, b) => a - b)
+      .map(h => d.holes[h] > 1 ? `${h + 1} (${d.holes[h]}x)` : `${h + 1}`).join(", ");
+    return {id, name: PLAYERS[id].n, last: last(id), team: PLAYERS[id].t,
+            total: d.total, holesTxt};
+  }).sort((a, b) => b.total - a.total || a.last.localeCompare(b.last));
+}
+
 /** Points each player has contributed. In a 2v2 match both partners get the
     side's points — they won it together. */
 function playerPoints(){
@@ -1237,7 +1274,11 @@ const Store = (() => {
   try { chatSeen = JSON.parse(localStorage.getItem(LS_SEEN) || "{}"); } catch(e){ chatSeen = {}; }
   const flush = () => { try { localStorage.setItem(LS, JSON.stringify(data)); } catch(e){} };
   const flushChat = () => { try { localStorage.setItem(LS_CHAT, JSON.stringify(chatData)); } catch(e){} };
-  const bucket = id => (data[id] = data[id] || {scores:{}, scorer:null});
+  const bucket = id => {
+    const b = data[id] = data[id] || {scores:{}, scorer:null};
+    b.mulligans = b.mulligans || {};       // older buckets predate this field
+    return b;
+  };
 
   function mergeRemote(id, remote){
     if (!remote) return false;
@@ -1246,6 +1287,11 @@ const Store = (() => {
       const rc = remote.scores[h][e], lc = (b.scores[h] || {})[e];
       if (!rc || typeof rc.t !== "number") continue;
       if (!lc || rc.t > lc.t){ b.scores[h] = b.scores[h] || {}; b.scores[h][e] = rc; changed = true; }
+    }
+    if (remote.mulligans) for (const h in remote.mulligans) for (const e in remote.mulligans[h]){
+      const rc = remote.mulligans[h][e], lc = (b.mulligans[h] || {})[e];
+      if (!rc || typeof rc.t !== "number") continue;
+      if (!lc || rc.t > lc.t){ b.mulligans[h] = b.mulligans[h] || {}; b.mulligans[h][e] = rc; changed = true; }
     }
     if (remote.scorer && (!b.scorer || remote.scorer.t > b.scorer.t)){
       b.scorer = remote.scorer; changed = true;
@@ -1286,6 +1332,26 @@ const Store = (() => {
       flush();
       if (!silent) this._emit();
       if (db) update(ref(db, `${EVENT_KEY}/matches/${id}/scores/${h}/${entrant}`), cell).catch(()=>{});
+    },
+
+    /* ---- shotgun mulligans (Round 3 only) ----------------------------------
+       A per-hole, per-player tally, same shape and sync path as scores. */
+    mulligans(id){
+      const b = data[id]; if (!b || !b.mulligans) return {};
+      const out = {};
+      for (const h in b.mulligans) for (const e in b.mulligans[h]){
+        const c = b.mulligans[h][e];
+        if (c && typeof c.v === "number" && c.v > 0){ out[h] = out[h] || {}; out[h][e] = c.v; }
+      }
+      return out;
+    },
+    setMulligan(id, h, entrant, val, by){
+      const b = bucket(id), t = now(), v = Math.max(0, val | 0);
+      const cell = {v, t, by};
+      b.mulligans[h] = b.mulligans[h] || {};
+      b.mulligans[h][entrant] = cell;
+      flush(); this._emit();
+      if (db) update(ref(db, `${EVENT_KEY}/matches/${id}/mulligans/${h}/${entrant}`), cell).catch(()=>{});
     },
 
     /* ---- tiebreak ----------------------------------------------------------
@@ -1337,16 +1403,25 @@ const Store = (() => {
         if (r.mode === "team"){ ents.add("s"); ents.add("d"); }
         else ["s","d"].forEach(k => m[k].p.forEach(pl => ents.add(pl[0])));
       }
+      const mulEnts = new Set(Object.keys(b.mulligans).flatMap(h => Object.keys(b.mulligans[h])));
+      const mulPayload = {};
       for (let h = 0; h < 18; h++) for (const e of ents){
         b.scores[h] = b.scores[h] || {};
         b.scores[h][e] = {v: null, t, by: "reset"};
         payload[`${h}/${e}`] = {v: null, t, by: "reset"};
+      }
+      for (let h = 0; h < 18; h++) for (const e of mulEnts){
+        b.mulligans[h] = b.mulligans[h] || {};
+        b.mulligans[h][e] = {v: 0, t, by: "reset"};
+        mulPayload[`${h}/${e}`] = {v: 0, t, by: "reset"};
       }
       b.scorer = {id: null, t};
       b.submitted = {v: false, by: "reset", t};
       flush(); this._emit();
       if (db){
         update(ref(db, `${EVENT_KEY}/matches/${id}/scores`), payload).catch(()=>{});
+        if (Object.keys(mulPayload).length)
+          update(ref(db, `${EVENT_KEY}/matches/${id}/mulligans`), mulPayload).catch(()=>{});
         update(ref(db, `${EVENT_KEY}/matches/${id}/scorer`), {id: null, t}).catch(()=>{});
         update(ref(db, `${EVENT_KEY}/matches/${id}/submitted`),
                {v: false, by: "reset", t}).catch(()=>{});
@@ -1428,6 +1503,16 @@ const Store = (() => {
             const cell = {...rc, t: stamp};
             b.scores[h] = b.scores[h] || {}; b.scores[h][e] = cell; restored++;
             if (db) update(ref(db, `${EVENT_KEY}/matches/${id}/scores/${h}/${e}`), cell).catch(()=>{});
+          } else skipped++;
+        }
+        for (const h in (inc.mulligans || {})) for (const e in inc.mulligans[h]){
+          const rc = inc.mulligans[h][e], lc = (b.mulligans[h] || {})[e];
+          if (!rc || typeof rc.t !== "number") continue;
+          if (!rc.v) continue;                             // nothing to restore
+          if (!lc || !lc.v || rc.t > lc.t){
+            const cell = {...rc, t: stamp};
+            b.mulligans[h] = b.mulligans[h] || {}; b.mulligans[h][e] = cell; restored++;
+            if (db) update(ref(db, `${EVENT_KEY}/matches/${id}/mulligans/${h}/${e}`), cell).catch(()=>{});
           } else skipped++;
         }
         for (const field of ["scorer","submitted"]){
@@ -1801,7 +1886,9 @@ function viewHome(){
         <button class="btn big ghost" data-nav="matches">All Matches</button>
       </div>
       <div class="actions" style="margin-top:9px">
-        <button class="btn big ghost" data-nav="chat" style="margin-top:0">Chat${chatBadge()}</button>
+        <button class="btn big ghost" data-nav="chat"
+          style="margin-top:0;display:flex;align-items:center;justify-content:center;gap:8px">
+          ${avatarSVG(Session.id, "sm")}<span>Chat${chatBadge()}</span></button>
         <button class="btn big ghost" data-nav="stats" style="margin-top:0">Statistics</button>
       </div>
       <button class="btn big ghost" data-nav="event">Event Overview</button>
@@ -2167,6 +2254,27 @@ function avatarSVG(id, cls){
       stroke="${snot ? "#a9840c" : "#1b6b3f"}" stroke-width="2"/>${inner}</svg>`;
 }
 
+/** Round 3's shotgun-mulligan badge: a small beer-mug monogram, same circular
+    frame as a player avatar so it reads as part of the same icon language.
+    Pass a count to draw the little label plate on the mug with that number
+    inside it — the per-player mulligan tally on the scoring screen. Called
+    with no count (the Round 3 header) it's purely decorative. */
+function beerMonoSVG(count){
+  const DEEP = "#0b2a1c", CREAM = "#f2e7cd";
+  const box = count == null ? "" : `
+    <rect x="24" y="30" width="16" height="14" rx="3" fill="${CREAM}" stroke="${DEEP}" stroke-width="1.6"/>
+    <text x="32" y="40.5" text-anchor="middle" font-size="11" font-weight="800" fill="${DEEP}">${count}</text>`;
+  return `<svg class="ava beermono" viewBox="0 0 64 64" aria-hidden="true">
+    <circle cx="32" cy="32" r="31" fill="#faf1d5" stroke="#a9840c" stroke-width="2"/>
+    <path d="M22 20 h16 v26 a3 3 0 0 1 -3 3 h-10 a3 3 0 0 1 -3 -3 z"
+      fill="#f4c542" stroke="${DEEP}" stroke-width="2.4"/>
+    <path d="M22 27 h16" stroke="${DEEP}" stroke-width="2"/>
+    <path d="M23 20 q3 -5 0 -8" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none" opacity=".8"/>
+    <path d="M38 24 h5 a4 4 0 0 1 4 4 v6 a4 4 0 0 1 -4 4 h-5"
+      fill="none" stroke="${DEEP}" stroke-width="2.4"/>
+    <path d="M20 20 q12 -6 24 0" fill="#fff" stroke="${DEEP}" stroke-width="2"/>${box}</svg>`;
+}
+
 /* ---------- player profile ---------- */
 function viewProfile(){
   const meId = V.profileId && PLAYERS[V.profileId] ? V.profileId : Session.id;
@@ -2279,11 +2387,12 @@ function viewStats(){
     overN:   {lbl:"Holes over par (Net)",   get:p=>p.overN},
     points:  {lbl:"Team points won",      get:p=>p.points, fmt:fmtPt}
   };
-  const key = STATS[V.statSort] ? V.statSort : "net";
+  const mulligan = V.statSort === "mulligans";
+  const key = mulligan ? "mulligans" : (STATS[V.statSort] ? V.statSort : "net");
   const S = STATS[key];
   const val = p => S.get(p);
   const shown = p => (S.fmt ? S.fmt(val(p)) : String(val(p)));
-  const sorted = [...rows].sort((a, b) =>
+  const sorted = mulligan ? [] : [...rows].sort((a, b) =>
     (S.low ? val(a) - val(b) : val(b) - val(a)) ||
     (S.tie ? S.tie(a, b) : 0) || a.netToPar - b.netToPar);
 
@@ -2297,14 +2406,23 @@ function viewStats(){
     data-sort="${jump}"><div class="k">${k}</div>
     <div class="v">${v}${icon || ""}<small>${sub}</small></div></button>`;
 
-  const body = sorted.map((p, i) => `<tr class="${p.team}">
+  // shotgun mulligans get their own row shape: name, total, then which holes.
+  // The team-name column is dropped here — the row tint already carries that,
+  // and the holes list needs the room a lot more than a repeated "SNOTS" does.
+  const body = mulligan ? mulliganStats().map((p, i) => `<tr class="${p.team}">
+    <td class="rk">${i + 1}</td>
+    <td class="nm">${esc(p.last)}</td>
+    <td class="vl">${p.total}</td>
+    <td class="hl">${p.total ? esc(p.holesTxt) : "&mdash;"}</td></tr>`).join("")
+  : sorted.map((p, i) => `<tr class="${p.team}">
     <td class="rk">${i + 1}</td>
     <td class="nm">${esc(p.last)}</td>
     <td class="tm">${p.team === "s" ? "Snots" : "Ducks"}</td>
     <td class="vl">${shown(p)}</td></tr>`).join("");
 
   const options = Object.keys(STATS).map(k =>
-    `<option value="${k}"${k === key ? " selected" : ""}>${STATS[k].lbl}</option>`).join("");
+    `<option value="${k}"${k === key ? " selected" : ""}>${STATS[k].lbl}</option>`).join("")
+    + `<option value="mulligans"${mulligan ? " selected" : ""}>Shotgun mulligans (Round 3)</option>`;
 
   const mvpNote = (key === "mvp" || key === "points") ? `<div class="legend"><b>How MVP is decided.</b>
     Every match win is worth 1 point and a halved match &frac12;. In the four 2v2 rounds
@@ -2340,11 +2458,16 @@ function viewStats(){
         <label for="statsel">Show</label>
         <select id="statsel" class="statsel">${options}</select>
       </div>
-      <div class="gridwrap"><table class="sl"><tbody>${body}</tbody></table>
-        <div class="legend">Each man's own scores from best ball, shamble and singles.
+      <div class="gridwrap"><table class="sl">${mulligan
+        ? `<thead><tr><th class="rk"></th><th class="nm">Player</th>
+             <th class="vl">Total</th><th class="hl">Holes</th></tr></thead>` : ""
+        }<tbody>${body}</tbody></table>
+        ${mulligan ? `<div class="legend">Every shotgun mulligan taken in Round 3 (Shamble),
+          tallied per player straight off the hole-by-hole tap counter. Repeats on the same
+          hole are folded in, e.g. <b>5 (2x)</b> means two mulligans on hole 5.</div>` : `<div class="legend">Each man's own scores from best ball, shamble and singles.
           On scramble and alternate shot the team's score counts for both partners, and a
           picked-up ball (X) counts as double par. <b>Gross</b> is what he actually made;
-          <b>Net</b> applies his strokes.</div>
+          <b>Net</b> applies his strokes.</div>`}
         ${mvpNote}
       </div>
       <button class="btn ghost" data-nav="home">Back to home</button>
@@ -2359,6 +2482,7 @@ function viewRound(){
   return `<div class="topbar">
       <button class="iconbtn" data-nav="matches">&#8592;</button>
       <h1>Round ${r.n} &middot; ${esc(r.fmt)}<div class="sub">${esc(c.n)} &middot; ${esc(r.tee)} tees</div></h1>
+      ${r.n === 3 ? beerMonoSVG() : ""}
       ${navBtnsHTML()}
     </div><div class="wrap">
       <div class="card flat"><div style="font-size:12.5px;color:var(--muted);line-height:1.65">
@@ -2419,6 +2543,8 @@ function viewMatch(){
   const sp = specialAt(r.n, h);
 
   const hs = holeScores(r, m, h, scores), row = scores[h] || {};
+  // Shotgun mulligans: Round 3 (Shamble) only, tracked per player per hole.
+  const mulRow = r.n === 3 ? (Store.mulligans(m.id)[h] || {}) : null;
   const sideBox = key => {
     const side = m[key], bh = sideHole(r, m, key, h, scores), rows = [];
     if (r.mode === "team"){
@@ -2431,7 +2557,8 @@ function viewMatch(){
         name: PLAYERS[pl[0]].n, sub: shotLbl(pl[2]),
         entrant: pl[0], raw: row[pl[0]], gross: hs[pl[0]] ? hs[pl[0]].gross : null,
         strokes: playerStrokes(r, side, pl, h), par, editable,
-        best: !!(bh && bh.byId === pl[0] && side.p.length > 1)}));
+        best: !!(bh && bh.byId === pl[0] && side.p.length > 1),
+        showMulligan: !!mulRow, mulliganCount: mulRow ? (mulRow[pl[0]] || 0) : 0}));
     });
     return `<div class="sidebox ${key}"><div class="sidehdr">
         <span>${key === "s" ? "SNOTS" : "DUCKS"}</span>
@@ -3227,11 +3354,12 @@ function afterHoleComplete(r, m, h, verdict){
     if (v.net - par <= -2){ setTimeout(() => playBlindDuck(who, "net"), delay); delay += 4400; break; }
   }
 
-  // Emerick posts a gross birdie or better. Only meaningful in best ball,
-  // shamble or singles, where he has his own personal line — a scramble or
-  // alt-shot score is the team's shared ball, not individually his.
-  if (r.mode !== "team"){
-    const em = hs["matt"];
+  // Emerick posts a gross birdie or better. In best ball, shamble or singles
+  // it's his own line; in Scramble/Alt Shot it's the team's shared ball, but
+  // Andrew wants the shade thrown at him regardless of whose shot it really was.
+  const mattSide = m.s.p.some(p => p[0] === "matt") ? "s" : m.d.p.some(p => p[0] === "matt") ? "d" : null;
+  if (mattSide){
+    const em = r.mode === "team" ? hs[mattSide] : hs["matt"];
     if (em && !em.picked && em.gross - par <= -1){ setTimeout(() => playSandbag(), delay); delay += 4400; }
   }
 
@@ -3270,7 +3398,11 @@ function checkVictory(){
 const VFLASH_LIVE = [];
 function flashHoleResult(html){
   const el = document.createElement("div");
-  el.className = "vflash"; el.innerHTML = html;
+  // one wrapper span, not raw markup straight into the flex container: a bare
+  // <b> next to a text node becomes two flex ITEMS, and flexbox drops the
+  // whitespace that used to sit at that boundary — which is why "Name beat"
+  // could render as "Namebeat". Wrapping keeps it one item, one text flow.
+  el.className = "vflash"; el.innerHTML = `<span>${html}</span>`;
   VFLASH_LIVE.push(el);
   while (VFLASH_LIVE.length > 3) VFLASH_LIVE.shift().remove();
   setTimeout(() => {
@@ -3334,7 +3466,7 @@ function entryRow(o){
     <div class="pname">${esc(o.name)}<span class="hc">${esc(o.sub)}</span>${
       o.best ? `<span class="ball">counts</span>` : ""}</div>
     <div class="entry">
-      <span class="lab">Gross Score:</span>
+      ${o.showMulligan ? "" : `<span class="lab">Gross Score:</span>`}
       <span class="gswrap">
         <input class="gsin ${val === "" ? "blank" : cls}" id="gs-${o.entrant}"
           data-entrant="${o.entrant}" type="${picked ? "text" : "number"}"
@@ -3342,6 +3474,13 @@ function entryRow(o){
           ${o.editable && !picked ? "" : "readonly"}>
         ${dotsHTML(o.strokes)}
       </span>
+      ${o.showMulligan ? `<span class="mully" id="mully-${o.entrant}">
+        <button class="mystep" data-mully="${o.entrant}" data-dir="-1"
+          ${o.editable ? "" : "disabled"} aria-label="Fewer mulligans">&minus;</button>
+        <span class="mymono">${beerMonoSVG(o.mulliganCount || 0)}</span>
+        <button class="mystep" data-mully="${o.entrant}" data-dir="1"
+          ${o.editable ? "" : "disabled"} aria-label="More mulligans">+</button>
+      </span>` : ""}
       <span class="out" id="net-${o.entrant}">${
         o.gross == null ? "" : `${picked ? "plays" : "net"}<b>${o.gross - o.strokes}</b>`}</span>
       ${o.editable ? `<span class="acts">
@@ -3906,6 +4045,12 @@ function wire(){
     const verdict = holeVerdict(r, m, V.hole, Store.scores(m.id));
     if (verdict && !before) afterHoleComplete(r, m, V.hole, verdict);
   });
+  document.querySelectorAll("[data-mully]").forEach(el => el.onclick = () => {
+    const {m} = ALL_MATCHES[V.matchId], entrant = el.dataset.mully;
+    const cur = (Store.mulligans(m.id)[V.hole] || {})[entrant] || 0;
+    Store.setMulligan(m.id, V.hole, entrant, cur + (+el.dataset.dir), Session.id);
+    render();
+  });
 
   if (V.view === "match"){
     let x0 = null, y0 = null;
@@ -4028,7 +4173,7 @@ window.MI26 = {PLAYERS, COURSES, ROUNDS, ALL_MATCHES, Store, Session, V,
   playScene, playTurkey, playBigDuck, playVictory, checkVictory, checkDormie,
   playHambone, playSittingDuck, playBlindDuck, playDucksWin, playSandbag,
   rocketSVG, darthSVG, marsSVG, roverSVG, turkeySVG, bigDuckSVG, victorySVG,
-  hamboneSVG, sittingDuckSVG, ducksWinSVG, blindDuckSVG, sandbagSVG,
+  hamboneSVG, sittingDuckSVG, ducksWinSVG, blindDuckSVG, sandbagSVG, beerMonoSVG, mulliganStats,
   render, patch, MATCH_COUNT, myMatch, BUILD, checkForUpdate,
   resetAll(){ Object.keys(ALL_MATCHES).forEach(id => Store.resetMatch(id)); render(); }};
 </script>
