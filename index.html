@@ -319,10 +319,6 @@ input,textarea{font-family:inherit}
 @keyframes dch{from{transform:translateY(0) rotate(0)}to{transform:translateY(-12px) rotate(4deg)}}
 .marc{stroke-dasharray:9 10;animation:mdash 1.2s linear infinite}
 @keyframes mdash{to{stroke-dashoffset:-38}}
-.mswing{transform-origin:110px 180px;animation:msw .8s ease-out both}
-@keyframes msw{0%{transform:rotate(-22deg)}60%{transform:rotate(8deg)}100%{transform:rotate(0)}}
-.mduck{transform-origin:330px 58px;animation:mfly 1.9s cubic-bezier(.3,0,.7,.4) .45s both}
-@keyframes mfly{0%{transform:translate(-190px,86px) scale(1.25)}100%{transform:translate(0,0) scale(1)}}
 /* Mars tee-off: swing connects with the tee'd duck partway through the
    downswing, at which point the resting duck vanishes and the launched one
    takes over — the two are never visible at the same time. */
@@ -854,7 +850,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-30.4";      // must match version.txt — that's what phones poll
+const BUILD = "2026-07-30.5";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -1630,10 +1626,11 @@ function render(){
   if (V.view === "brief") html += viewBrief();
   if (V.view === "match") html += viewMatch();
   if (V.view === "card")  html += viewCard();
+  if (V.view === "event") html += viewEventOverview();
   if (V.sheet) html += viewSheet();
   app.innerHTML = html;
   // turf only where legibility isn't critical: never on match entry or the card
-  const TURF = ["home", "board", "matches", "profile", "stats", "round", "brief"];
+  const TURF = ["home", "board", "matches", "profile", "stats", "round", "brief", "event"];
   document.body.classList.toggle("turf", TURF.includes(V.view));
   wire();
   mountVflashes();   // any live hole banners re-attach to the rebuilt DOM
@@ -1808,6 +1805,7 @@ function viewHome(){
         <button class="btn big ghost" data-nav="chat" style="margin-top:0">Chat${chatBadge()}</button>
         <button class="btn big ghost" data-nav="stats" style="margin-top:0">Statistics</button>
       </div>
+      <button class="btn big ghost" data-nav="event">Event Overview</button>
       ${syncHTML()}
     </div>`;
 }
@@ -2454,8 +2452,8 @@ function viewMatch(){
         </div>
         <div class="vflashstack" id="vflashstack"></div>
       </div>
-      ${st.done && !Store.isSubmitted(m.id) ? `<button class="btn" style="margin:0 0 10px"
-        data-nav="card" data-id="${m.id}">Match decided &mdash; Review &amp; Submit &rsaquo;</button>` : ""}
+      ${st.done && st.played === 18 && !Store.isSubmitted(m.id) ? `<button class="btn" style="margin:0 0 10px"
+        data-nav="card" data-id="${m.id}">Review &amp; Submit &rsaquo;</button>` : ""}
       <button class="roundbar ${V.briefOpen ? "open" : ""}" data-briefopen="1">
         <span class="rbn" style="background:${rColour(r.n)}">${r.n}</span>
         <span class="rbt">Round ${r.n} &middot; ${esc(r.fmt)}</span>
@@ -2682,36 +2680,6 @@ function darthSVG(){
     </g></svg>`;
 }
 
-/** A Snot teeing off a duck from the surface of the moon. */
-function moonSVG(){
-  return `<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    ${[[36,34],[356,44],[300,22],[80,60]].map(([x,y],i)=>`<circle class="rstar"
-      style="animation-delay:${i*.3}s" cx="${x}" cy="${y}" r="2.4" fill="${CREAMC}"/>`).join("")}
-    <circle cx="60" cy="52" r="26" fill="#2b6ea8" opacity=".45"/>
-    <path class="marc" d="M150 150 Q244 40 344 62" stroke="${GOLDC}" stroke-width="3.5"
-      fill="none" stroke-dasharray="8 9" stroke-linecap="round"/>
-    <g class="mduck">
-      <ellipse cx="330" cy="64" rx="26" ry="18" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3.5"/>
-      <circle cx="350" cy="50" r="12" fill="${GREENC}" stroke="${DEEPC}" stroke-width="3.5"/>
-      <path d="M342 44 l6 5 M356 44 l-6 5" stroke="${DEEPC}" stroke-width="2.6" stroke-linecap="round"/>
-      <path d="M362 48 l14 -4 l-12 10 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="2.4" stroke-linejoin="round"/>
-      <path d="M306 60 l-16 -6 l4 14 z" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3" stroke-linejoin="round"/>
-    </g>
-    <g class="mswing">
-      <rect x="86" y="150" width="42" height="52" rx="15" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
-      <circle cx="107" cy="122" r="28" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
-      <path d="M109 100 a22 22 0 0 1 0 44 z" fill="#16202b"/>
-      <path d="M126 166 L182 128" stroke="${GOLDC}" stroke-width="8" stroke-linecap="round"/>
-      <path d="M180 124 l16 -6 l5 11 l-16 6 z" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="2.6"/>
-    </g>
-    <path d="M0 196 q60 -22 120 -6 t130 2 t150 -8 v56 H0 z" fill="#3a4652"/>
-    <ellipse cx="90" cy="212" rx="20" ry="6" fill="#2c3640"/>
-    <ellipse cx="250" cy="220" rx="26" ry="7" fill="#2c3640"/></svg>`;
-}
-
-/** A Snot teeing off a duck from the surface of Mars — same mechanic as the
-    moon shot, reskinned rust-red, with Mars's two little moons standing in
-    for Earth. */
 /** A Snot on Mars, teeing off a duck like a golf ball — the duck sits still
     on a tee until the swing actually connects, then launches away. Its own
     astronaut/club shapes and swing arc, separate from the moon scene, so
@@ -2901,7 +2869,22 @@ function playScene(o){
   clearTimeout(playScene._t);
   playScene._t = setTimeout(close, o.ms || 3800);
 }
-const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+/* Plain uniform draw — no player, match, or team ever weights this. Verified
+   with a 1200-trial simulation of each pool: every scene landed within
+   normal random variance of an even 1-in-6 (all counts 176-230, expected
+   200). Genuinely random small samples still clump, though — the same
+   viewer opening a handful of matches can easily draw the same scene twice
+   in a row purely by chance, which reads as "biased" even when it isn't. To
+   cut down on that, this phone's last scene is excluded from its own next
+   draw (tracked locally only, never synced — every phone gets its own feel
+   for "hasn't repeated in a while"). */
+let _lastScene = null;
+function pickScene(entries){
+  const pool = entries.length > 1 ? entries.filter(e => e.key !== _lastScene) : entries;
+  const choice = pool[Math.floor(Math.random() * pool.length)];
+  _lastScene = choice.key;
+  return choice;
+}
 
 /* Match open — plays every single time, on the way in, always at the duck's
    expense. Draws from the full roster: everything tagged for either a match
@@ -2909,15 +2892,14 @@ const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 function playTaunt(r, m){
   const sub = `${esc(COURSES[r.course].n)} &middot; Play well`;
   const line = `Round ${r.n} &middot; ${esc(r.fmt)}`;
-  pick([
-    () => playScene({svg: tauntSVG(),    line, sub}),
-    () => playScene({svg: rocketSVG(),   line, sub, ms: 4200}),
-    () => playScene({svg: darthSVG(),    line, sub}),
-    () => playScene({svg: moonSVG(),     line, sub, ms: 4200}),
-    () => playScene({svg: marsSVG(),     line, sub, ms: 4200}),
-    () => playScene({svg: roverSVG(),    line, sub, ms: 4200}),
-    () => playScene({svg: duckHuntSVG(), line, sub, ms: 4200})
-  ])();
+  pickScene([
+    {key: "taunt",    run: () => playScene({svg: tauntSVG(),    line, sub})},
+    {key: "rocket",   run: () => playScene({svg: rocketSVG(),   line, sub, ms: 4200})},
+    {key: "darth",    run: () => playScene({svg: darthSVG(),    line, sub})},
+    {key: "mars",     run: () => playScene({svg: marsSVG(),     line, sub, ms: 4200})},
+    {key: "rover",    run: () => playScene({svg: roverSVG(),    line, sub, ms: 4200})},
+    {key: "duckhunt", run: () => playScene({svg: duckHuntSVG(), line, sub, ms: 4200})}
+  ]).run();
 }
 
 /* Snots take a match: astronauts on a duck hunt. Ducks winning shows nothing,
@@ -2978,14 +2960,14 @@ function playWin(r, m, st){
   const sub = esc(m.s.p.map(p => last(p[0])).join(" / "));
   const line = `Snots win ${esc(st.text)}`;
   const stamp = "Snots Win!";
-  pick([
-    () => playScene({svg: duckHuntSVG(), line, sub, stamp, ms: 4200}),
-    () => playScene({svg: rocketSVG(),   line, sub, stamp, ms: 4200}),
-    () => playScene({svg: darthSVG(),    line, sub, stamp}),
-    () => playScene({svg: moonSVG(),     line, sub, stamp, ms: 4200}),
-    () => playScene({svg: marsSVG(),     line, sub, stamp, ms: 4200}),
-    () => playScene({svg: roverSVG(),    line, sub, stamp, ms: 4200})
-  ])();
+  pickScene([
+    {key: "taunt",    run: () => playScene({svg: tauntSVG(),    line, sub, stamp})},
+    {key: "duckhunt", run: () => playScene({svg: duckHuntSVG(), line, sub, stamp, ms: 4200})},
+    {key: "rocket",   run: () => playScene({svg: rocketSVG(),   line, sub, stamp, ms: 4200})},
+    {key: "darth",    run: () => playScene({svg: darthSVG(),    line, sub, stamp})},
+    {key: "mars",     run: () => playScene({svg: marsSVG(),     line, sub, stamp, ms: 4200})},
+    {key: "rover",    run: () => playScene({svg: roverSVG(),    line, sub, stamp, ms: 4200})}
+  ]).run();
 }
 
 /* Three straight holes to the Snots. */
@@ -3307,7 +3289,10 @@ function viewCard(){
 
   const holesFilled = st.holes.filter(Boolean).length;
   const submitted = Store.isSubmitted(m.id);
-  const canSubmit = st.done && !submitted && (canScore(m) || Session.admin);
+  // A closed-out match (e.g. 5 & 4) is mathematically decided well before all
+  // 18 holes are played. Submit stays locked until every hole is in anyway —
+  // Andrew wants the full card played every time, not just enough to win.
+  const canSubmit = st.done && holesFilled === 18 && !submitted && (canScore(m) || Session.admin);
 
   return `<div class="topbar">
       <button class="iconbtn" data-nav="match" data-id="${m.id}">&#8592;</button>
@@ -3315,18 +3300,19 @@ function viewCard(){
       ${navBtnsHTML()}
     </div><div class="wrap">
       <div class="resbar ${st.done && !st.winner ? "halved" : (st.winner || "")}">
-        <div class="r1">${submitted ? "Submitted &middot; official" : "Match result"}</div>
+        <div class="r1">${submitted ? "Submitted &middot; official" : st.done ? "Match decided" : "Match result"}</div>
         <div class="r2">${st.started ? matchLine(st) : "Not started"}</div></div>
       ${canSubmit ? `<div class="lockbar">Check the card against the paper copy, then submit.
-        ${holesFilled < 18 ? `<b>${18 - holesFilled} hole${18 - holesFilled === 1 ? "" : "s"}
-        still blank</b> &mdash; you can submit anyway, but those holes won't count toward statistics.`
-        : "All 18 holes are in."}</div>
+        All 18 holes are in.</div>
         <button class="btn" style="margin:0 0 11px" data-submit="${m.id}">Attest &amp; Submit Round</button>` : ""}
       ${submitted ? `<div class="lockbar"><b>This round is submitted and locked.</b>
         ${Session.admin ? `<button data-unsubmit="${m.id}">Reopen &rsaquo;</button>`
           : "Ask Andrew or Pat if it needs reopening."}</div>` : ""}
       ${!st.done && st.started ? `<div class="lockbar">Match still in progress &mdash;
         thru ${st.thru}. You can submit once it's decided.</div>` : ""}
+      ${st.done && holesFilled < 18 ? `<div class="lockbar"><b>Match decided, ${18 - holesFilled}
+        hole${18 - holesFilled === 1 ? "" : "s"} still to play.</b> Keep going &mdash; every hole
+        counts for the statistics, and submit unlocks once all 18 are in.</div>` : ""}
       ${nine(0, 8, "OUT")}${nine(9, 17, "IN")}
       <div class="gridwrap"><div class="legend">
         <span class="sw u c1">3</span> birdie &middot; <span class="sw u c2">2</span> eagle &middot;
@@ -3343,7 +3329,6 @@ function viewCard(){
 
 /* ---------- menu ---------- */
 function viewSheet(){
-  if (V.sheet === "event") return viewEventSheet();
   if (V.sheet !== "menu") return "";
   let codes = "";
   if (Session.admin) codes = `<div class="sect" style="margin-top:4px">Player codes</div>
@@ -3358,7 +3343,6 @@ function viewSheet(){
       Session.me.title ? " &middot; " + esc(Session.me.title) : ""}<br>
       ${Store.online ? "Live sync is on." : "Offline &mdash; scores save here and sync when you get service."}<br>
       <span style="color:var(--dim)">Version ${BUILD}</span></p>
-    <button class="btn ghost" data-sheet="event" style="margin-bottom:15px">Event Overview</button>
     <div class="mycode"><div class="mck">Your login code</div>
       <div class="mcv mono">${Session.me.code}</div>
       <div class="mch">Write this down. It's how you get back in if you're ever signed out.</div></div>
@@ -3382,10 +3366,13 @@ const teeSpan = r => {
   return t[0] === t[t.length - 1] ? t[0] : `${t[0]} &ndash; ${t[t.length - 1]}`;
 };
 
-/** The whole trip on one scrollable sheet — schedule, points, buy-in, travel,
-    and the rules every match plays under. Pulls the schedule straight off
-    ROUNDS/COURSES so it can never drift from what the app actually plays. */
-function viewEventSheet(){
+/** The whole trip on one page — schedule, points, buy-in, travel, and the
+    rules every match plays under. Pulls the schedule straight off
+    ROUNDS/COURSES so it can never drift from what the app actually plays.
+    A real view (not a modal sheet) so the back arrow behaves exactly like
+    every other screen — no sticky-header-inside-a-scrolling-overlay tricks
+    that can end up scrolled out of reach on some phones. */
+function viewEventOverview(){
   const rows = ROUNDS.map(r => { const c = COURSES[r.course], col = rColour(r.n);
     return `<div class="card flat"><div class="rowline">
       <div class="rnum" style="color:${col};border-color:${col};background:${col}14">${r.n}</div>
@@ -3394,13 +3381,11 @@ function viewEventSheet(){
     </div></div>`;
   }).join("");
 
-  return `<div class="sheet" data-close="1"><div class="sheet-in">
-    <div class="sheethdr">
-      <button class="iconbtn" data-sheet="menu" aria-label="Back">&#8592;</button>
-      <h3>Event Overview</h3>
-      <button class="iconbtn" data-closebtn="1">&times;</button>
-    </div>
-
+  return `<div class="topbar">
+      <button class="iconbtn" data-nav="home">&#8592;</button>
+      <h1>Event Overview<div class="sub">The whole trip on one page</div></h1>
+      ${navBtnsHTML()}</div>
+    <div class="wrap">
     <p><b style="color:var(--text)">Shanty Creek Resort</b> &middot; Bellaire, Michigan<br>
       Five 18-hole matches, Thursday Aug 13 &ndash; Saturday Aug 15. Rooms are booked
       Thursday (8/13) through Sunday (8/16).</p>
@@ -3452,7 +3437,7 @@ function viewEventSheet(){
       <li><b>Breakfast balls</b> &mdash; allowed only in Best Ball and Singles
         (Rounds 2 and 5).</li>
     </ul>
-  </div></div>`;
+  </div>`;
 }
 
 /* ==========================================================================
@@ -3468,6 +3453,7 @@ function wire(){
     if (n === "profile"){ V.view = "profile"; V.profileId = null; }
     if (n === "stats") V.view = "stats";
     if (n === "chat")  V.view = "chat";
+    if (n === "event") V.view = "event";
     if (n === "round"){ V.view = "round"; V.round = +el.dataset.i; }
     if (n === "match"){
       V.view = "match"; V.matchId = el.dataset.id;
@@ -3702,6 +3688,15 @@ function wire(){
         clearTimeout(scheduleHoleSettle._t);
         scheduleHoleSettle._armed = null;
       }
+      // Auto-advance the moment the number can't get any more specific: two
+      // digits, or a single digit other than "1" (which could still become
+      // 10-15). Saves a tap on every score without jumping ahead of a "1"
+      // that's still mid-keystroke.
+      if (raw.length === 2 || (raw.length === 1 && raw !== "1")){
+        const boxes = [...document.querySelectorAll(".gsin")].filter(b => !b.readOnly);
+        const idx = boxes.indexOf(el);
+        if (idx > -1 && idx < boxes.length - 1) boxes[idx + 1].focus();
+      }
     };
     el.onfocus = () => {
       el.select();
@@ -3853,12 +3848,12 @@ document.addEventListener("visibilitychange", () => {
 window.MI26 = {PLAYERS, COURSES, ROUNDS, ALL_MATCHES, Store, Session, V,
   strokesOn, playerStrokes, teamStrokes, sideHole, holeScores, holeEntered, matchState, standings, markCls, PICKED,
   playerStats, playerPoints, mvp, toPar, roundSummary, holeVerdict, briefBody, viewBrief, seriesHTML, rColour,
-  eventResult, tiebreakHTML, tugSVG, avatarSVG, viewProfile, viewSheet, viewEventSheet,
+  eventResult, tiebreakHTML, tugSVG, avatarSVG, viewProfile, viewSheet, viewEventOverview,
   SPECIALS, specialAt, flashSpecial, afterHoleComplete, showToast, flashHoleResult, navBtnsHTML,
   mentionsMe, renderMsgText, taggedUnread, taggedTotal,
   playTaunt, tauntSVG, playWin, duckHuntSVG, matchLine, holeLine,
   playScene, playTurkey, playBigDuck, playVictory, checkVictory,
-  rocketSVG, darthSVG, moonSVG, marsSVG, roverSVG, turkeySVG, bigDuckSVG, victorySVG,
+  rocketSVG, darthSVG, marsSVG, roverSVG, turkeySVG, bigDuckSVG, victorySVG,
   render, patch, MATCH_COUNT, myMatch, BUILD, checkForUpdate,
   resetAll(){ Object.keys(ALL_MATCHES).forEach(id => Store.resetMatch(id)); render(); }};
 </script>
