@@ -128,7 +128,7 @@ input,textarea{font-family:inherit}
 .ava.big{width:86px;height:86px;margin:0 auto 10px}
 .ava.beermono{width:24px;height:24px;display:inline-block;vertical-align:middle;margin-left:6px}
 .mully{display:inline-flex;align-items:center;gap:5px;margin:0 8px}
-.mully .beermono{width:32px;height:32px;margin-left:0}
+.mully .beermono{width:36px;height:36px;margin-left:0}
 .mystep{width:22px;height:22px;border-radius:7px;flex:none;display:flex;align-items:center;
   justify-content:center;background:var(--surface2);border:1px solid var(--line);
   font-weight:800;font-size:15px;line-height:1;color:var(--text)}
@@ -378,6 +378,11 @@ input,textarea{font-family:inherit}
 .dwlever{transform-origin:62px 20px;animation:dwpull 1.2s ease-in-out .3s both}
 @keyframes dwpull{0%{transform:rotate(0)}40%{transform:rotate(38deg)}100%{transform:rotate(0)}}
 
+/* Clinching fireworks: each burst pops out and fades, staggered so they
+   don't all go off in the same instant. */
+.fwburst{opacity:0;animation:fwpop 1.1s ease-out var(--fwd,0s) both}
+@keyframes fwpop{0%{transform:scale(.2);opacity:0}30%{opacity:1}100%{transform:scale(1.5);opacity:0}}
+
 /* ---------- Snots win: duck hunt ---------- */
 .wsky{animation:tfade .3s ease-out}
 .wgrass{animation:wrise .5s cubic-bezier(.2,.9,.3,1.1) both}
@@ -418,6 +423,24 @@ input,textarea{font-family:inherit}
 .flashin .fhole{font-size:15px;font-weight:750;color:#a9bfae}
 .flashin svg{width:98px;height:98px;margin:0 auto 10px;display:block}
 .flashin .ftap{font-size:11.5px;color:#7d9a88;margin-top:18px;font-weight:650}
+
+/* ---------- dormie banner: full-screen, sticks until dismissed ---------- */
+.dormiewrap{position:fixed;inset:0;z-index:95;display:flex;align-items:center;
+  justify-content:center;padding:28px;animation:tfade .25s ease-out}
+.dormiewrap.out{animation:tout .3s ease-in forwards}
+.dormiewrap.s{background:radial-gradient(circle at 50% 35%,#3a2e08,#0b0700 72%)}
+.dormiewrap.d{background:radial-gradient(circle at 50% 35%,#07301c,#020c07 72%)}
+.dormiein{text-align:center;max-width:400px;animation:fpop .5s cubic-bezier(.2,.9,.3,1.25)}
+.dormiehd{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px}
+.dormiehd svg{width:34px;height:34px;flex:none;display:block}
+.dormietitle{font-size:15px;font-weight:850;letter-spacing:3px;text-transform:uppercase}
+.dormiewrap.s .dormietitle{color:#f4c542}
+.dormiewrap.d .dormietitle{color:#4fbf82}
+.dormieline{font-size:28px;font-weight:850;color:#fff;line-height:1.3}
+.dormiebtn{position:fixed;right:18px;bottom:max(18px,env(safe-area-inset-bottom,0px));
+  z-index:96;background:var(--red);color:#fff;font-weight:800;font-size:15px;
+  padding:16px 22px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.dormiebtn:active{filter:brightness(.9)}
 
 /* ---------- toast ---------- */
 /* Mid-screen, not tucked at the bottom — this is the confirmation a scorer
@@ -861,7 +884,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-30.7";      // must match version.txt — that's what phones poll
+const BUILD = "2026-07-31.1";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -1000,6 +1023,7 @@ ROUNDS.forEach(r => r.matches.forEach(m => ALL_MATCHES[m.id] = {r, m}));
 const MATCH_COUNT  = Object.keys(ALL_MATCHES).length;
 const TOTAL_POINTS = MATCH_COUNT * PT_WIN;
 const CLINCH       = TOTAL_POINTS / 2 + PT_HALVE;
+const CLINCH_FIREWORKS_MS = 3200;   // the quick flash before the (Snots-only) podium scene
 
 /* ==========================================================================
    3. SCORING ENGINE  (gross in -> everything else derived)
@@ -1888,7 +1912,7 @@ function viewHome(){
       <div class="actions" style="margin-top:9px">
         <button class="btn big ghost" data-nav="chat"
           style="margin-top:0;display:flex;align-items:center;justify-content:center;gap:8px">
-          ${avatarSVG(Session.id, "sm")}<span>Chat${chatBadge()}</span></button>
+          ${chatIconSVG()}<span>Chat${chatBadge()}</span></button>
         <button class="btn big ghost" data-nav="stats" style="margin-top:0">Statistics</button>
       </div>
       <button class="btn big ghost" data-nav="event">Event Overview</button>
@@ -2254,6 +2278,20 @@ function avatarSVG(id, cls){
       stroke="${snot ? "#a9840c" : "#1b6b3f"}" stroke-width="2"/>${inner}</svg>`;
 }
 
+/** A generic chat-bubble monogram for the home screen's Chat button — not a
+    player's own avatar, just a plain "this is chat" icon. */
+function chatIconSVG(){
+  return `<svg class="ava sm chatmono" viewBox="0 0 64 64" aria-hidden="true">
+    <circle cx="32" cy="32" r="31" fill="#eef6f0" stroke="#1b6b3f" stroke-width="2"/>
+    <rect x="9" y="19" width="30" height="21" rx="8" fill="#0b2a1c"/>
+    <path d="M15 40 v8 l9 -8 z" fill="#0b2a1c"/>
+    <rect x="21" y="8" width="34" height="24" rx="8" fill="#3ddc84"/>
+    <path d="M47 32 l9 8 v-8 z" fill="#3ddc84"/>
+    <rect x="27" y="16" width="6" height="6" rx="1.4" fill="#fff"/>
+    <rect x="35" y="16" width="6" height="6" rx="1.4" fill="#fff"/>
+    <rect x="43" y="16" width="6" height="6" rx="1.4" fill="#fff"/></svg>`;
+}
+
 /** Round 3's shotgun-mulligan badge: a small beer-mug monogram, same circular
     frame as a player avatar so it reads as part of the same icon language.
     Pass a count to draw the little label plate on the mug with that number
@@ -2261,18 +2299,20 @@ function avatarSVG(id, cls){
     with no count (the Round 3 header) it's purely decorative. */
 function beerMonoSVG(count){
   const DEEP = "#0b2a1c", CREAM = "#f2e7cd";
+  // widened from the original 22-38 mug so a bigger, more legible count still
+  // sits inside the box with room to spare
   const box = count == null ? "" : `
-    <rect x="24" y="30" width="16" height="14" rx="3" fill="${CREAM}" stroke="${DEEP}" stroke-width="1.6"/>
-    <text x="32" y="40.5" text-anchor="middle" font-size="11" font-weight="800" fill="${DEEP}">${count}</text>`;
+    <rect x="20" y="29" width="24" height="17" rx="3.5" fill="${CREAM}" stroke="${DEEP}" stroke-width="1.6"/>
+    <text x="32" y="42" text-anchor="middle" font-size="16" font-weight="800" fill="${DEEP}">${count}</text>`;
   return `<svg class="ava beermono" viewBox="0 0 64 64" aria-hidden="true">
     <circle cx="32" cy="32" r="31" fill="#faf1d5" stroke="#a9840c" stroke-width="2"/>
-    <path d="M22 20 h16 v26 a3 3 0 0 1 -3 3 h-10 a3 3 0 0 1 -3 -3 z"
+    <path d="M18 20 h24 v26 a3 3 0 0 1 -3 3 h-18 a3 3 0 0 1 -3 -3 z"
       fill="#f4c542" stroke="${DEEP}" stroke-width="2.4"/>
-    <path d="M22 27 h16" stroke="${DEEP}" stroke-width="2"/>
-    <path d="M23 20 q3 -5 0 -8" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none" opacity=".8"/>
-    <path d="M38 24 h5 a4 4 0 0 1 4 4 v6 a4 4 0 0 1 -4 4 h-5"
+    <path d="M18 27 h24" stroke="${DEEP}" stroke-width="2"/>
+    <path d="M19 20 q3 -5 0 -8" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none" opacity=".8"/>
+    <path d="M42 24 h5 a4 4 0 0 1 4 4 v6 a4 4 0 0 1 -4 4 h-5"
       fill="none" stroke="${DEEP}" stroke-width="2.4"/>
-    <path d="M20 20 q12 -6 24 0" fill="#fff" stroke="${DEEP}" stroke-width="2"/>${box}</svg>`;
+    <path d="M16 20 q14 -6 28 0" fill="#fff" stroke="${DEEP}" stroke-width="2"/>${box}</svg>`;
 }
 
 /* ---------- player profile ---------- */
@@ -2708,19 +2748,50 @@ function holeVerdict(r, m, h, scores){
   return {w, html:`<b class="win ${w}">${esc(nm(w))}</b> beat ${esc(nm(l))} on Hole ${h + 1}
     with ${term(win.gross, par)}${win.picked ? " (picked up)" : ""}`};
 }
-/** Dormie: the leading side's margin now exactly equals the holes left to
-    play, so the trailing side can at best halve. Called with the hole just
-    finished (pre-increment), so the banner lands right as the dormie hole
-    opens on screen. */
+/** A yellow caution triangle — flanks the Dormie banner's title both sides. */
+function cautionSVG(){
+  return `<svg viewBox="0 0 64 64" aria-hidden="true">
+    <path d="M32 6 L59 53 a5 5 0 0 1 -4.3 7.5 H9.3 A5 5 0 0 1 5 53 Z"
+      fill="#f4c542" stroke="#0b2a1c" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="28.6" y="23" width="6.8" height="18" rx="3" fill="#0b2a1c"/>
+    <circle cx="32" cy="48" r="4" fill="#0b2a1c"/></svg>`;
+}
+/** The Dormie banner itself: a full-screen, team-specific modal that sticks
+    until the "Proceed to Scoring" button is tapped — no tap-anywhere-to-skip
+    like the trash-talk scenes, this one's meant to be read and dealt with. */
+function showDormieModal(team){
+  document.querySelectorAll(".dormiewrap").forEach(e => e.remove());
+  const copy = team === "s"
+    ? {title: "Mission Control", line: "We are a go for DORMIE.<br>Launching Ducks in 3, 2, 1&hellip;"}
+    : {title: "Waterfowl Warning", line: "Ducks are DORMIE.<br>One more hole sends the Snots swimming."};
+  const el = document.createElement("div");
+  el.className = `dormiewrap ${team}`;
+  el.innerHTML = `<div class="dormiein">
+      <div class="dormiehd">${cautionSVG()}<span class="dormietitle">${copy.title}</span>${cautionSVG()}</div>
+      <div class="dormieline">${copy.line}</div>
+    </div>
+    <button class="dormiebtn" data-dormieok="1">Proceed to Scoring &rsaquo;</button>`;
+  document.body.appendChild(el);
+  el.querySelector("[data-dormieok]").onclick = () => {
+    el.classList.add("out"); setTimeout(() => el.remove(), 300);
+  };
+}
+/* Dormie: the leading side's margin now exactly equals the holes left to
+   play. Fires once per match, ever — a lead that narrows and re-lands on
+   the same margin later ("extending" the dormie) doesn't re-announce it.
+   Called with the hole just finished (pre-increment), so this lands right
+   as the dormie hole opens. */
+const DORMIE_KEY = `${EVENT_KEY}_dormieshown`;
 function checkDormie(r, m, h){
   const st = matchState(r, m, Store.scores(m.id));
   if (st.done || st.up === 0) return;
   const remain = 18 - st.thru;
   if (Math.abs(st.up) !== remain) return;
-  const w = st.up > 0 ? "s" : "d";
-  const names = m[w].p.map(p => last(p[0])).join(" / ");
-  flashHoleResult(`<b class="win ${w}">DORMIE</b> &mdash; ${esc(names)}
-    ${Math.abs(st.up)} up with ${remain} to play`);
+  let shown = [];
+  try { shown = JSON.parse(localStorage.getItem(DORMIE_KEY) || "[]"); } catch(e){ shown = []; }
+  if (shown.includes(m.id)) return;
+  try { localStorage.setItem(DORMIE_KEY, JSON.stringify([...shown, m.id])); } catch(e){}
+  showDormieModal(st.up > 0 ? "s" : "d");
 }
 /* The taunt. Plays every time anyone clicks into a match — no once-per-match
    memory — always at the duck's expense. */
@@ -3067,6 +3138,26 @@ function bigDuckSVG(){
     </g></svg>`;
 }
 
+/** Three quick bursts, team-colored — the flash that plays the instant the
+    clinching point lands, before the (Snots-only) podium scene picks up. */
+function fireworksSVG(team){
+  const A = team === "s" ? "#c9a227" : "#1b6b3f", B = team === "s" ? "#f4c542" : "#4fbf82";
+  const burst = (cx, cy, scale, delay, color) => {
+    let rays = "";
+    for (let i = 0; i < 10; i++){
+      const a = (i / 10) * Math.PI * 2;
+      rays += `<line x1="${cx}" y1="${cy}" x2="${cx + Math.cos(a) * 26 * scale}"
+        y2="${cy + Math.sin(a) * 26 * scale}" stroke="${color}" stroke-width="${(2.6 * scale).toFixed(2)}"
+        stroke-linecap="round"/>`;
+    }
+    return `<g class="fwburst" style="--fwd:${delay}s;transform-origin:${cx}px ${cy}px">${rays}</g>`;
+  };
+  return `<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    ${burst(96, 78, 1, 0, A)}
+    ${burst(300, 66, .8, .3, B)}
+    ${burst(206, 128, 1.15, .55, A)}
+    ${burst(150, 176, .7, .8, B)}</svg>`;
+}
 /** Snots on the podium, ducks in bits. */
 function victorySVG(){
   const tear = (x, y, d) => `<circle class="vtear" style="animation-delay:${d}s"
@@ -3206,13 +3297,15 @@ function playWin(r, m, st){
   const sub = esc(m.s.p.map(p => last(p[0])).join(" / "));
   const line = `Snots win ${esc(st.text)}`;
   const stamp = "Snots Win!";
+  // match-winning scenes run 3s longer than everything else in the pool —
+  // it's the payoff moment, worth lingering on
   pickScene([
-    {key: "taunt",    run: () => playScene({svg: tauntSVG(),    line, sub, stamp})},
-    {key: "duckhunt", run: () => playScene({svg: duckHuntSVG(), line, sub, stamp, ms: 4200})},
-    {key: "rocket",   run: () => playScene({svg: rocketSVG(),   line, sub, stamp, ms: 4200})},
-    {key: "darth",    run: () => playScene({svg: darthSVG(),    line, sub, stamp})},
-    {key: "mars",     run: () => playScene({svg: marsSVG(),     line, sub, stamp, ms: 4200})},
-    {key: "rover",    run: () => playScene({svg: roverSVG(),    line, sub, stamp, ms: 4200})}
+    {key: "taunt",    run: () => playScene({svg: tauntSVG(),    line, sub, stamp, ms: 6800})},
+    {key: "duckhunt", run: () => playScene({svg: duckHuntSVG(), line, sub, stamp, ms: 7200})},
+    {key: "rocket",   run: () => playScene({svg: rocketSVG(),   line, sub, stamp, ms: 7200})},
+    {key: "darth",    run: () => playScene({svg: darthSVG(),    line, sub, stamp, ms: 6800})},
+    {key: "mars",     run: () => playScene({svg: marsSVG(),     line, sub, stamp, ms: 7200})},
+    {key: "rover",    run: () => playScene({svg: roverSVG(),    line, sub, stamp, ms: 7200})}
   ]).run();
 }
 
@@ -3245,19 +3338,27 @@ function playBlindDuck(who, kind){
 /* Ducks take a match. The one time they get a scene, and they still don't
    take credit for it. */
 function playDucksWin(r, m, st){
-  playScene({svg: ducksWinSVG(), line: `Ducks win ${esc(st.text)}`, ms: 4200,
+  playScene({svg: ducksWinSVG(), line: `Ducks win ${esc(st.text)}`, ms: 7200,
     sub: "I have no skill, I'm just a lucky duck", stamp: "Ducks Win!"});
 }
 /* Matt Emerick posts a gross birdie or better — outside a shared-ball team
    format, where the score can't be pinned on him alone. Naming him is the
    whole point, so the caption always does. */
 function playSandbag(){
-  playScene({svg: sandbagSVG(), line: "You sandbagging son of a bitch", ms: 4200,
+  playScene({svg: sandbagSVG(), line: "You sandbagging son of a bitch", ms: 7200,
     sub: "Matt Emerick &middot; gross birdie or better"});
 }
-/* The Crusade is won. Longer, and it plays on every phone. */
+/* The clinching point lands — a quick fireworks flash naming whichever side
+   just took the Crusade, on every phone, regardless of side. */
+function playClinch(team, pts){
+  playScene({svg: fireworksSVG(team), line: team === "s" ? "Snots Win!" : "Ducks Win!", ms: CLINCH_FIREWORKS_MS,
+    sub: `${fmtPt(pts)} points &middot; ${fmtPt(CLINCH)} to clinch`});
+}
+/* The Crusade is won. Longer, and it plays on every phone. Ducks clinching
+   only ever gets the fireworks above — this podium scene stays Snots-only,
+   Andrew's call. */
 function playVictory(pts){
-  playScene({svg: victorySVG(), line: "SNOTS WIN THE CRUSADE", ms: 8000,
+  playScene({svg: victorySVG(), line: "SNOTS WIN THE CRUSADE", ms: 10000,
     sub: `${fmtPt(pts)} points &middot; ${fmtPt(CLINCH)} to clinch`});
 }
 
@@ -3375,17 +3476,22 @@ function checkVictory(){
   // Count SUBMITTED cards only — same principle as the match-win scene: a
   // mistyped score must never start a party, and this one can only ever fire
   // once. The clinching point arrives when its card is signed off.
-  let s = 0;
+  let s = 0, d = 0;
   for (const id in ALL_MATCHES){
     if (!Store.isSubmitted(id)) continue;
     const {r, m} = ALL_MATCHES[id];
     const st = matchState(r, m, Store.scores(id));
-    if (st.done) s += st.pts.s;
+    if (st.done){ s += st.pts.s; d += st.pts.d; }
   }
-  if (s < CLINCH) return;
+  const team = s >= CLINCH ? "s" : d >= CLINCH ? "d" : null;
+  if (!team) return;
   try { if (localStorage.getItem(VICTORY_KEY)) return;
         localStorage.setItem(VICTORY_KEY, "1"); } catch(e){}
-  playVictory(s);
+  const pts = team === "s" ? s : d;
+  playClinch(team, pts);
+  // Snots get the full podium scene too, timed to pick up right as the
+  // fireworks flash finishes — Ducks clinching only ever gets the fireworks.
+  if (team === "s") setTimeout(() => playVictory(pts), CLINCH_FIREWORKS_MS + 300);
 }
 
 /**
@@ -4174,6 +4280,7 @@ window.MI26 = {PLAYERS, COURSES, ROUNDS, ALL_MATCHES, Store, Session, V,
   playHambone, playSittingDuck, playBlindDuck, playDucksWin, playSandbag,
   rocketSVG, darthSVG, marsSVG, roverSVG, turkeySVG, bigDuckSVG, victorySVG,
   hamboneSVG, sittingDuckSVG, ducksWinSVG, blindDuckSVG, sandbagSVG, beerMonoSVG, mulliganStats,
+  fireworksSVG, playClinch, chatIconSVG, cautionSVG, showDormieModal, DORMIE_KEY, CLINCH_FIREWORKS_MS,
   render, patch, MATCH_COUNT, myMatch, BUILD, checkForUpdate,
   resetAll(){ Object.keys(ALL_MATCHES).forEach(id => Store.resetMatch(id)); render(); }};
 </script>
