@@ -317,25 +317,12 @@ input,textarea{font-family:inherit}
 @keyframes dbz{from{opacity:.2;transform:translateX(-4px)}to{opacity:.95;transform:translateX(4px)}}
 .dchoke{transform-origin:300px 110px;animation:dch 1.4s ease-in-out infinite alternate}
 @keyframes dch{from{transform:translateY(0) rotate(0)}to{transform:translateY(-12px) rotate(4deg)}}
-.marc{stroke-dasharray:9 10;animation:mdash 1.2s linear infinite}
-@keyframes mdash{to{stroke-dashoffset:-38}}
-/* Mars tee-off: swing connects with the tee'd duck partway through the
-   downswing, at which point the resting duck vanishes and the launched one
-   takes over — the two are never visible at the same time. */
-.mrsswing{transform-origin:110px 180px;animation:mrsw .9s cubic-bezier(.3,0,.4,1) both}
-@keyframes mrsw{0%{transform:rotate(-70deg)}55%{transform:rotate(45deg)}100%{transform:rotate(20deg)}}
-.mrstee{animation:mrsteefade .12s ease-out .5s forwards}
-@keyframes mrsteefade{to{opacity:0}}
-.mrsburst{transform-origin:0 0;opacity:0;animation:mrsburstflash .35s ease-out .5s forwards}
-@keyframes mrsburstflash{0%{opacity:1;transform:scale(.3)}100%{opacity:0;transform:scale(1.8)}}
-.mrsduck{transform-origin:330px 58px;opacity:0;animation:mrsfly 1s cubic-bezier(.25,.1,.3,1) .5s forwards}
-@keyframes mrsfly{
-  0%{opacity:0;transform:translate(-132px,130px) scale(1.3)}
-  1%{opacity:1;transform:translate(-132px,130px) scale(1.3)}
-  30%{opacity:1;transform:translate(-86px,75px) scale(1.2)}
-  60%{opacity:1;transform:translate(-45px,33px) scale(1.08)}
-  85%{opacity:1;transform:translate(-16px,10px) scale(1.02)}
-  100%{opacity:1;transform:translate(0,0) scale(1)}}
+/* Mars campfire: flames flicker continuously, the duck rocks gently on the
+   spit as though slowly turning. */
+.mrsflame{transform-origin:0 0;animation:mrsflick .15s ease-in-out infinite alternate}
+@keyframes mrsflick{from{transform:scaleY(.85)}to{transform:scaleY(1.15)}}
+.mrsduck{transform-origin:0 0;animation:mrsroast 1.6s ease-in-out infinite alternate}
+@keyframes mrsroast{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
 /* Lunar rover drives in from off-screen and PAST where the ducks are standing
    — the front wheel's final resting spot lands right on top of them, so even
    a single freeze-frame reads as "ran them over," not just "arrived nearby."
@@ -370,6 +357,18 @@ input,textarea{font-family:inherit}
 .vtear{animation:vtd 1.5s ease-in infinite}
 @keyframes vtd{0%{opacity:0;transform:translateY(0)}20%{opacity:1}
   100%{opacity:0;transform:translateY(26px)}}
+/* Four in a row: the hambone held aloft, with a little triumphant bounce. */
+.hbbone{transform-origin:0 0;animation:hbraise .5s cubic-bezier(.2,1.4,.4,1) both,
+  hbbob 1.4s ease-in-out .5s infinite alternate}
+@keyframes hbraise{0%{transform:translateY(40px) rotate(10deg);opacity:0}
+  100%{transform:translateY(0) rotate(-15deg);opacity:1}}
+@keyframes hbbob{from{transform:translateY(0) rotate(-15deg)}to{transform:translateY(-8px) rotate(-10deg)}}
+/* Five in a row: same falling-tear treatment as the victory scene's sad
+   ducks, just given the whole stage this time. */
+.sdtear{animation:vtd 1.5s ease-in infinite}
+/* Ducks win: one pull of the lever, then it settles on triple sevens. */
+.dwlever{transform-origin:62px 20px;animation:dwpull 1.2s ease-in-out .3s both}
+@keyframes dwpull{0%{transform:rotate(0)}40%{transform:rotate(38deg)}100%{transform:rotate(0)}}
 
 /* ---------- Snots win: duck hunt ---------- */
 .wsky{animation:tfade .3s ease-out}
@@ -850,7 +849,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-30.5";      // must match version.txt — that's what phones poll
+const BUILD = "2026-07-30.6";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -2582,6 +2581,20 @@ function holeVerdict(r, m, h, scores){
   return {w, html:`<b class="win ${w}">${esc(nm(w))}</b> beat ${esc(nm(l))} on Hole ${h + 1}
     with ${term(win.gross, par)}${win.picked ? " (picked up)" : ""}`};
 }
+/** Dormie: the leading side's margin now exactly equals the holes left to
+    play, so the trailing side can at best halve. Called with the hole just
+    finished (pre-increment), so the banner lands right as the dormie hole
+    opens on screen. */
+function checkDormie(r, m, h){
+  const st = matchState(r, m, Store.scores(m.id));
+  if (st.done || st.up === 0) return;
+  const remain = 18 - st.thru;
+  if (Math.abs(st.up) !== remain) return;
+  const w = st.up > 0 ? "s" : "d";
+  const names = m[w].p.map(p => last(p[0])).join(" / ");
+  flashHoleResult(`<b class="win ${w}">DORMIE</b> &mdash; ${esc(names)}
+    ${Math.abs(st.up)} up with ${remain} to play`);
+}
 /* The taunt. Plays every time anyone clicks into a match — no once-per-match
    memory — always at the duck's expense. */
 function tauntSVG(){
@@ -2680,50 +2693,43 @@ function darthSVG(){
     </g></svg>`;
 }
 
-/** A Snot on Mars, teeing off a duck like a golf ball — the duck sits still
-    on a tee until the swing actually connects, then launches away. Its own
-    astronaut/club shapes and swing arc, separate from the moon scene, so
-    fixing this one can never touch that one. */
+/** A Snot on Mars, roasting a duck over the campfire — spit turning, flames
+    flickering. Same roster slot as before, all-new artwork. */
 function marsSVG(){
   return `<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     ${[[36,34],[356,44],[300,22],[80,60]].map(([x,y],i)=>`<circle class="rstar"
       style="animation-delay:${i*.3}s" cx="${x}" cy="${y}" r="2.4" fill="${CREAMC}"/>`).join("")}
     <circle cx="52" cy="46" r="7" fill="#9a9a9a" opacity=".7"/>
     <circle cx="76" cy="60" r="4" fill="#9a9a9a" opacity=".55"/>
-    <path class="marc" d="M198 194 Q280 90 330 64" stroke="${GOLDC}" stroke-width="3.5"
-      fill="none" stroke-dasharray="8 9" stroke-linecap="round"/>
 
-    <!-- the tee: a peg planted in the dirt, right where the club connects -->
-    <path d="M198 210 l-4 -20 h8 z" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="2"/>
+    <!-- astronaut, tending the fire -->
+    <rect x="82" y="168" width="46" height="34" rx="14" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+    <circle cx="106" cy="150" r="26" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+    <path d="M108 128 a20 20 0 0 1 0 44 z" fill="#16202b"/>
+    <path d="M126 184 L172 178" stroke="${CREAMC}" stroke-width="9" stroke-linecap="round"/>
 
-    <!-- resting on the tee until impact, then it vanishes and the launched
-         duck (below) takes over — never both on screen at once -->
-    <g transform="translate(198 186) scale(.6)"><g class="mrstee">${rocketDuck()}</g></g>
+    <!-- fire pit -->
+    <path d="M178 196 l14 -10 h56 l14 10 z" fill="#4a2f1f" stroke="${DEEPC}" stroke-width="3"/>
+    <g transform="translate(220 190)"><g class="mrsflame">
+      <path d="M-16 0 q-8 -22 4 -34 q3 13 11 15 q1 -10 -3 -19 q15 10 12 30 q7 -6 6 -16 q8 15 -3 26 z"
+        fill="#e8820c" stroke="${DEEPC}" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M-6 0 q-3 -12 3 -18 q4 9 1 18 z" fill="${GOLDC}"/>
+    </g></g>
 
-    <!-- small impact burst, right at the moment of contact -->
-    <g class="mrsburst" transform="translate(198 190)">
-      <path d="M0 -14 L4 -4 L14 0 L4 4 L0 14 L-4 4 L-14 0 L-4 -4 Z" fill="${GOLDC}"/>
-    </g>
+    <!-- the spit -->
+    <path d="M196 196 L204 138 M244 196 L236 138 M200 138 H240"
+      stroke="#6b7078" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <g transform="translate(220 135)"><g class="mrsduck">
+      <ellipse cx="0" cy="0" rx="34" ry="15" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3.5"/>
+      <circle cx="-26" cy="-2" r="13" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3.5"/>
+      <path d="M-38 -2 l-12 4 l12 5 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M-31 -8 l6 5 M-21 -8 l-6 5" stroke="${DEEPC}" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M20 -8 l14 -6 M20 8 l14 6" stroke="${DEEPC}" stroke-width="2.6" stroke-linecap="round"/>
+    </g></g>
 
-    <!-- launched off the tee, arcing away into the Martian sky -->
-    <g class="mrsduck">
-      <ellipse cx="330" cy="64" rx="26" ry="18" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3.5"/>
-      <circle cx="350" cy="50" r="12" fill="${GREENC}" stroke="${DEEPC}" stroke-width="3.5"/>
-      <path d="M342 44 l6 5 M356 44 l-6 5" stroke="${DEEPC}" stroke-width="2.6" stroke-linecap="round"/>
-      <path d="M362 48 l14 -4 l-12 10 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="2.4" stroke-linejoin="round"/>
-      <path d="M306 60 l-16 -6 l4 14 z" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3" stroke-linejoin="round"/>
-    </g>
-
-    <g class="mrsswing">
-      <rect x="86" y="150" width="42" height="52" rx="15" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
-      <circle cx="107" cy="122" r="28" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
-      <path d="M109 100 a22 22 0 0 1 0 44 z" fill="#16202b"/>
-      <path d="M126 166 L182 128" stroke="${GOLDC}" stroke-width="8" stroke-linecap="round"/>
-      <path d="M180 124 l16 -6 l5 11 l-16 6 z" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="2.6"/>
-    </g>
     <path d="M0 196 q60 -22 120 -6 t130 2 t150 -8 v56 H0 z" fill="#9a4222"/>
     <ellipse cx="90" cy="212" rx="20" ry="6" fill="#732f18"/>
-    <ellipse cx="250" cy="220" rx="26" ry="7" fill="#732f18"/></svg>`;
+    <ellipse cx="330" cy="220" rx="26" ry="7" fill="#732f18"/></svg>`;
 }
 
 /** A Snot in a lunar rover, ducks crossing the moon at the worst possible
@@ -2756,6 +2762,120 @@ function roverSVG(){
       <path d="M141 100 a17 17 0 0 1 0 34 z" fill="#16202b"/>
       <path d="M212 140 l16 -28" stroke="${DEEPC}" stroke-width="3" stroke-linecap="round"/>
       <circle cx="230" cy="108" r="4.5" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="2"/>
+    </g></svg>`;
+}
+
+/** Four straight holes — an astronaut holds the hambone high while a duck
+    cowers behind him. */
+function hamboneSVG(){
+  return `<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    ${[[40,30],[350,40],[300,18],[80,50]].map(([x,y],i)=>`<circle class="rstar"
+      style="animation-delay:${i*.28}s" cx="${x}" cy="${y}" r="2.2" fill="${CREAMC}"/>`).join("")}
+    <path d="M0 196 q60 -18 120 -4 t130 2 t150 -10 v56 H0 z" fill="${GREENC}"/>
+    <ellipse cx="90" cy="212" rx="20" ry="6" fill="#0e3a26"/>
+    <ellipse cx="250" cy="220" rx="26" ry="7" fill="#0e3a26"/>
+    <g transform="translate(304 188) scale(.8)">
+      <ellipse cx="0" cy="0" rx="26" ry="16" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3"/>
+      <circle cx="20" cy="-10" r="11" fill="${GREENC}" stroke="${DEEPC}" stroke-width="3"/>
+      <path d="M30 -10 l12 4 l-12 5 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M13 -14 l6 5 M27 -14 l-6 5" stroke="${DEEPC}" stroke-width="2.4" stroke-linecap="round"/>
+    </g>
+    <rect x="140" y="150" width="46" height="56" rx="16" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+    <circle cx="163" cy="122" r="28" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+    <path d="M165 100 a22 22 0 0 1 0 44 z" fill="#16202b"/>
+    <path d="M182 158 q10 -34 20 -52" stroke="${CREAMC}" stroke-width="11" fill="none" stroke-linecap="round"/>
+    <g transform="translate(204 96)"><g class="hbbone">
+      <path d="M-10 -30 C 10 -40 34 -20 28 4 C 24 24 0 30 -14 18 C -24 10 -22 -6 -14 -16 Z"
+        fill="#e8b48a" stroke="${DEEPC}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M-14 -16 L-34 -34" stroke="${CREAMC}" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="-34" cy="-34" r="7" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="2.4"/>
+    </g></g></svg>`;
+}
+
+/** Five straight holes — the last thing before it's just sad. A duck sits
+    alone, crying. */
+function sittingDuckSVG(){
+  const tear = (x, y, d) => `<circle class="sdtear" style="animation-delay:${d}s"
+    cx="${x}" cy="${y}" r="3" fill="#8fd0ff"/>`;
+  return `<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M0 196 q60 -22 120 -6 t130 2 t150 -8 v56 H0 z" fill="${GREENC}"/>
+    <ellipse cx="140" cy="212" rx="20" ry="6" fill="#0e3a26"/>
+    <ellipse cx="290" cy="218" rx="26" ry="7" fill="#0e3a26"/>
+    <g transform="translate(200 150)">
+      <ellipse cx="0" cy="40" rx="52" ry="30" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+      <circle cx="10" cy="-4" r="30" fill="${GREENC}" stroke="${DEEPC}" stroke-width="4"/>
+      <path d="M-20 -6 l-22 8 l22 9 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M-2 -14 q6 6 12 0 M14 -14 q6 6 12 0" stroke="${DEEPC}" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+      <path d="M-4 6 q14 -8 26 0" stroke="${DEEPC}" stroke-width="3" fill="none" stroke-linecap="round"/>
+      ${tear(-2, 8, 0)}${tear(20, 10, .5)}
+    </g></svg>`;
+}
+
+/** Ducks take a match — the one time they get to gloat, and they don't even
+    take credit for it. */
+function ducksWinSVG(){
+  return `<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M0 196 q60 -18 120 -4 t130 2 t150 -10 v56 H0 z" fill="${GREENC}"/>
+    <ellipse cx="90" cy="212" rx="20" ry="6" fill="#0e3a26"/>
+    <ellipse cx="250" cy="220" rx="26" ry="7" fill="#0e3a26"/>
+    <g transform="translate(170 90)">
+      <rect x="-60" y="0" width="120" height="130" rx="14" fill="#c8102e" stroke="${DEEPC}" stroke-width="4"/>
+      <rect x="-46" y="16" width="92" height="46" rx="6" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3"/>
+      ${[-30, 0, 30].map(x => `<rect x="${x - 13}" y="22" width="26" height="34" rx="4"
+        fill="#fff" stroke="${DEEPC}" stroke-width="2"/>
+        <circle cx="${x}" cy="39" r="9" fill="#c8102e" stroke="${DEEPC}" stroke-width="2"/>`).join("")}
+      <circle cx="0" cy="90" r="16" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="3"/>
+      <text x="0" y="96" font-size="15" text-anchor="middle" fill="${DEEPC}" font-weight="800">777</text>
+      <g class="dwlever"><path d="M62 20 q22 0 22 30" stroke="#6b7078" stroke-width="7"
+        fill="none" stroke-linecap="round"/>
+        <circle cx="84" cy="50" r="9" fill="#c8102e" stroke="${DEEPC}" stroke-width="2.4"/></g>
+    </g>
+    <g transform="translate(280 165)">
+      <ellipse cx="0" cy="0" rx="30" ry="20" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3.5"/>
+      <circle cx="18" cy="-16" r="14" fill="${GREENC}" stroke="${DEEPC}" stroke-width="3.5"/>
+      <path d="M30 -16 l14 4 l-14 5 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="2.4" stroke-linejoin="round"/>
+      <circle cx="24" cy="-20" r="2.2" fill="${DEEPC}"/>
+      <path d="M-8 -30 q-14 -14 6 -20" stroke="${GOLDC}" stroke-width="4" fill="none" stroke-linecap="round"/>
+    </g></svg>`;
+}
+
+/** A Snot eagle gets Big Bird Alert; a Duck eagle gets this instead. */
+function blindDuckSVG(){
+  return `<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M0 196 q60 -18 120 -4 t130 2 t150 -10 v56 H0 z" fill="${GREENC}"/>
+    <ellipse cx="90" cy="212" rx="20" ry="6" fill="#0e3a26"/>
+    <ellipse cx="250" cy="220" rx="26" ry="7" fill="#0e3a26"/>
+    <g transform="translate(200 140)">
+      <ellipse cx="0" cy="40" rx="46" ry="28" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="4"/>
+      <circle cx="6" cy="0" r="34" fill="${GREENC}" stroke="${DEEPC}" stroke-width="4"/>
+      <path d="M-26 -2 l-22 8 l22 9 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="3" stroke-linejoin="round"/>
+      <rect x="-12" y="-14" width="20" height="14" rx="6" fill="#16202b" stroke="${DEEPC}" stroke-width="2.4"/>
+      <rect x="14" y="-14" width="20" height="14" rx="6" fill="#16202b" stroke="${DEEPC}" stroke-width="2.4"/>
+      <path d="M8 -8 h4" stroke="#16202b" stroke-width="3"/>
+      <path d="M-14 -10 l-8 -3 M36 -10 l8 -3" stroke="#16202b" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <path d="M244 178 l14 40" stroke="${CREAMC}" stroke-width="4" stroke-linecap="round"/></svg>`;
+}
+
+/** Matt Emerick posts a gross birdie or better. Naming him is the whole
+    point, so the caption always does. */
+function sandbagSVG(){
+  return `<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M0 0 h400 v150 H0 z" fill="#bcdff0"/>
+    <path d="M0 150 h400 v20 H0 z" fill="#2b6ea8" opacity=".5"/>
+    <path d="M0 165 q60 -14 120 0 t130 0 t150 0 v75 H0 z" fill="#e8d29a"/>
+    <circle cx="330" cy="46" r="24" fill="${GOLDC}" opacity=".8"/>
+    <path d="M240 100 a44 26 0 0 1 88 0 z" fill="#c8102e" stroke="${DEEPC}" stroke-width="3"/>
+    <path d="M284 100 V180" stroke="#8a5a2c" stroke-width="5" stroke-linecap="round"/>
+    <path d="M140 190 l70 -18 l14 8 l-56 24 z" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M154 196 l-6 16 M214 178 l10 16" stroke="${DEEPC}" stroke-width="3" stroke-linecap="round"/>
+    <g transform="translate(180 168)">
+      <ellipse cx="0" cy="0" rx="40" ry="20" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3.5"/>
+      <circle cx="26" cy="-16" r="16" fill="${GREENC}" stroke="${DEEPC}" stroke-width="3.5"/>
+      <path d="M40 -16 l14 4 l-14 5 z" fill="#e8820c" stroke="${DEEPC}" stroke-width="2.4" stroke-linejoin="round"/>
+      <rect x="12" y="-26" width="14" height="10" rx="4" fill="#16202b"/>
+      <rect x="28" y="-26" width="14" height="10" rx="4" fill="#16202b"/>
+      <path d="M-30 4 q-14 8 -22 2" stroke="${DEEPC}" stroke-width="3" fill="none" stroke-linecap="round"/>
     </g></svg>`;
 }
 
@@ -2902,8 +3022,7 @@ function playTaunt(r, m){
   ]).run();
 }
 
-/* Snots take a match: astronauts on a duck hunt. Ducks winning shows nothing,
-   by Andrew's instruction. */
+/* Snots take a match: astronauts on a duck hunt. */
 function duckHuntSVG(){
   const CREAM = "#f2e7cd", DEEP = "#0b2a1c", GOLD = "#c9a227", GRASS = "#0e3a26";
   const duck = cls => `<g class="wduck ${cls}">
@@ -2975,10 +3094,39 @@ function playTurkey(names){
   playScene({svg: turkeySVG(), line: "TURKEY", ms: 4200,
     sub: `${[].concat(names).map(esc).join(" &amp; ")} &middot; won three holes in a row`});
 }
+/* Four straight holes to the Snots — one past Turkey. */
+function playHambone(names){
+  playScene({svg: hamboneSVG(), line: "That's a Snot Hambone!", ms: 4200,
+    sub: `${[].concat(names).map(esc).join(" &amp; ")} &middot; four holes in a row`});
+}
+/* Five straight holes — the last one of these. Andrew's rule: it stops being
+   funny past five, so nothing plays for six or more. */
+function playSittingDuck(names){
+  playScene({svg: sittingDuckSVG(), line: "You're a Sitting Duck", ms: 4200,
+    sub: `${[].concat(names).map(esc).join(" &amp; ")} &middot; five holes in a row`});
+}
 /* A Snot eagle, gross or net. */
 function playBigDuck(who, kind){
   playScene({svg: bigDuckSVG(), line: "BIG BIRD ALERT", ms: 4200,
     sub: `${esc(who)} &middot; ${kind === "net" ? "net eagle" : "eagle"}`});
+}
+/* A Duck eagle, gross or net — Snots get Big Bird Alert, Ducks get this. */
+function playBlindDuck(who, kind){
+  playScene({svg: blindDuckSVG(), line: "Even a blind duck makes an eagle", ms: 4200,
+    sub: `${esc(who)} &middot; ${kind === "net" ? "net eagle" : "eagle"}`});
+}
+/* Ducks take a match. The one time they get a scene, and they still don't
+   take credit for it. */
+function playDucksWin(r, m, st){
+  playScene({svg: ducksWinSVG(), line: `Ducks win ${esc(st.text)}`, ms: 4200,
+    sub: "I have no skill, I'm just a lucky duck", stamp: "Ducks Win!"});
+}
+/* Matt Emerick posts a gross birdie or better — outside a shared-ball team
+   format, where the score can't be pinned on him alone. Naming him is the
+   whole point, so the caption always does. */
+function playSandbag(){
+  playScene({svg: sandbagSVG(), line: "You sandbagging son of a bitch", ms: 4200,
+    sub: "Matt Emerick &middot; gross birdie or better"});
 }
 /* The Crusade is won. Longer, and it plays on every phone. */
 function playVictory(pts){
@@ -3048,26 +3196,43 @@ function afterHoleComplete(r, m, h, verdict){
   flashHoleResult(verdict.html);
   let delay = 1500;
 
-  // three straight holes to the Snots — Turkey
+  // Snots on a run: Turkey at 3, Hambone at 4, Sitting Duck at 5, then
+  // nothing — Andrew's rule, it stops being funny past five.
   const st = matchState(r, m, Store.scores(m.id));
-  const played = [];
-  for (let i = 0; i <= h; i++) if (st.holes[i] !== null) played.push({i, w: st.holes[i]});
-  const tail = played.slice(-3);
-  if (tail.length === 3 && tail.every(x => x.w === "s") && tail[2].i === h){
+  let streak = 0;
+  for (let i = h; i >= 0 && st.holes[i] === "s"; i--) streak++;
+  if (streak >= 3 && streak <= 5){
     const names = m.s.p.map(p => last(p[0])).join(" / ");
-    setTimeout(() => playTurkey(names), delay);
+    if (streak === 3) setTimeout(() => playTurkey(names), delay);
+    else if (streak === 4) setTimeout(() => playHambone(names), delay);
+    else setTimeout(() => playSittingDuck(names), delay);
     delay += 4400;
   }
 
-  // a Snot eagle, gross or net
+  // an eagle, gross or net — Snots get Big Bird Alert, Ducks get Blind Duck
   const hs = holeScores(r, m, h, Store.scores(m.id));
   const par = COURSES[r.course].par[h];
-  const ents = r.mode === "team" ? ["s"] : m.s.p.map(p => p[0]);
-  for (const id of ents){
+  const sEnts = r.mode === "team" ? ["s"] : m.s.p.map(p => p[0]);
+  for (const id of sEnts){
     const v = hs[id]; if (!v || v.picked) continue;
     const who = r.mode === "team" ? m.s.p.map(p => last(p[0])).join(" / ") : PLAYERS[id].n;
     if (v.gross - par <= -2){ setTimeout(() => playBigDuck(who, "gross"), delay); delay += 4400; break; }
     if (v.net - par <= -2){ setTimeout(() => playBigDuck(who, "net"), delay); delay += 4400; break; }
+  }
+  const dEnts = r.mode === "team" ? ["d"] : m.d.p.map(p => p[0]);
+  for (const id of dEnts){
+    const v = hs[id]; if (!v || v.picked) continue;
+    const who = r.mode === "team" ? m.d.p.map(p => last(p[0])).join(" / ") : PLAYERS[id].n;
+    if (v.gross - par <= -2){ setTimeout(() => playBlindDuck(who, "gross"), delay); delay += 4400; break; }
+    if (v.net - par <= -2){ setTimeout(() => playBlindDuck(who, "net"), delay); delay += 4400; break; }
+  }
+
+  // Emerick posts a gross birdie or better. Only meaningful in best ball,
+  // shamble or singles, where he has his own personal line — a scramble or
+  // alt-shot score is the team's shared ball, not individually his.
+  if (r.mode !== "team"){
+    const em = hs["matt"];
+    if (em && !em.picked && em.gross - par <= -1){ setTimeout(() => playSandbag(), delay); delay += 4400; }
   }
 
   // the next hole is a side contest
@@ -3641,6 +3806,7 @@ function wire(){
     V.view = "home"; render(); window.scrollTo(0, 0);
     // celebrate only once the card is signed off, never on a mistyped score
     if (st.winner === "s") playWin(r, m, st);
+    else if (st.winner === "d") playDucksWin(r, m, st);
   };
   const unsub = document.querySelector("[data-unsubmit]");
   if (unsub) unsub.onclick = () => {
@@ -3716,10 +3882,12 @@ function wire(){
   if (proceed) proceed.onclick = () => {
     const ae = document.activeElement;
     if (ae && ae.classList.contains("gsin")) ae.blur();   // commit what's typed
+    const {r: pr, m: pm} = ALL_MATCHES[V.matchId], prevHole = V.hole;
     if (V.fromCard){ V.fromCard = false; V.view = "card"; }   // one tap back to review
     else if (V.hole === 17) V.view = "card";                  // all 18 in — review and submit
     else V.hole = V.hole + 1;
     V.pending = false; render(); window.scrollTo(0, 0);
+    if (V.view === "match" && V.hole === prevHole + 1) checkDormie(pr, pm, prevHole);
   };
   document.querySelectorAll("[data-clear]").forEach(el => el.onclick = () => {
     const {m} = ALL_MATCHES[V.matchId];
@@ -3751,7 +3919,12 @@ function wire(){
         // swiping forward obeys the same gate as the buttons
         const {r: rr, m: mm2} = ALL_MATCHES[V.matchId];
         const done = matchState(rr, mm2, Store.scores(mm2.id)).holes[V.hole] !== null;
-        if (!fwd || done){ V.hole = Math.max(0, Math.min(17, V.hole + (fwd ? 1 : -1))); render(); }
+        if (!fwd || done){
+          const prevHole = V.hole;
+          V.hole = Math.max(0, Math.min(17, V.hole + (fwd ? 1 : -1)));
+          render();
+          if (fwd && V.hole === prevHole + 1) checkDormie(rr, mm2, prevHole);
+        }
       }
       x0 = null;
     };
@@ -3852,8 +4025,10 @@ window.MI26 = {PLAYERS, COURSES, ROUNDS, ALL_MATCHES, Store, Session, V,
   SPECIALS, specialAt, flashSpecial, afterHoleComplete, showToast, flashHoleResult, navBtnsHTML,
   mentionsMe, renderMsgText, taggedUnread, taggedTotal,
   playTaunt, tauntSVG, playWin, duckHuntSVG, matchLine, holeLine,
-  playScene, playTurkey, playBigDuck, playVictory, checkVictory,
+  playScene, playTurkey, playBigDuck, playVictory, checkVictory, checkDormie,
+  playHambone, playSittingDuck, playBlindDuck, playDucksWin, playSandbag,
   rocketSVG, darthSVG, marsSVG, roverSVG, turkeySVG, bigDuckSVG, victorySVG,
+  hamboneSVG, sittingDuckSVG, ducksWinSVG, blindDuckSVG, sandbagSVG,
   render, patch, MATCH_COUNT, myMatch, BUILD, checkForUpdate,
   resetAll(){ Object.keys(ALL_MATCHES).forEach(id => Store.resetMatch(id)); render(); }};
 </script>
