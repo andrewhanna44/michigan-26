@@ -431,6 +431,8 @@ input,textarea{font-family:inherit}
 .dormiewrap.s{background:radial-gradient(circle at 50% 35%,#3a2e08,#0b0700 72%)}
 .dormiewrap.d{background:radial-gradient(circle at 50% 35%,#07301c,#020c07 72%)}
 .dormiein{text-align:center;max-width:400px;animation:fpop .5s cubic-bezier(.2,.9,.3,1.25)}
+.dormiefig{margin:0 auto 14px}
+.dormiefig svg{width:110px;height:120px;margin:0 auto;display:block}
 .dormiehd{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px}
 .dormiehd svg{width:34px;height:34px;flex:none;display:block}
 .dormietitle{font-size:15px;font-weight:850;letter-spacing:3px;text-transform:uppercase}
@@ -441,6 +443,18 @@ input,textarea{font-family:inherit}
   z-index:96;background:var(--red);color:#fff;font-weight:800;font-size:15px;
   padding:16px 22px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
 .dormiebtn:active{filter:brightness(.9)}
+
+/* ---------- profile popup: someone else's card, over your own page ---------- */
+.ppopwrap{position:fixed;inset:0;z-index:90;display:flex;align-items:center;
+  justify-content:center;background:rgba(11,42,28,.55);padding:24px;animation:tfade .2s ease-out}
+.ppopwrap.out{animation:tout .25s ease-in forwards}
+.ppopin{position:relative;width:100%;max-width:360px;animation:fpop .35s cubic-bezier(.2,.9,.3,1.25)}
+.ppopin .pcard{margin-bottom:0}
+.ppopclose{position:absolute;top:-14px;right:-14px;width:34px;height:34px;border-radius:50%;
+  background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;
+  color:var(--text);z-index:1}
+.ppopclose:active{filter:brightness(.95)}
 
 /* ---------- toast ---------- */
 /* Mid-screen, not tucked at the bottom — this is the confirmation a scorer
@@ -884,7 +898,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-31.1";      // must match version.txt — that's what phones poll
+const BUILD = "2026-07-31.2";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -894,26 +908,26 @@ const PICKED = "X";                // sentinel for a picked-up ball
 const PLAYERS = {
   // `title` is the man's role in the trip; `admin` is what he can do in the app.
   // Pat is sole Commissioner; Andrew built the thing. Both have Admin Access.
-  pat:    {n:"Pat Hodgman",        t:"s", idx:6.7,  room:1, yrs:4, code:"7K4M", admin:true, title:"Commissioner"},
-  andrew: {n:"Andrew Hanna",       t:"s", idx:-0.6, room:1, yrs:4, code:"3QX9", admin:true, title:"Coding Nerd"},
-  rendina:{n:"Anthony Rendina",    t:"s", idx:16.2, room:2, yrs:4, code:"R8VT", title:"Daddy Dina"},
-  robert: {n:"Robert Leonard",     t:"s", idx:8.8,  room:3, yrs:3, code:"J2WN", title:"Bobby"},
-  curtin: {n:"Mike Curtin",        t:"s", idx:2.1,  room:2, yrs:2, code:"5FHD", title:"Mikey"},
-  gudden: {n:"Micheal Guddendorf", t:"s", idx:14.7, room:3, yrs:1, code:"T9BQ", title:"New Guy"},
-  alec:   {n:"Alec Kaczkowski",    t:"s", idx:7.4,  room:4, yrs:4, code:"6MZL", title:"Kaz"},
-  bert:   {n:"Alex Bertolini",     t:"s", idx:10.0, room:5, yrs:4, code:"P4RC", title:"BIRDO"},
-  jordan: {n:"Jordan Watt",        t:"s", idx:16.0, room:5, yrs:4, code:"W7GK", title:"JWATT"},
-  luke:   {n:"Luke Smeester",      t:"s", idx:9.1,  room:4, yrs:1, code:"N2DX", title:"New Guy"},
-  jacobs: {n:"Alex Jacobs",        t:"d", idx:5.8,  room:1, yrs:4, code:"8CJV", title:"Duck Captain"},
-  blohm:  {n:"Jason Blohm",        t:"d", idx:6.9,  room:1, yrs:4, code:"L5TR", title:"Blohmer"},
-  ryan:   {n:"Ryan Raupach",       t:"d", idx:11.9, room:2, yrs:4, code:"V3NP", title:"Big Paw"},
-  cam:    {n:"Cameron Raupach",    t:"d", idx:9.4,  room:2, yrs:4, code:"K9HM", title:"Lil Paw"},
-  mosele: {n:"Nick Mosele",        t:"d", idx:6.0,  room:3, yrs:2, code:"D6QW", title:"Bloomington Guy"},
-  eric:   {n:"Eric Petersen",      t:"d", idx:15.7, room:5, yrs:4, code:"Z4LB", title:"Stretch"},
-  reed:   {n:"Reed Hosteller",     t:"d", idx:10.3, room:5, yrs:3, code:"G7XF", title:"Hos"},
-  matt:   {n:"Matt Emerick",       t:"d", idx:23.1, room:3, yrs:3, code:"M2VJ", title:"Sandbagger"},
-  cooper: {n:"Cooper Macek",       t:"d", idx:15.1, room:4, yrs:1, code:"C8RT", title:"New Guy"},
-  austin: {n:"Austin MacDonald",   t:"d", idx:9.8,  room:4, yrs:4, code:"H5KN", title:"Charlotte"}
+  pat:    {n:"Pat Hodgman",        t:"s", idx:6.7,  room:1, yrs:4, code:"HAWA", admin:true, title:"Commissioner"},
+  andrew: {n:"Andrew Hanna",       t:"s", idx:-0.6, room:1, yrs:4, code:"LLNK", admin:true, title:"Coding Nerd"},
+  rendina:{n:"Anthony Rendina",    t:"s", idx:16.2, room:2, yrs:4, code:"XJG9", title:"Daddy Dina"},
+  robert: {n:"Robert Leonard",     t:"s", idx:8.8,  room:3, yrs:3, code:"NGMY", title:"Bobby"},
+  curtin: {n:"Mike Curtin",        t:"s", idx:2.1,  room:2, yrs:2, code:"GM2B", title:"Mikey"},
+  gudden: {n:"Micheal Guddendorf", t:"s", idx:14.7, room:3, yrs:1, code:"3RP5", title:"New Guy"},
+  alec:   {n:"Alec Kaczkowski",    t:"s", idx:7.4,  room:4, yrs:4, code:"XANY", title:"Kaz"},
+  bert:   {n:"Alex Bertolini",     t:"s", idx:10.0, room:5, yrs:4, code:"XHMW", title:"BIRDO"},
+  jordan: {n:"Jordan Watt",        t:"s", idx:16.0, room:5, yrs:4, code:"AQFV", title:"JWATT"},
+  luke:   {n:"Luke Smeester",      t:"s", idx:9.1,  room:4, yrs:1, code:"T6AQ", title:"New Guy"},
+  jacobs: {n:"Alex Jacobs",        t:"d", idx:5.8,  room:1, yrs:4, code:"45YM", title:"Duck Captain"},
+  blohm:  {n:"Jason Blohm",        t:"d", idx:6.9,  room:1, yrs:4, code:"WK25", title:"Blohmer"},
+  ryan:   {n:"Ryan Raupach",       t:"d", idx:11.9, room:2, yrs:4, code:"LAKA", title:"Big Paw"},
+  cam:    {n:"Cameron Raupach",    t:"d", idx:9.4,  room:2, yrs:4, code:"QUSB", title:"Lil Paw"},
+  mosele: {n:"Nick Mosele",        t:"d", idx:6.0,  room:3, yrs:2, code:"52WT", title:"Bloomington Guy"},
+  eric:   {n:"Eric Petersen",      t:"d", idx:15.7, room:5, yrs:4, code:"Q87G", title:"Stretch"},
+  reed:   {n:"Reed Hosteller",     t:"d", idx:10.3, room:5, yrs:3, code:"DBBY", title:"Hos"},
+  matt:   {n:"Matt Emerick",       t:"d", idx:23.1, room:3, yrs:3, code:"3885", title:"Sandbagger"},
+  cooper: {n:"Cooper Macek",       t:"d", idx:15.1, room:4, yrs:1, code:"LTBM", title:"New Guy"},
+  austin: {n:"Austin MacDonald",   t:"d", idx:9.8,  room:4, yrs:4, code:"A56N", title:"Charlotte"}
 };
 const last = id => PLAYERS[id].n.split(" ").slice(-1)[0];
 
@@ -1193,7 +1207,8 @@ function playerStats(){
   const acc = {};
   Object.keys(PLAYERS).forEach(id => acc[id] = {holes:0, gross:0, net:0, par:0,
     eagle:0, birdie:0, parCt:0, over:0,
-    eagleN:0, birdieN:0, parCtN:0, overN:0, underN:0, rounds:new Set()});
+    eagleN:0, birdieN:0, parCtN:0, overN:0, underN:0, rounds:new Set(),
+    holesWon:0, holesLost:0});
   const bump = (a, gross, net, par, rid) => {
     a.holes++; a.gross += gross; a.net += net; a.par += par; a.rounds.add(rid);
     const d = gross - par;
@@ -1202,18 +1217,26 @@ function playerStats(){
     const n = net - par;                       // same counts, measured off net
     if (n <= -2) a.eagleN++; else if (n === -1) a.birdieN++;
     else if (n === 0) a.parCtN++; else a.overN++;
-    if (n < 0) a.underN++;                     // MVP tie-break
+    if (n < 0) a.underN++;
   };
   ROUNDS.forEach(r => {
     const c = COURSES[r.course];
     r.matches.forEach(m => {
       const scores = Store.scores(m.id);
+      const st = matchState(r, m, scores);
       for (let h = 0; h < 18; h++){
         const hs = holeScores(r, m, h, scores);   // picked-up balls already resolved
         if (r.mode === "team"){
           ["s","d"].forEach(k => { const v = hs[k]; if (!v) return;
             m[k].p.forEach(pl => bump(acc[pl[0]], v.gross, v.net, c.par[h], r.n)); });
         } else for (const id in hs) bump(acc[id], hs[id].gross, hs[id].net, c.par[h], r.n);
+        // Hole wins/losses credit both partners in team formats, same as match
+        // points already do — a 2v2 win is shared, not personally attributed.
+        const w = st.holes[h];
+        if (w === "s" || w === "d"){
+          m[w].p.forEach(pl => acc[pl[0]].holesWon++);
+          m[w === "s" ? "d" : "s"].p.forEach(pl => acc[pl[0]].holesLost++);
+        }
       }
     });
   });
@@ -1224,7 +1247,8 @@ function playerStats(){
             grossToPar: a.gross - a.par, netToPar: a.net - a.par,
             eagle: a.eagle, birdie: a.birdie, parCt: a.parCt, over: a.over,
             eagleN: a.eagleN, birdieN: a.birdieN, parCtN: a.parCtN, overN: a.overN,
-            underN: a.underN, points: pts[id] || 0, rounds: a.rounds.size};
+            underN: a.underN, points: pts[id] || 0, rounds: a.rounds.size,
+            holesWon: a.holesWon, holesLost: a.holesLost, netHoles: a.holesWon - a.holesLost};
   }).filter(p => p.holes > 0);
 }
 
@@ -1273,7 +1297,7 @@ function mvp(){
   const team = (st.s > st.d) || (st.s === st.d && st.projS > st.projD) ? "s" : "d";
   const pool = playerStats().filter(p => p.team === team && p.points > 0);
   if (!pool.length) return null;
-  pool.sort((a, b) => b.points - a.points || b.underN - a.underN || a.netToPar - b.netToPar);
+  pool.sort((a, b) => b.points - a.points || b.netHoles - a.netHoles || a.netToPar - b.netToPar);
   return {...pool[0], team, decided: st.fin === MATCH_COUNT};
 }
 
@@ -1670,7 +1694,7 @@ function myMatch(){
    ========================================================================== */
 let V = {view:"home", round:0, matchId:null, hole:0, sheet:null, pending:false,
          chan:"all", draft:null, refocusChat:false, statSort:"net", fromCard:false,
-         profileId:null, tagOpen:false, briefOpen:false};
+         tagOpen:false, briefOpen:false};
 
 /* GitHub Pages caches the page, so a phone can keep running an old build for
    hours after a fix ships. Poll for a newer BUILD and offer a one-tap reload —
@@ -2316,11 +2340,45 @@ function beerMonoSVG(count){
 }
 
 /* ---------- player profile ---------- */
+/** The card at the top of a profile: monogram, name, team, admin flag, and
+    the four key facts. Shared between your own profile page and the popup
+    that shows when you tap someone else's row in "The field". */
+function profileCardHTML(id){
+  const p = PLAYERS[id], pts = playerPoints()[id] || 0;
+  const fact = (k, v) => `<div class="pfact"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+  return `<div class="pcard ${p.t}">
+      ${avatarSVG(id, "big")}
+      <div class="pname">${esc(p.n)}</div>
+      <div class="pteam">${p.t === "s" ? "SNOTS" : "DUCKS"}${
+        p.title ? ` &middot; ${esc(p.title.toUpperCase())}` : ""}</div>
+      ${p.admin ? `<div class="padmin">ADMIN ACCESS</div>` : ""}
+      <div class="pfacts">
+        ${fact("Handicap", fmtIdx(p.idx))}
+        ${fact("Room", p.room)}
+        ${fact("Years", p.yrs)}
+        ${fact("Points", fmtPt(pts))}
+      </div>
+    </div>`;
+}
+/** A small popup over whatever screen is already showing — just the card
+    above, plus a close button. Tapping another player's row in "The field"
+    no longer navigates away from your own profile; this is the replacement. */
+function showProfilePopup(id){
+  document.querySelectorAll(".ppopwrap").forEach(e => e.remove());
+  const el = document.createElement("div");
+  el.className = "ppopwrap";
+  el.innerHTML = `<div class="ppopin">
+      <button class="ppopclose" data-ppopclose="1" aria-label="Close">&times;</button>
+      ${profileCardHTML(id)}
+    </div>`;
+  const close = () => { el.classList.add("out"); setTimeout(() => el.remove(), 250); };
+  el.onclick = e => { if (e.target === el) close(); };
+  el.querySelector("[data-ppopclose]").onclick = close;
+  document.body.appendChild(el);
+}
 function viewProfile(){
-  const meId = V.profileId && PLAYERS[V.profileId] ? V.profileId : Session.id;
-  const p = PLAYERS[meId], own = meId === Session.id;
+  const meId = Session.id, p = PLAYERS[meId];
   const stats = playerStats().find(x => x.id === meId);
-  const pts = playerPoints()[meId] || 0;
 
   let mine = "";
   ROUNDS.forEach(r => r.matches.forEach(m => {
@@ -2343,8 +2401,6 @@ function viewProfile(){
       <div class="chev">&rsaquo;</div></div></button>`;
   }));
 
-  const fact = (k, v) => `<div class="pfact"><div class="k">${k}</div><div class="v">${v}</div></div>`;
-
   let roster = "";
   ["s","d"].forEach(t => {
     roster += `<div class="sect">${t === "s" ? "Snots" : "Ducks"}</div>`;
@@ -2362,33 +2418,21 @@ function viewProfile(){
 
   return `<div class="topbar">
       <button class="iconbtn" data-nav="home">&#8592;</button>
-      <h1>${own ? "Your profile" : esc(p.n)}<div class="sub">${
+      <h1>Your profile<div class="sub">${
         p.t === "s" ? "Snots" : "Ducks"}${p.title ? " &middot; " + esc(p.title) : ""}</div></h1>
       ${navBtnsHTML()}</div>
     <div class="wrap">
-      <div class="pcard ${p.t}">
-        ${avatarSVG(meId, "big")}
-        <div class="pname">${esc(p.n)}</div>
-        <div class="pteam">${p.t === "s" ? "SNOTS" : "DUCKS"}${
-          p.title ? ` &middot; ${esc(p.title.toUpperCase())}` : ""}</div>
-        ${p.admin ? `<div class="padmin">ADMIN ACCESS</div>` : ""}
-        <div class="pfacts">
-          ${fact("Handicap", fmtIdx(p.idx))}
-          ${fact("Room", p.room)}
-          ${fact("Years", p.yrs)}
-          ${fact("Points", fmtPt(pts))}
-        </div>
-      </div>
-      ${own ? `<div class="mycode"><div class="mck">Your login code</div>
+      ${profileCardHTML(meId)}
+      <div class="mycode"><div class="mck">Your login code</div>
         <div class="mcv mono">${p.code}</div>
-        <div class="mch">This is your key to the app. Write it down.</div></div>` : ""}
+        <div class="mch">This is your key to the app. Write it down.</div></div>
       <div class="card flat"><div style="font-size:12.5px;color:var(--muted);line-height:1.7">
         ${stats ? `<b style="color:var(--text)">So far:</b> ${stats.holes} holes &middot;
           ${toPar(stats.grossToPar)} gross &middot; ${toPar(stats.netToPar)} net &middot;
           ${stats.birdie} birdie${stats.birdie === 1 ? "" : "s"}${
           stats.eagle ? ` &middot; ${stats.eagle} eagle${stats.eagle === 1 ? "" : "s"}` : ""}`
         : "No holes played yet."}</div></div>
-      <div class="sect">${own ? "Your matches" : "Matches"}</div>${mine}
+      <div class="sect">Your matches</div>${mine}
       <div class="sect" style="margin-top:24px">The field</div>${roster}
     </div>`;
 }
@@ -2413,19 +2457,21 @@ function viewStats(){
 
   // every statistic the filter can show: label, how to read it, sort direction
   const STATS = {
-    mvp:     {lbl:"MVP ranking",          get:p=>p.points, fmt:fmtPt, tie:(a,b)=>b.underN - a.underN},
-    net:     {lbl:"Net score to par",     get:p=>p.netToPar,   fmt:toPar, low:true},
-    gross:   {lbl:"Gross score to par",   get:p=>p.grossToPar, fmt:toPar, low:true},
-    worst:   {lbl:"Most over par (Gross)",get:p=>p.grossToPar, fmt:toPar},
-    eagle:   {lbl:"Eagles (Gross)",       get:p=>p.eagle},
-    eagleN:  {lbl:"Eagles (Net)",         get:p=>p.eagleN},
-    birdie:  {lbl:"Birdies (Gross)",      get:p=>p.birdie},
-    birdieN: {lbl:"Birdies (Net)",        get:p=>p.birdieN},
-    par:     {lbl:"Pars (Gross)",         get:p=>p.parCt},
-    parN:    {lbl:"Pars (Net)",           get:p=>p.parCtN},
-    over:    {lbl:"Holes over par (Gross)", get:p=>p.over},
-    overN:   {lbl:"Holes over par (Net)",   get:p=>p.overN},
-    points:  {lbl:"Team points won",      get:p=>p.points, fmt:fmtPt}
+    mvp:      {lbl:"MVP ranking",          get:p=>p.points, fmt:fmtPt, tie:(a,b)=>b.netHoles - a.netHoles},
+    net:      {lbl:"Net score to par",     get:p=>p.netToPar,   fmt:toPar, low:true},
+    gross:    {lbl:"Gross score to par",   get:p=>p.grossToPar, fmt:toPar, low:true},
+    worst:    {lbl:"Most over par (Gross)",get:p=>p.grossToPar, fmt:toPar},
+    eagle:    {lbl:"Eagles (Gross)",       get:p=>p.eagle},
+    eagleN:   {lbl:"Eagles (Net)",         get:p=>p.eagleN},
+    birdie:   {lbl:"Birdies (Gross)",      get:p=>p.birdie},
+    birdieN:  {lbl:"Birdies (Net)",        get:p=>p.birdieN},
+    par:      {lbl:"Pars (Gross)",         get:p=>p.parCt},
+    parN:     {lbl:"Pars (Net)",           get:p=>p.parCtN},
+    over:     {lbl:"Holes over par (Gross)", get:p=>p.over},
+    overN:    {lbl:"Holes over par (Net)",   get:p=>p.overN},
+    holesWon: {lbl:"Most Holes Won",       get:p=>p.holesWon},
+    holesLost:{lbl:"Most Holes Lost",      get:p=>p.holesLost},
+    points:   {lbl:"Team points won",      get:p=>p.points, fmt:fmtPt}
   };
   const mulligan = V.statSort === "mulligans";
   const key = mulligan ? "mulligans" : (STATS[V.statSort] ? V.statSort : "net");
@@ -2468,7 +2514,8 @@ function viewStats(){
     Every match win is worth 1 point and a halved match &frac12;. In the four 2v2 rounds
     both partners are credited the side's full point &mdash; they won it together.
     The MVP is the man with the most points <b>on the winning team</b>.
-    <br><b>Tie-break:</b> most holes played under net par.</div>` : "";
+    <br><b>Tie-break:</b> best net holes won &mdash; holes won minus holes lost, in match
+    play, counting 2v2 rounds the same way points do (both partners share the credit).</div>` : "";
 
   return `<div class="topbar">
       <button class="iconbtn" data-nav="home">&#8592;</button>
@@ -2481,8 +2528,8 @@ function viewStats(){
           <div class="v">${best ? esc(best.name) : "&mdash;"}
           <small>${best
             ? `${fmtPt(best.points)} point${best.points === 1 ? "" : "s"} for the
-               ${best.team === "s" ? "Snots" : "Ducks"} &middot; tie-break: ${best.underN} hole${
-               best.underN === 1 ? "" : "s"} under net par`
+               ${best.team === "s" ? "Snots" : "Ducks"} &middot; tie-break: ${best.netHoles > 0 ? "+" : ""}${best.netHoles} net hole${
+               Math.abs(best.netHoles) === 1 ? "" : "s"}`
             : "Decided once one team is ahead"}</small></div></button>
         ${card("Best net", bNet, esc(bNet.last), `${toPar(bNet.netToPar)} to par`, "net")}
         ${card("Best gross", bGross, esc(bGross.last), `${toPar(bGross.grossToPar)} to par`, "gross")}
@@ -2756,17 +2803,42 @@ function cautionSVG(){
     <rect x="28.6" y="23" width="6.8" height="18" rx="3" fill="#0b2a1c"/>
     <circle cx="32" cy="48" r="4" fill="#0b2a1c"/></svg>`;
 }
+/** A full duck, standing, calm — sits above the Waterfowl Warning text. */
+function dormieDuckSVG(){
+  const CREAM = "#f2e7cd", DEEP = "#0b2a1c";
+  return `<svg viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <ellipse cx="60" cy="120" rx="34" ry="7" fill="#000" opacity=".22"/>
+    <path d="M40 112 h40 a18 18 0 0 0 18 -18 v-24 h-76 v24 a18 18 0 0 0 18 18 z"
+      fill="${CREAM}" stroke="${DEEP}" stroke-width="4"/>
+    <circle cx="60" cy="46" r="34" fill="${CREAM}" stroke="${DEEP}" stroke-width="4"/>
+    <path d="M28 44 l-17 6 l17 7 z" fill="#e8820c" stroke="${DEEP}" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="46" cy="36" r="4.4" fill="${DEEP}"/></svg>`;
+}
+/** A full Snot astronaut, standing, calm — sits above the Mission Control text. */
+function dormieSnotSVG(){
+  const CREAM = "#f2e7cd", DEEP = "#0b2a1c";
+  return `<svg viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <ellipse cx="60" cy="120" rx="34" ry="7" fill="#000" opacity=".22"/>
+    <rect x="34" y="68" width="52" height="44" rx="16" fill="${CREAM}" stroke="${DEEP}" stroke-width="4"/>
+    <rect x="12" y="72" width="14" height="26" rx="7" fill="#8a6d00" stroke="${DEEP}" stroke-width="3"/>
+    <rect x="94" y="72" width="14" height="26" rx="7" fill="#8a6d00" stroke="${DEEP}" stroke-width="3"/>
+    <circle cx="60" cy="44" r="30" fill="${CREAM}" stroke="${DEEP}" stroke-width="4"/>
+    <path d="M32 42 a28 28 0 0 1 56 0 v6 a28 28 0 0 1 -56 0 z" fill="#16202b" stroke="${DEEP}" stroke-width="3"/>
+    <path d="M40 36 c5 -6 12 -9 20 -9" stroke="#8fd0ff" stroke-width="4" fill="none"
+      stroke-linecap="round" opacity=".85"/></svg>`;
+}
 /** The Dormie banner itself: a full-screen, team-specific modal that sticks
     until the "Proceed to Scoring" button is tapped — no tap-anywhere-to-skip
     like the trash-talk scenes, this one's meant to be read and dealt with. */
 function showDormieModal(team){
   document.querySelectorAll(".dormiewrap").forEach(e => e.remove());
   const copy = team === "s"
-    ? {title: "Mission Control", line: "We are a go for DORMIE.<br>Launching Ducks in 3, 2, 1&hellip;"}
-    : {title: "Waterfowl Warning", line: "Ducks are DORMIE.<br>One more hole sends the Snots swimming."};
+    ? {fig: dormieSnotSVG(), title: "Mission Control", line: "We are a go for DORMIE.<br>Launching Ducks in 3, 2, 1&hellip;"}
+    : {fig: dormieDuckSVG(), title: "Waterfowl Warning", line: "Ducks are DORMIE.<br>One more hole sends the Snots swimming."};
   const el = document.createElement("div");
   el.className = `dormiewrap ${team}`;
   el.innerHTML = `<div class="dormiein">
+      <div class="dormiefig">${copy.fig}</div>
       <div class="dormiehd">${cautionSVG()}<span class="dormietitle">${copy.title}</span>${cautionSVG()}</div>
       <div class="dormieline">${copy.line}</div>
     </div>
@@ -3055,8 +3127,8 @@ function blindDuckSVG(){
     <path d="M244 178 l14 40" stroke="${CREAMC}" stroke-width="4" stroke-linecap="round"/></svg>`;
 }
 
-/** Matt Emerick posts a gross birdie or better. Naming him is the whole
-    point, so the caption always does. */
+/** Matt Emerick posts a gross birdie or better. The caption stays anonymous
+    now — Andrew's call, a little less mean. */
 function sandbagSVG(){
   return `<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <path d="M0 0 h400 v150 H0 z" fill="#bcdff0"/>
@@ -3341,12 +3413,11 @@ function playDucksWin(r, m, st){
   playScene({svg: ducksWinSVG(), line: `Ducks win ${esc(st.text)}`, ms: 7200,
     sub: "I have no skill, I'm just a lucky duck", stamp: "Ducks Win!"});
 }
-/* Matt Emerick posts a gross birdie or better — outside a shared-ball team
-   format, where the score can't be pinned on him alone. Naming him is the
-   whole point, so the caption always does. */
+/* Matt Emerick posts a gross birdie or better. Everything else about this
+   scene stays exactly as it was — just no name in the caption anymore. */
 function playSandbag(){
   playScene({svg: sandbagSVG(), line: "You sandbagging son of a bitch", ms: 7200,
-    sub: "Matt Emerick &middot; gross birdie or better"});
+    sub: "Gross birdie or better"});
 }
 /* The clinching point lands — a quick fireworks flash naming whichever side
    just took the Crusade, on every phone, regardless of side. */
@@ -3763,7 +3834,14 @@ function viewSheet(){
       it can only add back what's missing, never overwrite something newer.</p>
       <button class="btn ghost" data-export="1">Download backup</button>
       <button class="btn ghost" data-restore="1">Restore from backup&hellip;</button>
-      <input type="file" id="restorefile" accept="application/json,.json" style="display:none">` : ""}
+      <input type="file" id="restorefile" accept="application/json,.json" style="display:none">
+      <div class="sect" style="margin-top:4px">Danger zone</div>
+      <p style="margin-bottom:10px;color:var(--muted);font-size:12.5px;line-height:1.55">
+        Wipes every score, scorer and submission on all 30 matches back to blank, on every
+        phone at once. Download a backup first if you want a record of what's there now.
+        <b style="color:var(--text)">This cannot be undone.</b>
+      </p>
+      <button class="btn ghost" data-resetall="1" style="color:var(--red)">Reset ALL matches&hellip;</button>` : ""}
     <button class="btn ghost" data-closebtn="1">Close</button>
     <button class="btn ghost" data-signout="1">Return to lock screen</button>
   </div></div>`;
@@ -3860,7 +3938,7 @@ function wire(){
     if (n === "home")  V.view = "home";
     if (n === "board") V.view = "board";
     if (n === "matches") V.view = "matches";
-    if (n === "profile"){ V.view = "profile"; V.profileId = null; }
+    if (n === "profile") V.view = "profile";
     if (n === "stats") V.view = "stats";
     if (n === "chat")  V.view = "chat";
     if (n === "event") V.view = "event";
@@ -3898,7 +3976,8 @@ function wire(){
   const upd = document.querySelector("[data-update]");
   if (upd) upd.onclick = applyUpdate;
   document.querySelectorAll("[data-profile]").forEach(el => el.onclick = () => {
-    V.view = "profile"; V.profileId = el.dataset.profile; render(); window.scrollTo(0, 0);
+    const id = el.dataset.profile;
+    if (id !== Session.id) showProfilePopup(id);   // your own row is already the page you're on
   });
   document.querySelectorAll("[data-sheet]").forEach(el =>
     el.onclick = () => { V.sheet = el.dataset.sheet; render(); });
@@ -4062,6 +4141,18 @@ function wire(){
   if (rst) rst.onclick = () => {
     if (confirm("Wipe every score in this match and start it over?\n\nThis clears it on everyone's phone."))
       { Store.resetMatch(rst.dataset.reset); V.hole = 0; render(); } };
+
+  const rstAll = document.querySelector("[data-resetall]");
+  if (rstAll) rstAll.onclick = () => {
+    if (!confirm("Wipe EVERY score, scorer and submission on all 30 matches?\n\n"
+      + "This affects every phone at once. Download a backup first if you want a record "
+      + "of what's there now.")) return;
+    if (!confirm("Really sure? This is the whole trip's data, not just one match, and it "
+      + "cannot be undone.")) return;
+    Object.keys(ALL_MATCHES).forEach(id => Store.resetMatch(id));
+    V.sheet = null; render();
+    showToast("All 30 matches reset to a clean slate");
+  };
 
   /* --- gross score inputs -------------------------------------------------
      Writes are "silent" (no re-render) so the keyboard stays open and the
@@ -4281,6 +4372,7 @@ window.MI26 = {PLAYERS, COURSES, ROUNDS, ALL_MATCHES, Store, Session, V,
   rocketSVG, darthSVG, marsSVG, roverSVG, turkeySVG, bigDuckSVG, victorySVG,
   hamboneSVG, sittingDuckSVG, ducksWinSVG, blindDuckSVG, sandbagSVG, beerMonoSVG, mulliganStats,
   fireworksSVG, playClinch, chatIconSVG, cautionSVG, showDormieModal, DORMIE_KEY, CLINCH_FIREWORKS_MS,
+  dormieDuckSVG, dormieSnotSVG, profileCardHTML, showProfilePopup,
   render, patch, MATCH_COUNT, myMatch, BUILD, checkForUpdate,
   resetAll(){ Object.keys(ALL_MATCHES).forEach(id => Store.resetMatch(id)); render(); }};
 </script>
