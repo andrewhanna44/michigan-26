@@ -145,6 +145,15 @@ input,textarea{font-family:inherit}
 .pcard .pname{font-size:20px;font-weight:850;letter-spacing:-.3px}
 .pcard .pteam{font-size:10.5px;font-weight:800;letter-spacing:2px;margin-top:3px}
 .pcard.s .pteam{color:var(--snots)} .pcard.d .pteam{color:var(--ducks)}
+.tierrow{display:inline-flex;align-items:center;gap:7px;margin-top:9px;padding:5px 11px 5px 7px;
+  border-radius:999px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.tflag{width:24px;height:24px;flex:none;display:block}
+.tiername{font-size:12px;font-weight:850;letter-spacing:.6px;text-transform:uppercase}
+.tiercount{font-size:11px;font-weight:650;color:var(--dim)}
+.tierrow.vet      .tiername{color:#8a6d00}
+.tierrow.mainstay .tiername{color:#6e767c}
+.tierrow.returner .tiername{color:#7a4a17}
+.tierrow.rookie   .tiername{color:#1f6b36}
 .pfacts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
 .pfact{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 4px}
 .pfact .k{font-size:9.5px;font-weight:800;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
@@ -263,6 +272,9 @@ input,textarea{font-family:inherit}
 .taunt .tsub{color:#c9a227;font-size:11.5px;font-weight:750;letter-spacing:1.6px;
   text-transform:uppercase;margin-top:8px;opacity:0;animation:tin .4s ease-out 1.5s forwards;
   text-align:center;padding:0 24px;line-height:1.6}
+/* which match a relayed scene came from — quieter than the scene's own caption */
+.taunt .tsub .tfrom{display:block;margin-top:5px;color:#7d9a88;font-size:10.5px;
+  letter-spacing:1.1px;font-weight:650}
 .taunt .tskip{position:absolute;bottom:calc(26px + var(--safe-b));color:#7d9a88;
   font-size:11.5px;font-weight:650;letter-spacing:.6px}
 @keyframes tin{to{opacity:1}}
@@ -823,6 +835,10 @@ table.sl tr.s .tm{color:var(--snots)} table.sl tr.d .tm{color:var(--ducks)}
   padding:10px 12px;justify-content:center}
 .syncpill .led{width:7px;height:7px;border-radius:50%;background:var(--dim)}
 .syncpill.on .led{background:#2f9e44} .syncpill.off .led{background:var(--red)}
+.syncpill.err{color:#fff;background:var(--red);border-radius:11px;padding:9px 12px;
+  font-size:12px;font-weight:700;line-height:1.45;align-items:flex-start}
+.syncpill.err .led{background:#fff;margin-top:5px}
+.syncpill.err .syncerr{opacity:.75;font-weight:600}
 .sheet{position:fixed;inset:0;background:rgba(14,18,22,.45);z-index:80;display:flex;
   align-items:flex-end;justify-content:center}
 .sheet-in{background:var(--surface);width:100%;max-width:560px;border-radius:17px 17px 0 0;
@@ -898,7 +914,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-31.2";      // must match version.txt — that's what phones poll
+const BUILD = "2026-07-31.3";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -1123,7 +1139,7 @@ function sideHole(r, m, key, h, scores){
 function matchState(r, m, scores){
   let up = 0, sW = 0, dW = 0, halved = 0;
   const holes = new Array(18).fill(null);
-  let closedAt = null, closedMargin = 0;
+  let closedAt = null, closedMargin = 0, decided = 0;
   for (let h = 0; h < 18; h++){
     if (!holeEntered(r, m, h, scores)) continue;   // partial holes count for nothing
     const s = sideHole(r, m, "s", h, scores);
@@ -1134,8 +1150,14 @@ function matchState(r, m, scores){
     else if (d.net < s.net){ w = "d"; up--; dW++; }
     else { w = "h"; halved++; }
     holes[h] = w;
-    if (closedAt === null && Math.abs(up) > 17 - h){
-      closedAt = h + 1; closedMargin = Math.abs(up);
+    decided++;
+    /* Holes left is 18 minus holes actually DECIDED — not "holes after this
+       one on the card". A scorer who skips a hole and fills it in later would
+       otherwise close the match early: nine straight wins with hole 1 still
+       blank read as "9 & 8" and banked the point, when 9 up with 9 to play is
+       only dormie. Counting decided holes makes the order of entry irrelevant. */
+    if (closedAt === null && Math.abs(up) > 18 - decided){
+      closedAt = decided; closedMargin = Math.abs(up);
     }
   }
   const played = sW + dW + halved, thru = played;
@@ -1144,7 +1166,7 @@ function matchState(r, m, scores){
   if (closedAt !== null){
     winner = up > 0 ? "s" : "d";
     const rem = 18 - closedAt;
-    text = rem === 0 ? "1 UP" : `${closedMargin} & ${rem}`;
+    text = rem === 0 ? `${closedMargin} UP` : `${closedMargin} & ${rem}`;
   } else if (played === 18){
     if (up === 0) text = "HALVED";
     else { winner = up > 0 ? "s" : "d"; text = `${Math.abs(up)} UP`; }
@@ -1311,6 +1333,21 @@ const Store = (() => {
   let data = {}, chatData = {}, chatSeen = {}, tie = null;
   try { tie = JSON.parse(localStorage.getItem(LS_TIE) || "null"); } catch(e){ tie = null; }
   let db = null, connected = false, authed = false, chatBlocked = null, listeners = [];
+  let synced = false;        // the first full matches snapshot has landed
+  /* A rejected write used to vanish into an empty catch. That is the worst
+     possible failure here: the merge is additive newest-wins, so the value
+     sticks on the writer's phone forever and reaches nobody, while the sync
+     pill still reads "Live" because the socket is open. Record it and let the
+     UI say so. */
+  let writeErr = null;
+  const track = p => (p && p.then ? p.then(() => {
+    // recovered — a later write got through, so stop shouting about the old one
+    if (writeErr){ writeErr = null; listeners.forEach(f => f()); }
+  }).catch(err => {
+    writeErr = (err && (err.code || err.message)) || "write failed";
+    console.warn("write rejected:", writeErr);
+    listeners.forEach(f => f());
+  }) : p);
   /* Every merge is "newest timestamp wins". If we trusted each phone's own
      clock, one man with a wrong clock would either lose every correction he
      makes or silently overwrite everyone else's. Firebase tells us how far
@@ -1356,6 +1393,8 @@ const Store = (() => {
     get chatBlocked(){ return chatBlocked; },
     onChange(fn){ listeners.push(fn); },
     _emit(){ listeners.forEach(f => f()); },
+    get writeErr(){ return writeErr; },
+    get synced(){ return synced; },
 
     scores(id){
       const b = data[id]; if (!b) return {};
@@ -1379,7 +1418,7 @@ const Store = (() => {
       b.scores[h][entrant] = cell;
       flush();
       if (!silent) this._emit();
-      if (db) update(ref(db, `${EVENT_KEY}/matches/${id}/scores/${h}/${entrant}`), cell).catch(()=>{});
+      if (db) track(update(ref(db, `${EVENT_KEY}/matches/${id}/scores/${h}/${entrant}`), cell));
     },
 
     /* ---- shotgun mulligans (Round 3 only) ----------------------------------
@@ -1399,7 +1438,7 @@ const Store = (() => {
       b.mulligans[h] = b.mulligans[h] || {};
       b.mulligans[h][entrant] = cell;
       flush(); this._emit();
-      if (db) update(ref(db, `${EVENT_KEY}/matches/${id}/mulligans/${h}/${entrant}`), cell).catch(()=>{});
+      if (db) track(update(ref(db, `${EVENT_KEY}/matches/${id}/mulligans/${h}/${entrant}`), cell));
     },
 
     /* ---- tiebreak ----------------------------------------------------------
@@ -1411,20 +1450,20 @@ const Store = (() => {
       tie = {...(tie || {}), ...patch, by, t: now()};
       try { localStorage.setItem(LS_TIE, JSON.stringify(tie)); } catch(e){}
       this._emit();
-      if (db) update(ref(db, `${EVENT_KEY}/tiebreak`), tie).catch(()=>{});
+      if (db) track(update(ref(db, `${EVENT_KEY}/tiebreak`), tie));
     },
     clearTiebreak(by){
       tie = {format: "", result: "", winner: null, by, t: now()};
       try { localStorage.setItem(LS_TIE, JSON.stringify(tie)); } catch(e){}
       this._emit();
-      if (db) update(ref(db, `${EVENT_KEY}/tiebreak`), tie).catch(()=>{});
+      if (db) track(update(ref(db, `${EVENT_KEY}/tiebreak`), tie));
     },
 
     scorer(id){ return (data[id] || {}).scorer || null; },
     setScorer(id, pid){
       const b = bucket(id), t = now();
       b.scorer = {id: pid, t}; flush(); this._emit();
-      if (db) update(ref(db, `${EVENT_KEY}/matches/${id}/scorer`), {id: pid, t}).catch(()=>{});
+      if (db) track(update(ref(db, `${EVENT_KEY}/matches/${id}/scorer`), {id: pid, t}));
     },
 
     /* A submitted match is signed off and locked. Scoring stays open until
@@ -1435,8 +1474,8 @@ const Store = (() => {
     setSubmitted(id, val, by){
       const b = bucket(id), t = now();
       b.submitted = {v: !!val, by: by || "", t}; flush(); this._emit();
-      if (db) update(ref(db, `${EVENT_KEY}/matches/${id}/submitted`),
-                     {v: !!val, by: by || "", t}).catch(()=>{});
+      if (db) track(update(ref(db, `${EVENT_KEY}/matches/${id}/submitted`),
+                     {v: !!val, by: by || "", t}));
     },
 
     /* Tombstone every hole/entrant this match could ever have, not just the
@@ -1467,12 +1506,12 @@ const Store = (() => {
       b.submitted = {v: false, by: "reset", t};
       flush(); this._emit();
       if (db){
-        update(ref(db, `${EVENT_KEY}/matches/${id}/scores`), payload).catch(()=>{});
+        track(update(ref(db, `${EVENT_KEY}/matches/${id}/scores`), payload));
         if (Object.keys(mulPayload).length)
-          update(ref(db, `${EVENT_KEY}/matches/${id}/mulligans`), mulPayload).catch(()=>{});
-        update(ref(db, `${EVENT_KEY}/matches/${id}/scorer`), {id: null, t}).catch(()=>{});
-        update(ref(db, `${EVENT_KEY}/matches/${id}/submitted`),
-               {v: false, by: "reset", t}).catch(()=>{});
+          track(update(ref(db, `${EVENT_KEY}/matches/${id}/mulligans`), mulPayload));
+        track(update(ref(db, `${EVENT_KEY}/matches/${id}/scorer`), {id: null, t}));
+        track(update(ref(db, `${EVENT_KEY}/matches/${id}/submitted`),
+               {v: false, by: "reset", t}));
       }
     },
 
@@ -1550,7 +1589,7 @@ const Store = (() => {
           if (empty(lc) || rc.t > lc.t){
             const cell = {...rc, t: stamp};
             b.scores[h] = b.scores[h] || {}; b.scores[h][e] = cell; restored++;
-            if (db) update(ref(db, `${EVENT_KEY}/matches/${id}/scores/${h}/${e}`), cell).catch(()=>{});
+            if (db) track(update(ref(db, `${EVENT_KEY}/matches/${id}/scores/${h}/${e}`), cell));
           } else skipped++;
         }
         for (const h in (inc.mulligans || {})) for (const e in inc.mulligans[h]){
@@ -1560,7 +1599,7 @@ const Store = (() => {
           if (!lc || !lc.v || rc.t > lc.t){
             const cell = {...rc, t: stamp};
             b.mulligans[h] = b.mulligans[h] || {}; b.mulligans[h][e] = cell; restored++;
-            if (db) update(ref(db, `${EVENT_KEY}/matches/${id}/mulligans/${h}/${e}`), cell).catch(()=>{});
+            if (db) track(update(ref(db, `${EVENT_KEY}/matches/${id}/mulligans/${h}/${e}`), cell));
           } else skipped++;
         }
         for (const field of ["scorer","submitted"]){
@@ -1571,7 +1610,7 @@ const Store = (() => {
           if (lcEmpty || rc.t > lc.t){
             const cell = {...rc, t: stamp};
             b[field] = cell; restored++;
-            if (db) update(ref(db, `${EVENT_KEY}/matches/${id}/${field}`), cell).catch(()=>{});
+            if (db) track(update(ref(db, `${EVENT_KEY}/matches/${id}/${field}`), cell));
           } else skipped++;
         }
       }
@@ -1582,7 +1621,7 @@ const Store = (() => {
           if (!msg || typeof msg.t !== "number" || chatData[ch][mid]) continue;
           delete msg.state; delete msg.err;
           chatData[ch][mid] = msg; restored++;
-          if (db) set(ref(db, `${EVENT_KEY}/chat/${ch}/${mid}`), msg).catch(()=>{});
+          if (db) track(set(ref(db, `${EVENT_KEY}/chat/${ch}/${mid}`), msg));
         }
       }
       flush(); flushChat(); this._emit();
@@ -1605,7 +1644,10 @@ const Store = (() => {
         onValue(ref(db, `${EVENT_KEY}/matches`), snap => {
           const all = snap.val() || {}; let changed = false;
           for (const id in all) if (mergeRemote(id, all[id])) changed = true;
-          if (changed){ flush(); this._emit(); }
+          const first = !synced; synced = true;
+          // always emit the first snapshot even if it merged nothing — that is
+          // the tick the field broadcast uses to learn what's already history
+          if (changed || first){ flush(); this._emit(); }
         }, err => console.warn("sync read blocked:", err.code || err));
         /* The server is the authority here, not this phone. Firebase applies a
            write to its local cache before the server has accepted it, so a
@@ -1745,6 +1787,11 @@ const dotsHTML = n => n <= 0 ? "" :
    ========================================================================== */
 function render(){
   const app = $("#app");
+  /* An id we don't recognise is worse than no id: it walks straight past the
+     lock screen and then every view throws on a null player, leaving a white
+     screen with no way back that nobody on a tee box can fix. Treat it as
+     signed out. */
+  if (Session.id && !Session.me) Session.id = null;
   if (!Session.id){ app.innerHTML = viewLogin(); wireLogin(); return; }
   let html = updateReady
     ? `<button class="updbar" data-update="1">A newer version is ready &mdash; tap to update</button>` : "";
@@ -2124,8 +2171,20 @@ const chatBadge = () => {
   const n = Store.chatUnread("all") + Store.chatUnread(myChannel());
   return n > 0 ? `<span class="dotbadge">${n > 99 ? "99+" : n}</span>` : "";
 };
-const syncHTML = () => `<div class="syncpill ${Store.online ? "on" : "off"}"><span class="led"></span>
-  ${Store.online ? "Live &middot; synced to every phone" : "Offline &middot; saved here, will sync"}</div>`;
+/* "Live" means the socket is open, which is not the same as the server
+   ACCEPTING what we send. A rejected write is the dangerous case — the card
+   looks perfect to its scorer and nobody else ever sees it — so that gets its
+   own loud state rather than a green light. */
+/* One wrapper span around the message, not loose markup: .syncpill is a flex
+   container, so a bare <b> beside text becomes its own flex item and the
+   sentence wraps into nonsense. Same trap as the hole banner. */
+const syncHTML = () => Store.writeErr
+  ? `<div class="syncpill err"><span class="led"></span><span>Scores are <b>not</b> reaching
+      the other phones &mdash; show this to Andrew or Pat
+      <span class="syncerr">(${esc(Store.writeErr)})</span></span></div>`
+  : `<div class="syncpill ${Store.online ? "on" : "off"}"><span class="led"></span><span>${
+      Store.online ? "Live &middot; synced to every phone" : "Offline &middot; saved here, will sync"
+    }</span></div>`;
 
 /* ---------- leaderboard (Ryder Cup style) ----------
    Deliberately different from All Matches: this is a board you read, not a
@@ -2339,6 +2398,51 @@ function beerMonoSVG(count){
     <path d="M16 20 q14 -6 28 0" fill="#fff" stroke="${DEEP}" stroke-width="2"/>${box}</svg>`;
 }
 
+/* ---------- appearances badge ----------
+   Each man's `yrs` is how many Crusades he's played. That earns a rank, shown
+   as a pin flag: one stripe a year up to Mainstay, then stars for a Veteran. */
+const TIERS = [
+  {min:4, key:"vet",      label:"Veteran",  colour:"#e0b83a", edge:"#8a6d00", marks:4, stars:true},
+  {min:3, key:"mainstay", label:"Mainstay", colour:"#c3ccd3", edge:"#78828a", marks:3},
+  {min:2, key:"returner", label:"Returner", colour:"#c07f36", edge:"#7a4a17", marks:2},
+  {min:1, key:"rookie",   label:"Rookie",   colour:"#49ab63", edge:"#1f6b36", marks:1}
+];
+const tierFor = yrs => TIERS.find(t => (yrs || 0) >= t.min) || TIERS[TIERS.length - 1];
+
+function tierFlagSVG(yrs, cls){
+  const t = tierFor(yrs), DEEP = "#0b2a1c";
+  const star = (cx, cy, r) => {
+    let d = "";
+    for (let i = 0; i < 10; i++){
+      const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r;
+      d += `${i ? "L" : "M"}${(cx + Math.cos(a) * rr).toFixed(1)} ${(cy + Math.sin(a) * rr).toFixed(1)} `;
+    }
+    return `<path d="${d}Z" fill="${DEEP}" opacity=".8"/>`;
+  };
+  let marks = "";
+  if (t.stars){
+    marks = star(27, 17.5, 4.3) + star(39, 17.5, 4.3) + star(27, 27.5, 4.3) + star(39, 27.5, 4.3);
+  } else {
+    // stripes sit as a centred block on the flag, whatever the count
+    const top = 22.5 - ((t.marks - 1) * 6) / 2 - 1.6;
+    for (let i = 0; i < t.marks; i++)
+      marks += `<rect x="21" y="${(top + i * 6).toFixed(1)}" width="26" height="3.2" rx="1.6"
+        fill="${DEEP}" opacity=".78"/>`;
+  }
+  return `<svg class="tflag ${cls || ""}" viewBox="0 0 64 64" aria-hidden="true">
+    <rect x="14" y="8" width="3.4" height="48" rx="1.7" fill="#6b7078"/>
+    <circle cx="15.7" cy="8" r="2.6" fill="#6b7078"/>
+    <path d="M17.4 10 H50 v25 H17.4 z" fill="${t.colour}" stroke="${t.edge}" stroke-width="2.4"
+      stroke-linejoin="round"/>${marks}</svg>`;
+}
+/** The rank line under a player's team on his card. */
+function tierBadgeHTML(yrs){
+  const t = tierFor(yrs), n = yrs || 0;
+  return `<div class="tierrow ${t.key}">${tierFlagSVG(yrs)}
+    <span class="tiername">${t.label}</span>
+    <span class="tiercount">${n} Crusade${n === 1 ? "" : "s"}</span></div>`;
+}
+
 /* ---------- player profile ---------- */
 /** The card at the top of a profile: monogram, name, team, admin flag, and
     the four key facts. Shared between your own profile page and the popup
@@ -2352,6 +2456,7 @@ function profileCardHTML(id){
       <div class="pteam">${p.t === "s" ? "SNOTS" : "DUCKS"}${
         p.title ? ` &middot; ${esc(p.title.toUpperCase())}` : ""}</div>
       ${p.admin ? `<div class="padmin">ADMIN ACCESS</div>` : ""}
+      ${tierBadgeHTML(p.yrs)}
       <div class="pfacts">
         ${fact("Handicap", fmtIdx(p.idx))}
         ${fact("Room", p.room)}
@@ -2854,15 +2959,32 @@ function showDormieModal(team){
    Called with the hole just finished (pre-increment), so this lands right
    as the dormie hole opens. */
 const DORMIE_KEY = `${EVENT_KEY}_dormieshown`;
+const dormieShown = () => {
+  try { return JSON.parse(localStorage.getItem(DORMIE_KEY) || "[]"); } catch(e){ return []; }
+};
+const saveDormieShown = list => {
+  try { localStorage.setItem(DORMIE_KEY, JSON.stringify(list)); } catch(e){}
+};
+/* Self-healing, same reason as the victory flag: this list is per-phone, so a
+   wipe only really clears it on whoever ran the reset. Any match back to zero
+   decided holes is dropped here, on every phone, next time data syncs. */
+function pruneDormieShown(){
+  const shown = dormieShown();
+  if (!shown.length) return;
+  const live = shown.filter(id => {
+    const e = ALL_MATCHES[id];
+    return e && matchState(e.r, e.m, Store.scores(id)).thru > 0;
+  });
+  if (live.length !== shown.length) saveDormieShown(live);
+}
 function checkDormie(r, m, h){
   const st = matchState(r, m, Store.scores(m.id));
   if (st.done || st.up === 0) return;
   const remain = 18 - st.thru;
   if (Math.abs(st.up) !== remain) return;
-  let shown = [];
-  try { shown = JSON.parse(localStorage.getItem(DORMIE_KEY) || "[]"); } catch(e){ shown = []; }
+  const shown = dormieShown();
   if (shown.includes(m.id)) return;
-  try { localStorage.setItem(DORMIE_KEY, JSON.stringify([...shown, m.id])); } catch(e){}
+  saveDormieShown([...shown, m.id]);
   showDormieModal(st.up > 0 ? "s" : "d");
 }
 /* The taunt. Plays every time anyone clicks into a match — no once-per-match
@@ -3381,31 +3503,34 @@ function playWin(r, m, st){
   ]).run();
 }
 
+/* `from` names another match when the scene is being relayed to the field —
+   already HTML, so it is not escaped again here. Own-match scenes omit it. */
+const fromTag = from => from ? `<span class="tfrom">${from}</span>` : "";
 /* Three straight holes to the Snots. */
-function playTurkey(names){
+function playTurkey(names, from){
   playScene({svg: turkeySVG(), line: "TURKEY", ms: 4200,
-    sub: `${[].concat(names).map(esc).join(" &amp; ")} &middot; won three holes in a row`});
+    sub: `${[].concat(names).map(esc).join(" &amp; ")} &middot; won three holes in a row${fromTag(from)}`});
 }
 /* Four straight holes to the Snots — one past Turkey. */
-function playHambone(names){
+function playHambone(names, from){
   playScene({svg: hamboneSVG(), line: "That's a Snot Hambone!", ms: 4200,
-    sub: `${[].concat(names).map(esc).join(" &amp; ")} &middot; four holes in a row`});
+    sub: `${[].concat(names).map(esc).join(" &amp; ")} &middot; four holes in a row${fromTag(from)}`});
 }
 /* Five straight holes — the last one of these. Andrew's rule: it stops being
    funny past five, so nothing plays for six or more. */
-function playSittingDuck(names){
+function playSittingDuck(names, from){
   playScene({svg: sittingDuckSVG(), line: "You're a Sitting Duck", ms: 4200,
-    sub: `${[].concat(names).map(esc).join(" &amp; ")} &middot; five holes in a row`});
+    sub: `${[].concat(names).map(esc).join(" &amp; ")} &middot; five holes in a row${fromTag(from)}`});
 }
 /* A Snot eagle, gross or net. */
-function playBigDuck(who, kind){
+function playBigDuck(who, kind, from){
   playScene({svg: bigDuckSVG(), line: "BIG BIRD ALERT", ms: 4200,
-    sub: `${esc(who)} &middot; ${kind === "net" ? "net eagle" : "eagle"}`});
+    sub: `${esc(who)} &middot; ${kind === "net" ? "net eagle" : "eagle"}${fromTag(from)}`});
 }
 /* A Duck eagle, gross or net — Snots get Big Bird Alert, Ducks get this. */
-function playBlindDuck(who, kind){
+function playBlindDuck(who, kind, from){
   playScene({svg: blindDuckSVG(), line: "Even a blind duck makes an eagle", ms: 4200,
-    sub: `${esc(who)} &middot; ${kind === "net" ? "net eagle" : "eagle"}`});
+    sub: `${esc(who)} &middot; ${kind === "net" ? "net eagle" : "eagle"}${fromTag(from)}`});
 }
 /* Ducks take a match. The one time they get a scene, and they still don't
    take credit for it. */
@@ -3415,9 +3540,9 @@ function playDucksWin(r, m, st){
 }
 /* Matt Emerick posts a gross birdie or better. Everything else about this
    scene stays exactly as it was — just no name in the caption anymore. */
-function playSandbag(){
+function playSandbag(from){
   playScene({svg: sandbagSVG(), line: "You sandbagging son of a bitch", ms: 7200,
-    sub: "Gross birdie or better"});
+    sub: `Gross birdie or better${fromTag(from)}`});
 }
 /* The clinching point lands — a quick fireworks flash naming whichever side
    just took the Crusade, on every phone, regardless of side. */
@@ -3484,60 +3609,144 @@ function scheduleHoleSettle(r, m, h){
     if ((V.view !== "match" && V.view !== "card") || V.matchId !== m.id) return;
     const verdict = holeVerdict(r, m, h, Store.scores(m.id));
     if (!verdict) return;                     // a score was cleared in the meantime
+    /* Every score is already committed on its own keystroke, so there is
+       nothing to flush here — and yanking focus out of a box the scorer is
+       still working in just closes the keyboard on him. patch() unlocks the
+       arrow, the Save button and the hole strip without touching the DOM;
+       the full render waits until he's actually finished. */
     const ae = document.activeElement;
-    if (ae && ae.classList.contains("gsin")) ae.blur();
-    V.pending = false; render();
+    if (ae && ae.classList && ae.classList.contains("gsin")){ patch(); V.pending = true; }
+    else { V.pending = false; render(); }
     afterHoleComplete(r, m, h, verdict);
   }, 900);
 }
 
-function afterHoleComplete(r, m, h, verdict){
-  flashHoleResult(verdict.html);
-  let delay = 1500;
+/**
+ * Everything scene-worthy that happened on one completed hole, as plain data.
+ * Kept separate from playing it so the scorer's own phone and every other
+ * phone in the field decide identically — the two paths can't drift.
+ */
+function holeEvents(r, m, h){
+  const scores = Store.scores(m.id);
+  const st = matchState(r, m, scores);
+  const hs = holeScores(r, m, h, scores);
+  const par = COURSES[r.course].par[h];
+  const evs = [];
 
   // Snots on a run: Turkey at 3, Hambone at 4, Sitting Duck at 5, then
   // nothing — Andrew's rule, it stops being funny past five.
-  const st = matchState(r, m, Store.scores(m.id));
   let streak = 0;
   for (let i = h; i >= 0 && st.holes[i] === "s"; i--) streak++;
-  if (streak >= 3 && streak <= 5){
-    const names = m.s.p.map(p => last(p[0])).join(" / ");
-    if (streak === 3) setTimeout(() => playTurkey(names), delay);
-    else if (streak === 4) setTimeout(() => playHambone(names), delay);
-    else setTimeout(() => playSittingDuck(names), delay);
-    delay += 4400;
-  }
+  if (streak >= 3 && streak <= 5)
+    evs.push({kind: streak === 3 ? "turkey" : streak === 4 ? "hambone" : "sitting",
+              names: m.s.p.map(p => last(p[0])).join(" / ")});
 
   // an eagle, gross or net — Snots get Big Bird Alert, Ducks get Blind Duck
-  const hs = holeScores(r, m, h, Store.scores(m.id));
-  const par = COURSES[r.course].par[h];
-  const sEnts = r.mode === "team" ? ["s"] : m.s.p.map(p => p[0]);
-  for (const id of sEnts){
-    const v = hs[id]; if (!v || v.picked) continue;
-    const who = r.mode === "team" ? m.s.p.map(p => last(p[0])).join(" / ") : PLAYERS[id].n;
-    if (v.gross - par <= -2){ setTimeout(() => playBigDuck(who, "gross"), delay); delay += 4400; break; }
-    if (v.net - par <= -2){ setTimeout(() => playBigDuck(who, "net"), delay); delay += 4400; break; }
-  }
-  const dEnts = r.mode === "team" ? ["d"] : m.d.p.map(p => p[0]);
-  for (const id of dEnts){
-    const v = hs[id]; if (!v || v.picked) continue;
-    const who = r.mode === "team" ? m.d.p.map(p => last(p[0])).join(" / ") : PLAYERS[id].n;
-    if (v.gross - par <= -2){ setTimeout(() => playBlindDuck(who, "gross"), delay); delay += 4400; break; }
-    if (v.net - par <= -2){ setTimeout(() => playBlindDuck(who, "net"), delay); delay += 4400; break; }
-  }
+  const eagle = (side, kind) => {
+    const ents = r.mode === "team" ? [side] : m[side].p.map(p => p[0]);
+    for (const id of ents){
+      const v = hs[id]; if (!v || v.picked) continue;
+      const who = r.mode === "team" ? m[side].p.map(p => last(p[0])).join(" / ") : PLAYERS[id].n;
+      if (v.gross - par <= -2) return {kind, who, how: "gross"};
+      if (v.net   - par <= -2) return {kind, who, how: "net"};
+    }
+    return null;
+  };
+  const se = eagle("s", "bigbird");   if (se) evs.push(se);
+  const de = eagle("d", "blindduck"); if (de) evs.push(de);
 
   // Emerick posts a gross birdie or better. In best ball, shamble or singles
   // it's his own line; in Scramble/Alt Shot it's the team's shared ball, but
   // Andrew wants the shade thrown at him regardless of whose shot it really was.
-  const mattSide = m.s.p.some(p => p[0] === "matt") ? "s" : m.d.p.some(p => p[0] === "matt") ? "d" : null;
+  const mattSide = m.s.p.some(p => p[0] === "matt") ? "s"
+                 : m.d.p.some(p => p[0] === "matt") ? "d" : null;
   if (mattSide){
     const em = r.mode === "team" ? hs[mattSide] : hs["matt"];
-    if (em && !em.picked && em.gross - par <= -1){ setTimeout(() => playSandbag(), delay); delay += 4400; }
+    if (em && !em.picked && em.gross - par <= -1) evs.push({kind: "sandbag"});
   }
+  return evs;
+}
+/** Render one descriptor. `from` names the match when it isn't your own. */
+function playHoleEvent(ev, from){
+  if (ev.kind === "turkey")    return playTurkey(ev.names, from);
+  if (ev.kind === "hambone")   return playHambone(ev.names, from);
+  if (ev.kind === "sitting")   return playSittingDuck(ev.names, from);
+  if (ev.kind === "bigbird")   return playBigDuck(ev.who, ev.how, from);
+  if (ev.kind === "blindduck") return playBlindDuck(ev.who, ev.how, from);
+  if (ev.kind === "sandbag")   return playSandbag(from);
+}
 
+function afterHoleComplete(r, m, h, verdict){
+  flashHoleResult(verdict.html);
+  ANNOUNCED.add(holeKey(m.id, h));   // so the field broadcast doesn't repeat it
+  let delay = 1500;
+  holeEvents(r, m, h).forEach(ev => {
+    setTimeout(() => playHoleEvent(ev), delay);
+    delay += 4400;
+  });
   // the next hole is a side contest
   const nxt = specialAt(r.n, h + 1);
   if (nxt && h + 1 <= 17) setTimeout(() => flashSpecial(nxt, h + 2), delay);
+}
+
+/* ---------- trash talk from the rest of the field ----------
+   Hole scenes used to fire only inside the scorer's own keystroke handler, so
+   nineteen of twenty phones never saw any of it. Anything landing from another
+   match now plays on whoever has the app open, captioned with whose match it
+   came from — the talk spreads on its own from there. */
+const ANNOUNCED = new Set();
+const holeKey = (mId, h) => `${mId}:${h}`;
+let broadcastReady = false;
+
+/** Mark every finished hole as already seen, playing nothing. */
+function seedAnnounced(){
+  for (const id in ALL_MATCHES){
+    const {r, m} = ALL_MATCHES[id], sc = Store.scores(id);
+    for (let h = 0; h < 18; h++)
+      if (holeEntered(r, m, h, sc)) ANNOUNCED.add(holeKey(id, h));
+  }
+  broadcastReady = true;
+}
+
+function broadcastFieldEvents(){
+  if (!Session.id || !Store.synced) return;
+  /* The first full picture from the server is history, not news — seed it
+     silently. Waiting for that snapshot matters: localStorage alone is a
+     fraction of the field, so seeding at boot would make the whole morning's
+     holes look brand new the moment the real data landed. */
+  if (!broadcastReady){ seedAnnounced(); return; }
+  /* Mid-keystroke is the one time a full-screen scene is genuinely unwelcome,
+     and nothing is marked seen on the way out — with five matches syncing, the
+     next tick comes along in seconds and it plays then. */
+  const ae = document.activeElement;
+  if (ae && ae.classList && ae.classList.contains("gsin")) return;
+
+  const armed = scheduleHoleSettle._armed;
+  const fresh = [];
+  for (const id in ALL_MATCHES){
+    const {r, m} = ALL_MATCHES[id], sc = Store.scores(id);
+    for (let h = 0; h < 18; h++){
+      const k = holeKey(id, h);
+      // a wiped or corrected hole becomes eligible again
+      if (!holeEntered(r, m, h, sc)){ ANNOUNCED.delete(k); continue; }
+      if (ANNOUNCED.has(k)) continue;
+      ANNOUNCED.add(k);
+      /* Only the hole THIS phone is mid-entry on is skipped — its own settle
+         is about to announce it and would double up. Anything else plays,
+         including your own match when someone else is keeping the card, which
+         is the whole point: watchers used to see nothing at all. */
+      if (armed && armed.mId === id && armed.h === h) continue;
+      const evs = holeEvents(r, m, h);
+      if (evs.length) fresh.push({r, m, h, own: id === V.matchId, ev: evs[evs.length - 1]});
+    }
+  }
+  if (!fresh.length) return;
+  // Coming back after a while shouldn't queue ten scenes — newest one only.
+  const pick = fresh[fresh.length - 1];
+  const nm = k => esc(pick.m[k].p.map(p => last(p[0])).join(" / "));
+  // no "from" line when it happened in the match you're already looking at
+  playHoleEvent(pick.ev, pick.own ? null
+    : `from Round ${pick.r.n} &middot; ${nm("s")} v ${nm("d")}`);
 }
 
 /* The Crusade being won plays once, on every phone that sees it happen. */
@@ -3555,7 +3764,12 @@ function checkVictory(){
     if (st.done){ s += st.pts.s; d += st.pts.d; }
   }
   const team = s >= CLINCH ? "s" : d >= CLINCH ? "d" : null;
-  if (!team) return;
+  /* Self-healing: nobody is at clinch, so forget any earlier win. The flag is
+     per-phone localStorage, and a wipe (or a reopened card) only clears it on
+     the phone that did it — every other phone would sit on a stale "already
+     played" and never show the real thing. This runs on every sync, so all 20
+     recover on their own. */
+  if (!team){ try { localStorage.removeItem(VICTORY_KEY); } catch(e){} return; }
   try { if (localStorage.getItem(VICTORY_KEY)) return;
         localStorage.setItem(VICTORY_KEY, "1"); } catch(e){}
   const pts = team === "s" ? s : d;
@@ -4150,6 +4364,11 @@ function wire(){
     if (!confirm("Really sure? This is the whole trip's data, not just one match, and it "
       + "cannot be undone.")) return;
     Object.keys(ALL_MATCHES).forEach(id => Store.resetMatch(id));
+    /* The once-only scenes remember on THIS phone that they already fired.
+       Without clearing them a wipe isn't really a clean slate: a phone that
+       saw a dormie or the Crusade win during testing would never show it
+       again for real, and the victory scene only ever gets one chance. */
+    try { localStorage.removeItem(VICTORY_KEY); localStorage.removeItem(DORMIE_KEY); } catch(e){}
     V.sheet = null; render();
     showToast("All 30 matches reset to a clean slate");
   };
@@ -4211,7 +4430,19 @@ function wire(){
       const cur = (Store.scores(mm.id)[V.hole] || {})[el.dataset.entrant];
       const shown = (cur == null) ? "" : cur === PICKED ? "X" : String(cur);
       if (el.value !== shown) el.value = shown;
-      if (V.pending){ V.pending = false; render(); } else patch();
+      if (!V.pending){ patch(); return; }
+      /* A deferred render is waiting on this blur, but blur also fires when
+         focus is simply moving to the NEXT score box — auto-advance does it on
+         every score. Rendering there rebuilds every box, so the box the focus
+         is travelling to no longer exists by the time it lands and iOS drops
+         the keyboard mid-hole. Let focus settle first: still on a score box
+         means still typing, so patch and keep the render pending. */
+      setTimeout(() => {
+        if (!V.pending) return;
+        const ae = document.activeElement;
+        if (ae && ae.classList && ae.classList.contains("gsin")){ patch(); return; }
+        V.pending = false; render();
+      }, 0);
     };
   });
   const proceed = document.querySelector("[data-proceed]");
@@ -4342,12 +4573,14 @@ function patch(){
 Store.onChange(() => {
   if (!Session.id) return;
   checkVictory();
+  pruneDormieShown();
   const ae = document.activeElement, cls = ae && ae.classList;
   // Never rebuild the DOM out from under someone who is typing a score.
   if (cls && cls.contains("gsin")){ V.pending = true; return; }
   // Chat can redraw live, but the draft and caret have to survive it.
   if (cls && cls.contains("chatin")){ V.draft = ae.value; V.refocusChat = true; }
   render();
+  broadcastFieldEvents();   // anything that just landed from another match
 });
 Store.connect();
 render();
@@ -4373,6 +4606,8 @@ window.MI26 = {PLAYERS, COURSES, ROUNDS, ALL_MATCHES, Store, Session, V,
   hamboneSVG, sittingDuckSVG, ducksWinSVG, blindDuckSVG, sandbagSVG, beerMonoSVG, mulliganStats,
   fireworksSVG, playClinch, chatIconSVG, cautionSVG, showDormieModal, DORMIE_KEY, CLINCH_FIREWORKS_MS,
   dormieDuckSVG, dormieSnotSVG, profileCardHTML, showProfilePopup,
+  tierFor, tierFlagSVG, tierBadgeHTML, holeEvents, playHoleEvent,
+  broadcastFieldEvents, seedAnnounced, ANNOUNCED, pruneDormieShown, syncHTML,
   render, patch, MATCH_COUNT, myMatch, BUILD, checkForUpdate,
   resetAll(){ Object.keys(ALL_MATCHES).forEach(id => Store.resetMatch(id)); render(); }};
 </script>
