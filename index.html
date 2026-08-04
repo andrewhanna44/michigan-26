@@ -444,7 +444,7 @@ input,textarea{font-family:inherit}
 .dormiewrap.d{background:radial-gradient(circle at 50% 35%,#07301c,#020c07 72%)}
 .dormiein{text-align:center;max-width:400px;animation:fpop .5s cubic-bezier(.2,.9,.3,1.25)}
 .dormiefig{margin:0 auto 14px}
-.dormiefig svg{width:110px;height:120px;margin:0 auto;display:block}
+.dormiefig svg{width:110px;height:auto;margin:0 auto;display:block}
 .dormiehd{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px}
 .dormiehd svg{width:34px;height:34px;flex:none;display:block}
 .dormietitle{font-size:15px;font-weight:850;letter-spacing:3px;text-transform:uppercase}
@@ -610,8 +610,9 @@ input,textarea{font-family:inherit}
 .mk{display:inline-flex;align-items:center;justify-content:center;
   min-width:21px;height:21px;line-height:1;font-weight:750}
 .mk.picked{color:var(--red);font-weight:850}
-table.gc td.tap{cursor:pointer}
-table.gc td.tap:active{background:var(--surface3)}
+table.gc td.tap,table.gc th.tap{cursor:pointer}
+table.gc td.tap:active,table.gc th.tap:active{background:var(--surface3)}
+table.gc .hrange{font-weight:600;color:var(--dim);font-size:9.5px;letter-spacing:0}
 
 .resbar{border-radius:13px;padding:11px;text-align:center;margin-bottom:9px;
   background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
@@ -914,7 +915,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-31.3";      // must match version.txt — that's what phones poll
+const BUILD = "2026-07-31.4";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -2921,16 +2922,27 @@ function dormieDuckSVG(){
 }
 /** A full Snot astronaut, standing, calm — sits above the Mission Control text. */
 function dormieSnotSVG(){
-  const CREAM = "#f2e7cd", DEEP = "#0b2a1c";
-  return `<svg viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <ellipse cx="60" cy="120" rx="34" ry="7" fill="#000" opacity=".22"/>
-    <rect x="34" y="68" width="52" height="44" rx="16" fill="${CREAM}" stroke="${DEEP}" stroke-width="4"/>
-    <rect x="12" y="72" width="14" height="26" rx="7" fill="#8a6d00" stroke="${DEEP}" stroke-width="3"/>
-    <rect x="94" y="72" width="14" height="26" rx="7" fill="#8a6d00" stroke="${DEEP}" stroke-width="3"/>
-    <circle cx="60" cy="44" r="30" fill="${CREAM}" stroke="${DEEP}" stroke-width="4"/>
-    <path d="M32 42 a28 28 0 0 1 56 0 v6 a28 28 0 0 1 -56 0 z" fill="#16202b" stroke="${DEEP}" stroke-width="3"/>
-    <path d="M40 36 c5 -6 12 -9 20 -9" stroke="#8fd0ff" stroke-width="4" fill="none"
-      stroke-linecap="round" opacity=".85"/></svg>`;
+  const CREAM = "#f2e7cd", DEEP = "#0b2a1c", G = "#14472f";
+  // Same helmet/visor construction as the crest astronaut the app icon is
+  // cropped from, built out into a full standing figure — legs, boots and
+  // both arms — rather than the crest's bust-and-reaching-arm pose.
+  return `<svg viewBox="0 0 120 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <ellipse cx="60" cy="142" rx="32" ry="7" fill="#000" opacity=".2"/>
+    <rect x="38" y="122" width="16" height="20" rx="7" fill="${CREAM}" stroke="${DEEP}" stroke-width="3.5"/>
+    <rect x="66" y="122" width="16" height="20" rx="7" fill="${CREAM}" stroke="${DEEP}" stroke-width="3.5"/>
+    <rect x="42" y="96" width="14" height="30" rx="7" fill="${CREAM}" stroke="${DEEP}" stroke-width="3.5"/>
+    <rect x="64" y="96" width="14" height="30" rx="7" fill="${CREAM}" stroke="${DEEP}" stroke-width="3.5"/>
+    <rect x="20" y="74" width="15" height="34" rx="7.5" fill="${CREAM}" stroke="${DEEP}"
+      stroke-width="3.5" transform="rotate(-8 27.5 91)"/>
+    <rect x="85" y="74" width="15" height="34" rx="7.5" fill="${CREAM}" stroke="${DEEP}"
+      stroke-width="3.5" transform="rotate(8 92.5 91)"/>
+    <rect x="38" y="68" width="44" height="46" rx="16" fill="${CREAM}" stroke="${DEEP}" stroke-width="4"/>
+    <rect x="50" y="84" width="20" height="13" rx="3" fill="#8a6d00" stroke="${DEEP}" stroke-width="2"/>
+    <circle cx="55" cy="90.5" r="1.7" fill="${DEEP}"/><circle cx="65" cy="90.5" r="1.7" fill="${DEEP}"/>
+    <circle cx="60" cy="38" r="30" fill="${CREAM}" stroke="${DEEP}" stroke-width="4"/>
+    <path d="M62 10 a28 28 0 0 1 0 56 z" fill="${G}" stroke="${DEEP}" stroke-width="2.6"/>
+    <path d="M48 20 c4 -7 11 -10 19 -10" stroke="${CREAM}" stroke-width="3.4" fill="none"
+      stroke-linecap="round" opacity=".8"/></svg>`;
 }
 /** The Dormie banner itself: a full-screen, team-specific modal that sticks
     until the "Proceed to Scoring" button is tapped — no tap-anywhere-to-skip
@@ -3922,13 +3934,18 @@ function viewCard(){
   };
 
   const nine = (from, to, label) => {
-    let head = `<tr><th class="lbl">${label}</th>`;
+    // the hole range sits right next to OUT/IN so it's obvious at a glance
+    // which nine each subtotal covers, with no counting required
+    const range = `${from + 1}&ndash;${to + 1}`;
+    let head = `<tr><th class="lbl">${label} <span class="hrange">${range}</span></th>`;
     for (let h = from; h <= to; h++){
       const sp = specialAt(r.n, h);
-      head += `<th${sp ? ` class="sph" title="${SPECIAL_LABEL[sp]}"` : ""}>${h + 1}${
+      // hole numbers double as a shortcut back into scoring that hole
+      head += `<th class="tap${sp ? " sph" : ""}" ${sp ? `title="${SPECIAL_LABEL[sp]}" ` : ""
+        }data-gohole="${h}">${h + 1}${
         sp ? `<span class="sptag">${SPECIAL_SHORT[sp]}</span>` : ""}</th>`;
     }
-    head += `<th class="tot">${label}</th></tr>`;
+    head += `<th class="tot">${label} <span class="hrange">${range}</span></th></tr>`;
     let par = `<tr class="meta"><td class="lbl">Par</td>`, si = `<tr class="meta"><td class="lbl">Stroke index</td>`;
     let pT = 0;
     for (let h = from; h <= to; h++){ par += `<td>${c.par[h]}</td>`; si += `<td>${c.hcp[h]}</td>`; pT += c.par[h]; }
