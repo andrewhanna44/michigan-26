@@ -526,7 +526,7 @@ input,textarea{font-family:inherit}
 .holeinfo .hn{font-size:23px;font-weight:850;line-height:1;letter-spacing:-.5px}
 .holeinfo .hd{font-size:11.5px;color:var(--muted);margin-top:4px;font-weight:600}
 .strip{display:flex;gap:3px;margin-top:10px}
-.strip button{flex:1;height:27px;border-radius:5px;background:var(--surface2);
+.strip button{position:relative;flex:1;height:27px;border-radius:5px;background:var(--surface2);
   border:1px solid var(--line);font-size:10px;font-weight:700;color:var(--dim);
   display:flex;align-items:center;justify-content:center;padding:0;min-width:0}
 .strip button.cur{outline:2px solid var(--text);outline-offset:-1px;color:var(--text)}
@@ -534,6 +534,13 @@ input,textarea{font-family:inherit}
 .strip button.sp{position:relative}
 .strip button .spdot{position:absolute;top:1px;right:1px;width:5px;height:5px;
   border-radius:50%;background:var(--red)}
+.strip button .spdot.ctp{background:#2b6cb0}
+.strip button .spdot.ld{background:var(--red)}
+.strip button .popdots{position:absolute;left:2px;bottom:1px;display:flex;gap:1px}
+.strip button .popdots i{width:3.5px;height:3.5px;border-radius:50%;
+  box-shadow:0 0 0 .5px rgba(255,255,255,.85)}
+.strip button .popdots i.s{background:var(--snots-solid)}
+.strip button .popdots i.d{background:var(--ducks-solid)}
 .spbadge{display:inline-block;margin-top:6px;padding:3px 9px;border-radius:7px;
   font-size:10px;font-weight:850;letter-spacing:1.2px;text-transform:uppercase;
   background:var(--red);color:#fff}
@@ -844,6 +851,7 @@ table.sl tr.s .tm{color:var(--snots)} table.sl tr.d .tm{color:var(--ducks)}
   align-items:flex-end;justify-content:center}
 .sheet-in{background:var(--surface);width:100%;max-width:560px;border-radius:17px 17px 0 0;
   padding:0 16px calc(22px + var(--safe-b));max-height:86vh;overflow-y:auto}
+.sheet-in.cardsheet{max-width:680px}
 .sheethdr{position:sticky;top:0;background:var(--surface);display:flex;align-items:center;
   gap:10px;padding:17px 0 11px;border-bottom:1px solid var(--line);margin-bottom:14px;z-index:2}
 .sheethdr h3{margin:0;font-size:17px;flex:1}
@@ -915,7 +923,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-07-31.4";      // must match version.txt — that's what phones poll
+const BUILD = "2026-08-07.1";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -959,8 +967,7 @@ const COURSES = {
   // two nines in the opposite order.
   summit:{n:"The Summit", par:[4,3,4,4,5,4,4,3,4, 4,4,3,4,4,5,3,5,4],
     hcp:[16,14,18,12,4,2,8,10,6, 13,5,17,11,9,1,15,3,7],
-    yds:{Blue:[359,216,333,352,467,413,353,216,385, 339,365,171,378,355,524,197,470,399]},
-    note:"Holes are numbered to match the printed Summit scorecard. Pat's spreadsheet lists these two nines in the opposite order."},
+    yds:{Blue:[359,216,333,352,467,413,353,216,385, 339,365,171,378,355,524,197,470,399]}},
   schuss:{n:"Schuss Mountain", par:[4,4,4,3,5,4,5,4,3, 4,5,4,4,5,3,4,3,4],
     hcp:[17,9,7,13,1,5,15,3,11, 8,2,18,16,12,10,4,14,6],
     yds:{Blue:[355,373,410,240,586,438,483,466,209, 407,592,369,376,479,186,463,181,400],
@@ -1126,13 +1133,14 @@ function sideHole(r, m, key, h, scores){
   const hs = holeScores(r, m, h, scores);
   if (r.mode === "team"){
     const v = hs[key];
-    return v ? {net: v.net, gross: v.gross, byId: null, picked: v.picked} : null;
+    return v ? {net: v.net, gross: v.gross, strokes: v.strokes, byId: null, picked: v.picked} : null;
   }
   let best = null;
   for (const pl of m[key].p){
     const v = hs[pl[0]];
     if (!v) continue;
-    if (!best || v.net < best.net) best = {net: v.net, gross: v.gross, byId: pl[0], picked: v.picked};
+    if (!best || v.net < best.net)
+      best = {net: v.net, gross: v.gross, strokes: v.strokes, byId: pl[0], picked: v.picked};
   }
   return best;
 }
@@ -1737,7 +1745,7 @@ function myMatch(){
    ========================================================================== */
 let V = {view:"home", round:0, matchId:null, hole:0, sheet:null, pending:false,
          chan:"all", draft:null, refocusChat:false, statSort:"net", fromCard:false,
-         tagOpen:false, briefOpen:false};
+         tagOpen:false, briefOpen:false, cardOpen:false};
 
 /* GitHub Pages caches the page, so a phone can keep running an old build for
    hours after a fix ships. Poll for a newer BUILD and offer a one-tap reload —
@@ -1805,9 +1813,9 @@ function render(){
   if (V.view === "round") html += viewRound();
   if (V.view === "brief") html += viewBrief();
   if (V.view === "match") html += viewMatch();
-  if (V.view === "card")  html += viewCard();
   if (V.view === "event") html += viewEventOverview();
   if (V.sheet) html += viewSheet();
+  if (V.cardOpen && V.matchId) html += viewCard();
   app.innerHTML = html;
   // turf only where legibility isn't critical: never on match entry or the card
   const TURF = ["home", "board", "matches", "profile", "stats", "round", "brief", "event"];
@@ -2715,22 +2723,38 @@ function matchCard(r, m, st){
 function viewMatch(){
   const {r, m} = ALL_MATCHES[V.matchId], c = COURSES[r.course];
   const scores = Store.scores(m.id), st = matchState(r, m, scores);
-  const h = V.hole, editable = canScore(m), sc = Store.scorer(m.id), par = c.par[h];
+  const h = V.hole, sc = Store.scorer(m.id), par = c.par[h];
 
-  // You can't run ahead of the card: the first hole without a result is as far
-  // as anyone may go. Everything behind it stays open for corrections.
+  // The card itself is free to browse — jump to any hole to check it. Entry
+  // stays locked to the first hole without a result, so a score can't get
+  // saved out of order; everything behind that hole stays open for
+  // corrections. locked here means "not reachable to SCORE yet", not "can't
+  // look at it".
   let firstOpen = 17;
   for (let i = 0; i < 18; i++){ if (st.holes[i] === null){ firstOpen = i; break; } }
   const holeDone = st.holes[h] !== null;
+  const editable = canScore(m) && h <= firstOpen;
+
+  // Pops (handicap strokes) painted in team colors so a hole with strokes
+  // reads at a glance without opening the scorecard — separate from the
+  // CTP/LD dot, which is now its own color (blue/red) so the two can't blur
+  // together on a chip this small.
+  const popCounts = i => r.mode === "team"
+    ? [teamStrokes(r, m.s, i) > 0 ? 1 : 0, teamStrokes(r, m.d, i) > 0 ? 1 : 0]
+    : [m.s.p.filter(pl => playerStrokes(r, m.s, pl, i) > 0).length,
+       m.d.p.filter(pl => playerStrokes(r, m.d, pl, i) > 0).length];
 
   let strip = "";
   for (let i = 0; i < 18; i++){
     const w = st.holes[i], sp = specialAt(r.n, i);
     const locked = i > firstOpen;
-    strip += `<button data-hole="${i}" id="chip-${i}" ${locked ? "disabled" : ""}
+    const [sPops, dPops] = popCounts(i);
+    const popdots = (sPops || dPops) ? `<span class="popdots">${
+      '<i class="s"></i>'.repeat(sPops)}${'<i class="d"></i>'.repeat(dPops)}</span>` : "";
+    strip += `<button data-hole="${i}" id="chip-${i}"
       class="${i === h ? "cur " : ""}${locked ? "lock " : ""}${sp ? "sp " : ""}${
       w === "s" ? "w" : w === "d" ? "l" : w === "h" ? "h" : ""}">${i + 1}${
-      sp ? `<span class="spdot"></span>` : ""}</button>`;
+      sp ? `<span class="spdot ${sp}"></span>` : ""}${popdots}</button>`;
   }
   const yd = yards(r, m, h);
   const sp = specialAt(r.n, h);
@@ -2789,7 +2813,7 @@ function viewMatch(){
           <div class="holeinfo"><div class="hn">Hole ${h + 1}</div>
             <div class="hd">Par ${par}${yd ? " &middot; " + yd : ""} &middot; S.I. ${c.hcp[h]}</div>
             ${sp ? `<div class="spbadge ${sp}">${SPECIAL_LABEL[sp]}</div>` : ""}</div>
-          <button class="navbtn" data-step="1" ${h === 17 || !holeDone ? "disabled" : ""}>&rsaquo;</button>
+          <button class="navbtn" data-step="1" ${h === 17 ? "disabled" : ""}>&rsaquo;</button>
         </div>
         <div class="strip">${strip}</div>
       </div>
@@ -2799,8 +2823,10 @@ function viewMatch(){
           ${holeDone || V.fromCard ? "" : "disabled"}>${
           V.fromCard ? "Back to Review" : h === 17 ? "Review Round" : "Save Scores &amp; Proceed"}</button>
       </div>
-      <div class="gate${holeDone || V.fromCard ? " off" : ""}" id="gatebar">Enter a score for
-        <b>every player</b> before moving on.</div>
+      <div class="gate${holeDone || V.fromCard ? " off" : ""}" id="gatebar">${
+        h > firstOpen
+          ? `Just browsing &mdash; scoring unlocks here once <b>hole ${firstOpen + 1}</b> is complete.`
+          : `Enter a score for <b>every player</b> before moving on.`}</div>
       <div class="savedtag">Every score saves the moment you type it${
         Store.online ? " and syncs to everyone" : " &mdash; will sync when you get service"}.${
         st.done ? " Keep going &mdash; the remaining holes still count for statistics." : ""}</div>
@@ -2880,26 +2906,39 @@ function viewBrief(){
     </div>`;
 }
 
-/** "Hodgman / Bertolini beat Mosele / MacDonald on Hole 1 with a Birdie" */
+/** "Hodgman / Bertolini beat Mosele / MacDonald on Hole 1 with a Birdie" — the
+    term is read off the GROSS score, same as a scorecard. When a stroke on
+    that hole is actually what produced the result, the net term rides along
+    too ("a Bogey/Net Par") so nobody reads "Birdie" and assumes that's what
+    was actually shot. */
 function holeVerdict(r, m, h, scores){
   if (!holeEntered(r, m, h, scores)) return null;  // wait for every score, not just one per side
   const s = sideHole(r, m, "s", h, scores), d = sideHole(r, m, "d", h, scores);
   if (!s || !d) return null;
   const nm = k => m[k].p.map(p => last(p[0])).join(" / ");
-  const term = (gross, par) => {
-    const x = gross - par;
-    return x <= -3 ? "an Albatross" : x === -2 ? "an Eagle" : x === -1 ? "a Birdie"
-         : x === 0 ? "a Par" : x === 1 ? "a Bogey" : x === 2 ? "a Double Bogey"
-         : x === 3 ? "a Triple Bogey" : `a ${x} over par`;
-  };
+  const raw = x => x <= -3 ? "Albatross" : x === -2 ? "Eagle" : x === -1 ? "Birdie"
+       : x === 0 ? "Par" : x === 1 ? "Bogey" : x === 2 ? "Double Bogey"
+       : x === 3 ? "Triple Bogey" : `${x} Over Par`;
+  const art = w => /^[AEIOU]/.test(w) ? "an" : "a";
   const par = COURSES[r.course].par[h];
-  if (s.net === d.net)
-    return {w:null, html:`<b>${esc(nm("s"))}</b> and <b>${esc(nm("d"))}</b> halved
-      Hole ${h + 1} with ${term(s.gross, par)}`};
+  // A side's own term: plain gross term normally, gross/net when a stroke on
+  // this hole moved their result (strokes always shift the bucket, so the two
+  // terms can never coincide once a stroke is in play).
+  const term = side => {
+    const g = raw(side.gross - par), gTerm = `${art(g)} ${g}`;
+    return side.strokes ? `${gTerm}/Net ${raw(side.net - par)}` : gTerm;
+  };
+  if (s.net === d.net){
+    const sT = term(s), dT = term(d);
+    return {w:null, html: sT === dT
+      ? `<b>${esc(nm("s"))}</b> and <b>${esc(nm("d"))}</b> halved Hole ${h + 1} with ${sT}`
+      : `<b>${esc(nm("s"))}</b> and <b>${esc(nm("d"))}</b> halved Hole ${h + 1} &mdash;
+         ${esc(nm("s"))} ${sT}, ${esc(nm("d"))} ${dT}`};
+  }
   const w = s.net < d.net ? "s" : "d", l = w === "s" ? "d" : "s";
   const win = w === "s" ? s : d;
   return {w, html:`<b class="win ${w}">${esc(nm(w))}</b> beat ${esc(nm(l))} on Hole ${h + 1}
-    with ${term(win.gross, par)}${win.picked ? " (picked up)" : ""}`};
+    with ${term(win)}${win.picked ? " (picked up)" : ""}`};
 }
 /** A yellow caution triangle — flanks the Dormie banner's title both sides. */
 function cautionSVG(){
@@ -3227,7 +3266,12 @@ function ducksWinSVG(){
       <rect x="-46" y="16" width="92" height="46" rx="6" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="3"/>
       ${[-30, 0, 30].map(x => `<rect x="${x - 13}" y="22" width="26" height="34" rx="4"
         fill="#fff" stroke="${DEEPC}" stroke-width="2"/>
-        <circle cx="${x}" cy="39" r="9" fill="#c8102e" stroke="${DEEPC}" stroke-width="2"/>`).join("")}
+        <g transform="translate(${x} 39)">
+          <circle r="9" fill="${CREAMC}" stroke="${DEEPC}" stroke-width="1.8"/>
+          <rect x="-7.5" y="-3" width="15" height="7" rx="3" fill="#16202b"/>
+          <path d="M-4.5 -1.5 L-1.5 1.5 M-4.5 1.5 L-1.5 -1.5 M1.5 -1.5 L4.5 1.5 M1.5 1.5 L4.5 -1.5"
+            stroke="#fff" stroke-width="1.1" stroke-linecap="round"/>
+        </g>`).join("")}
       <circle cx="0" cy="90" r="16" fill="${GOLDC}" stroke="${DEEPC}" stroke-width="3"/>
       <text x="0" y="96" font-size="15" text-anchor="middle" fill="${DEEPC}" font-weight="800">777</text>
       <g class="dwlever"><path d="M62 20 q22 0 22 30" stroke="#6b7078" stroke-width="7"
@@ -3618,7 +3662,7 @@ function scheduleHoleSettle(r, m, h){
   scheduleHoleSettle._armed = {mId: m.id, h};   // so further keystrokes push it back
   scheduleHoleSettle._t = setTimeout(() => {
     scheduleHoleSettle._armed = null;
-    if ((V.view !== "match" && V.view !== "card") || V.matchId !== m.id) return;
+    if (V.view !== "match" || V.matchId !== m.id) return;
     const verdict = holeVerdict(r, m, h, Store.scores(m.id));
     if (!verdict) return;                     // a score was cleared in the meantime
     /* Every score is already committed on its own keystroke, so there is
@@ -4006,11 +4050,13 @@ function viewCard(){
   // Andrew wants the full card played every time, not just enough to win.
   const canSubmit = st.done && holesFilled === 18 && !submitted && (canScore(m) || Session.admin);
 
-  return `<div class="topbar">
-      <button class="iconbtn" data-nav="match" data-id="${m.id}">&#8592;</button>
-      <h1>Review Round<div class="sub">${esc(c.n)} &middot; ${esc(r.fmt)} &middot; ${esc(m.tee || r.tee)}</div></h1>
-      ${navBtnsHTML()}
-    </div><div class="wrap">
+  // A modal, not a separate screen: closing it (X, backdrop, or a tap into a
+  // hole to fix it) drops you back exactly where you were mid-round, instead
+  // of forcing a walk back through Home/Brief the way a full page nav did.
+  return `<div class="sheet" data-cardclose="1"><div class="sheet-in cardsheet">
+      <div class="sheethdr"><h3>Scorecard</h3>
+        <button class="iconbtn" data-cardclosebtn="1">&times;</button></div>
+      <p style="margin-top:-9px">${esc(c.n)} &middot; ${esc(r.fmt)} &middot; ${esc(m.tee || r.tee)}</p>
       <div class="resbar ${st.done && !st.winner ? "halved" : (st.winner || "")}">
         <div class="r1">${submitted ? "Submitted &middot; official" : st.done ? "Match decided" : "Match result"}</div>
         <div class="r2">${st.started ? matchLine(st) : "Not started"}</div></div>
@@ -4032,11 +4078,7 @@ function viewCard(){
         <span class="rd"></span> a stroke is given on that hole
         ${r.par3Low ? "<br>Par 3s: the pair plays off the lower partner's strokes." : ""}
       </div></div>
-      <div class="actions">
-        <button class="btn big ghost" data-nav="match" data-id="${m.id}">Return to Your Match</button>
-        <button class="btn big ghost" data-nav="board">Live Leaderboard</button>
-      </div>
-    </div>`;
+    </div></div>`;
 }
 
 /* ---------- menu ---------- */
@@ -4195,7 +4237,7 @@ function wire(){
       V.briefOpen = false;
       V.pendingTaunt = m.id;   // every click into a match plays one, every time
     }
-    if (n === "card"){ V.view = "card"; V.matchId = el.dataset.id; }
+    if (n === "card"){ V.cardOpen = true; V.matchId = el.dataset.id; }
     V.sheet = null; render(); window.scrollTo(0, 0);
     if (V.pendingTaunt){
       const {r, m} = ALL_MATCHES[V.pendingTaunt];
@@ -4271,6 +4313,10 @@ function wire(){
     el.onclick = e => { if (e.target === el){ V.sheet = null; render(); } });
   document.querySelectorAll("[data-closebtn]").forEach(el =>
     el.onclick = () => { V.sheet = null; render(); });
+  document.querySelectorAll("[data-cardclose]").forEach(el =>
+    el.onclick = e => { if (e.target === el){ V.cardOpen = false; render(); } });
+  document.querySelectorAll("[data-cardclosebtn]").forEach(el =>
+    el.onclick = () => { V.cardOpen = false; render(); });
   /* --- tiebreak ----------------------------------------------------------- */
   const tbf = document.querySelector("[data-tbformat]");
   if (tbf) tbf.onclick = () => {
@@ -4334,7 +4380,7 @@ function wire(){
     V.hole = +el.dataset.hole; render(); });
   // tapping a hole on the review card jumps straight into editing it
   document.querySelectorAll("[data-gohole]").forEach(el => el.onclick = () => {
-    V.hole = +el.dataset.gohole; V.view = "match"; V.fromCard = true;
+    V.hole = +el.dataset.gohole; V.view = "match"; V.fromCard = true; V.cardOpen = false;
     render(); window.scrollTo(0, 0); });
 
   const claim = document.querySelector("[data-claim]");
@@ -4358,7 +4404,7 @@ function wire(){
     const id = sub.dataset.submit, {r, m} = ALL_MATCHES[id];
     const st = matchState(r, m, Store.scores(id));
     Store.setSubmitted(id, true, Session.id);
-    V.view = "home"; render(); window.scrollTo(0, 0);
+    V.view = "home"; V.cardOpen = false; render(); window.scrollTo(0, 0);
     // celebrate only once the card is signed off, never on a mistyped score
     if (st.winner === "s") playWin(r, m, st);
     else if (st.winner === "d") playDucksWin(r, m, st);
@@ -4467,11 +4513,11 @@ function wire(){
     const ae = document.activeElement;
     if (ae && ae.classList.contains("gsin")) ae.blur();   // commit what's typed
     const {r: pr, m: pm} = ALL_MATCHES[V.matchId], prevHole = V.hole;
-    if (V.fromCard){ V.fromCard = false; V.view = "card"; }   // one tap back to review
-    else if (V.hole === 17) V.view = "card";                  // all 18 in — review and submit
+    if (V.fromCard){ V.fromCard = false; V.cardOpen = true; }   // one tap back to review
+    else if (V.hole === 17) V.cardOpen = true;                  // all 18 in — review and submit
     else V.hole = V.hole + 1;
     V.pending = false; render(); window.scrollTo(0, 0);
-    if (V.view === "match" && V.hole === prevHole + 1) checkDormie(pr, pm, prevHole);
+    if (!V.cardOpen && V.hole === prevHole + 1) checkDormie(pr, pm, prevHole);
   };
   document.querySelectorAll("[data-clear]").forEach(el => el.onclick = () => {
     const {m} = ALL_MATCHES[V.matchId];
@@ -4506,15 +4552,12 @@ function wire(){
       const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
       if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.8){
         const fwd = dx < 0;
-        // swiping forward obeys the same gate as the buttons
+        // browsing is free in both directions now — only score ENTRY is gated
         const {r: rr, m: mm2} = ALL_MATCHES[V.matchId];
-        const done = matchState(rr, mm2, Store.scores(mm2.id)).holes[V.hole] !== null;
-        if (!fwd || done){
-          const prevHole = V.hole;
-          V.hole = Math.max(0, Math.min(17, V.hole + (fwd ? 1 : -1)));
-          render();
-          if (fwd && V.hole === prevHole + 1) checkDormie(rr, mm2, prevHole);
-        }
+        const prevHole = V.hole;
+        V.hole = Math.max(0, Math.min(17, V.hole + (fwd ? 1 : -1)));
+        render();
+        if (fwd && V.hole === prevHole + 1) checkDormie(rr, mm2, prevHole);
       }
       x0 = null;
     };
@@ -4574,10 +4617,9 @@ function patch(){
     // erase the CTP/LD dots from the strip after the first keystroke
     chip.className = (i === h ? "cur " : "") + (locked ? "lock " : "") + (sp ? "sp " : "") +
       (w === "s" ? "w" : w === "d" ? "l" : w === "h" ? "h" : "");
-    chip.disabled = locked;
   }
   const fwd = document.querySelector('.navbtn[data-step="1"]');
-  if (fwd) fwd.disabled = h === 17 || !holeDone;
+  if (fwd) fwd.disabled = h === 17;
   const go = document.querySelector("[data-proceed]");
   if (go) go.disabled = !(holeDone || V.fromCard);
   const gate = document.getElementById("gatebar");
