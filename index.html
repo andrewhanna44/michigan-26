@@ -531,11 +531,11 @@ input,textarea{font-family:inherit}
   display:flex;align-items:center;justify-content:center;padding:0;min-width:0}
 .strip button.cur{outline:2px solid var(--text);outline-offset:-1px;color:var(--text)}
 .strip button.lock{opacity:.34}
-.strip button.sp{position:relative}
-.strip button .spdot{position:absolute;top:1px;right:1px;width:5px;height:5px;
-  border-radius:50%;background:var(--red)}
-.strip button .spdot.ctp{background:#2b6cb0}
-.strip button .spdot.ld{background:var(--red)}
+/* CTP/LD read as a colored ring around the whole chip, not a dot — a dot
+   competes for the same corner as the win/loss fill and pop dots; box-shadow
+   layers independently of the border the win/loss classes already own. */
+.strip button.ctp{box-shadow:inset 0 0 0 2px #2b6cb0}
+.strip button.ld{box-shadow:inset 0 0 0 2px var(--red)}
 .strip button .popdots{position:absolute;left:2px;bottom:1px;display:flex;gap:1px}
 .strip button .popdots i{width:3.5px;height:3.5px;border-radius:50%;
   box-shadow:0 0 0 .5px rgba(255,255,255,.85)}
@@ -578,8 +578,9 @@ input,textarea{font-family:inherit}
 .gsin.blank{border:1.5px dashed var(--line);background:transparent}
 /* Sits outside the score box so it stays visible on top of a circled birdie. */
 .gsdots{position:absolute;top:-3px;right:-3px;display:flex;gap:2px;pointer-events:none}
-.gsdots .dot{width:6px;height:6px;border-radius:50%;background:var(--red);
-  box-shadow:0 0 0 2px var(--surface)}
+.gsdots .dot{width:6px;height:6px;border-radius:50%;box-shadow:0 0 0 2px var(--surface)}
+.gsdots .dot.s{background:var(--snots-solid)}
+.gsdots .dot.d{background:var(--ducks-solid)}
 .entry .out{flex:1;text-align:right;font-size:11px;color:var(--dim);font-weight:650}
 .entry .out b{display:block;font-size:17px;color:var(--text);font-weight:800;line-height:1.15}
 /* Two clearly-labelled actions. Previously an unlabelled X and a ↺ arrow, which
@@ -682,11 +683,12 @@ table.gc .netrow td b{color:var(--text);font-weight:750}
 table.gc .netrow .lbl{background:var(--surface2);color:var(--muted);font-weight:600;padding-left:16px}
 table.gc .sep td{height:6px;background:var(--surface3);padding:0}
 table.gc .sep .lbl{background:var(--surface3)}
-table.gc .gdot{position:absolute;top:3px;right:3px;width:4px;height:4px;border-radius:50%;
-  background:var(--red)}
+table.gc .gdot{position:absolute;top:3px;right:3px;width:4px;height:4px;border-radius:50%}
 table.gc .gdot.two{width:9px;background:none}
+table.gc .gdot.s{background:var(--snots-solid)}
+table.gc .gdot.d{background:var(--ducks-solid)}
 table.gc .gdot.two::before,table.gc .gdot.two::after{content:"";position:absolute;top:0;
-  width:4px;height:4px;border-radius:50%;background:var(--red)}
+  width:4px;height:4px;border-radius:50%;background:inherit}
 table.gc .gdot.two::before{right:5px} table.gc .gdot.two::after{right:0}
 table.gc td.w{background:var(--snots-solid);color:#fff}
 table.gc td.l{background:var(--ducks-solid);color:#fff}
@@ -923,7 +925,7 @@ const FIREBASE_CONFIG = {
 };
 const EVENT_KEY = "mi26";          // must match database.rules.json
 const PT_WIN = 1, PT_HALVE = 0.5;
-const BUILD = "2026-08-07.1";      // must match version.txt — that's what phones poll
+const BUILD = "2026-08-07.2";      // must match version.txt — that's what phones poll
 const PICKED = "X";                // sentinel for a picked-up ball
 
 /* ==========================================================================
@@ -1788,8 +1790,8 @@ function yards(r, m, h){
   if (parts.length === 2) return `${c.yds[parts[0]][h]}/${c.yds[parts[1]][h]} yds`;
   return null;
 }
-const dotsHTML = n => n <= 0 ? "" :
-  `<span class="gsdots">${'<span class="dot"></span>'.repeat(n)}</span>`;
+const dotsHTML = (n, side) => n <= 0 ? "" :
+  `<span class="gsdots">${`<span class="dot ${side}"></span>`.repeat(n)}</span>`;
 
 /* ==========================================================================
    7. RENDER
@@ -2752,9 +2754,8 @@ function viewMatch(){
     const popdots = (sPops || dPops) ? `<span class="popdots">${
       '<i class="s"></i>'.repeat(sPops)}${'<i class="d"></i>'.repeat(dPops)}</span>` : "";
     strip += `<button data-hole="${i}" id="chip-${i}"
-      class="${i === h ? "cur " : ""}${locked ? "lock " : ""}${sp ? "sp " : ""}${
-      w === "s" ? "w" : w === "d" ? "l" : w === "h" ? "h" : ""}">${i + 1}${
-      sp ? `<span class="spdot ${sp}"></span>` : ""}${popdots}</button>`;
+      class="${i === h ? "cur " : ""}${locked ? "lock " : ""}${sp ? `${sp} ` : ""}${
+      w === "s" ? "w" : w === "d" ? "l" : w === "h" ? "h" : ""}">${i + 1}${popdots}</button>`;
   }
   const yd = yards(r, m, h);
   const sp = specialAt(r.n, h);
@@ -2766,12 +2767,12 @@ function viewMatch(){
     const side = m[key], bh = sideHole(r, m, key, h, scores), rows = [];
     if (r.mode === "team"){
       rows.push(entryRow({
-        name: side.p.map(p => last(p[0])).join(" / "), sub: shotLbl(side.net),
+        name: side.p.map(p => last(p[0])).join(" / "), sub: shotLbl(side.net), side: key,
         entrant: key, raw: row[key], gross: hs[key] ? hs[key].gross : null,
         strokes: teamStrokes(r, side, h), par, editable}));
     } else side.p.forEach(pl => {
       rows.push(entryRow({
-        name: PLAYERS[pl[0]].n, sub: shotLbl(pl[2]),
+        name: PLAYERS[pl[0]].n, sub: shotLbl(pl[2]), side: key,
         entrant: pl[0], raw: row[pl[0]], gross: hs[pl[0]] ? hs[pl[0]].gross : null,
         strokes: playerStrokes(r, side, pl, h), par, editable,
         best: !!(bh && bh.byId === pl[0] && side.p.length > 1),
@@ -3919,7 +3920,7 @@ function entryRow(o){
           data-entrant="${o.entrant}" type="${picked ? "text" : "number"}"
           inputmode="numeric" pattern="[0-9]*" min="1" max="15" value="${val}"
           ${o.editable && !picked ? "" : "readonly"}>
-        ${dotsHTML(o.strokes)}
+        ${dotsHTML(o.strokes, o.side)}
       </span>
       ${o.showMulligan ? `<span class="mully" id="mully-${o.entrant}">
         <button class="mystep" data-mully="${o.entrant}" data-dir="-1"
@@ -3955,7 +3956,7 @@ function viewCard(){
   const shortSide = key => m[key].p.length > 1
     ? m[key].p.map(p => last(p[0])[0]).join("/") : last(m[key].p[0][0]);
 
-  const rowPair = (name, colour, entrantId, strokesFor, from, to) => {
+  const rowPair = (name, colour, key, entrantId, strokesFor, from, to) => {
     let g = `<tr class="gr"><td class="lbl" style="color:${colour}">${esc(name)}</td>`;
     let n = `<tr class="netrow"><td class="lbl">net</td>`;
     let gt = 0, nt = 0, any = false;
@@ -3968,7 +3969,7 @@ function viewCard(){
         : raw === PICKED ? `<span class="mk picked">X</span>`
         : `<span class="mk ${markCls(v.gross, c.par[h])}">${v.gross}</span>`;
       g += `<td class="tap" data-gohole="${h}">${
-        s > 0 ? `<span class="gdot${s > 1 ? " two" : ""}"></span>` : ""}${cell}</td>`;
+        s > 0 ? `<span class="gdot ${key}${s > 1 ? " two" : ""}"></span>` : ""}${cell}</td>`;
       n += `<td>${v ? `<b>${v.net}</b>` : ""}</td>`;
       if (v){ gt += v.gross; nt += v.net; any = true; }
     }
@@ -3999,10 +4000,10 @@ function viewCard(){
     ["s","d"].forEach(key => {
       const side = m[key], colour = key === "s" ? "var(--snots)" : "var(--ducks)";
       if (r.mode === "team"){
-        body += rowPair(side.p.map(p => last(p[0])).join(" / "), colour, key,
+        body += rowPair(side.p.map(p => last(p[0])).join(" / "), colour, key, key,
           h => teamStrokes(r, side, h), from, to);
       } else {
-        side.p.forEach(pl => body += rowPair(PLAYERS[pl[0]].n, colour, pl[0],
+        side.p.forEach(pl => body += rowPair(PLAYERS[pl[0]].n, colour, key, pl[0],
           h => playerStrokes(r, side, pl, h), from, to));
         if (side.p.length > 1){
           let g = `<tr class="bestrow"><td class="lbl" style="color:${colour}">${
@@ -4613,9 +4614,9 @@ function patch(){
     const chip = document.getElementById(`chip-${i}`), w = st.holes[i];
     if (!chip) continue;
     const locked = i > firstOpen, sp = specialAt(r.n, i);
-    // rebuild the FULL class list — dropping "lock"/"sp" here is what used to
-    // erase the CTP/LD dots from the strip after the first keystroke
-    chip.className = (i === h ? "cur " : "") + (locked ? "lock " : "") + (sp ? "sp " : "") +
+    // rebuild the FULL class list — dropping "lock"/ctp/ld here is what used to
+    // erase the CTP/LD ring from the strip after the first keystroke
+    chip.className = (i === h ? "cur " : "") + (locked ? "lock " : "") + (sp ? `${sp} ` : "") +
       (w === "s" ? "w" : w === "d" ? "l" : w === "h" ? "h" : "");
   }
   const fwd = document.querySelector('.navbtn[data-step="1"]');
